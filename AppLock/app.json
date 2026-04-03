@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AppLock",
-    "slug": "AppLock",
+    "name": "PayPig",
+    "slug": "PayPig",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,20 +9,20 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0D0D0D"
+      "backgroundColor": "#08080F"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.applock.selfcontrol"
+      "bundleIdentifier": "com.paypig.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0D0D0D",
+        "backgroundColor": "#08080F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.applock.selfcontrol"
+      "package": "com.paypig.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

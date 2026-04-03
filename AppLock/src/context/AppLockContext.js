@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AppLockContext = createContext();
 
-const STORAGE_KEY = "@applock_state";
+const STORAGE_KEY = "@paypig_state";
 
 const initialState = {
   lockedApps: {},

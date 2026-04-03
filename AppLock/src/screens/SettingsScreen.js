@@ -9,8 +9,9 @@ import {
   TextInput,
   Alert,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAppLock } from "../context/AppLockContext";
-import { COLORS, FONTS } from "../utils/theme";
+import { COLORS, FONTS, SHADOW, GRADIENTS } from "../utils/theme";
 
 export default function SettingsScreen() {
   const { state, dispatch } = useAppLock();
@@ -22,27 +23,36 @@ export default function SettingsScreen() {
     {
       key: "mild",
       label: "Mild",
-      desc: "Gentle nudges. For the sensitive types.",
+      desc: "Gentle nudges. For the delicate.",
       emoji: "😊",
+      color: COLORS.mint,
+      bg: COLORS.mintSoft,
     },
     {
       key: "medium",
       label: "Medium",
-      desc: "Solid roasts. The sweet spot of shame.",
+      desc: "The sweet spot of shame.",
       emoji: "😏",
+      color: COLORS.gold,
+      bg: COLORS.goldSoft,
     },
     {
       key: "savage",
       label: "Savage",
       desc: "No mercy. You asked for this.",
       emoji: "💀",
+      color: COLORS.pink,
+      bg: COLORS.pinkSoft,
     },
   ];
 
   const saveFee = () => {
     const fee = parseFloat(defaultFee);
     if (isNaN(fee) || fee < 0) {
-      Alert.alert("Nice Try", "Enter a real number. Preferably one that hurts.");
+      Alert.alert(
+        "Nice Try",
+        "Enter a real number. Preferably one that hurts."
+      );
       return;
     }
     if (fee === 0) {
@@ -50,7 +60,7 @@ export default function SettingsScreen() {
         "Really? $0.00?",
         "That defeats the entire purpose. But sure, it's your life.",
         [
-          { text: "Fine, I'll raise it", style: "cancel" },
+          { text: "I'll raise it", style: "cancel" },
           {
             text: "I want $0",
             onPress: () =>
@@ -64,22 +74,25 @@ export default function SettingsScreen() {
       return;
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: fee } });
+    Alert.alert("Saved", `$${fee.toFixed(2)} per moment of weakness. Nice.`);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>
-          Configure your suffering experience
-        </Text>
+        <Text style={styles.subtitle}>Configure your suffering</Text>
 
         {/* Default Fee */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Default Unlock Fee</Text>
           <Text style={styles.sectionDesc}>
-            How much should it cost you every time you're weak?
+            The price of your weakness, per offense
           </Text>
+
           <View style={styles.feeRow}>
             <View style={styles.feeInputContainer}>
               <Text style={styles.feeCurrency}>$</Text>
@@ -89,21 +102,45 @@ export default function SettingsScreen() {
                 onChangeText={setDefaultFee}
                 keyboardType="decimal-pad"
                 placeholder="0.50"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={COLORS.textDim}
               />
             </View>
-            <TouchableOpacity style={styles.saveButton} onPress={saveFee}>
-              <Text style={styles.saveButtonText}>Save</Text>
+            <TouchableOpacity
+              style={styles.saveButton}
+              activeOpacity={0.8}
+              onPress={saveFee}
+            >
+              <LinearGradient
+                colors={GRADIENTS.pink}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.saveButtonInner}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
+
           <View style={styles.presets}>
-            {[0.25, 0.5, 1.0, 2.0, 5.0].map((amount) => (
+            {[0.25, 0.5, 1.0, 2.0, 5.0, 10.0].map((amount) => (
               <TouchableOpacity
                 key={amount}
-                style={styles.presetChip}
+                style={[
+                  styles.presetChip,
+                  parseFloat(defaultFee) === amount && styles.presetChipActive,
+                ]}
+                activeOpacity={0.7}
                 onPress={() => setDefaultFee(amount.toString())}
               >
-                <Text style={styles.presetText}>${amount.toFixed(2)}</Text>
+                <Text
+                  style={[
+                    styles.presetText,
+                    parseFloat(defaultFee) === amount &&
+                      styles.presetTextActive,
+                  ]}
+                >
+                  ${amount.toFixed(2)}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -112,47 +149,73 @@ export default function SettingsScreen() {
         {/* Roast Intensity */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Roast Intensity</Text>
-          <Text style={styles.sectionDesc}>
-            How hard do you want to be roasted?
-          </Text>
-          {intensityOptions.map((option) => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.intensityOption,
-                state.settings.roastIntensity === option.key &&
-                  styles.intensityOptionActive,
-              ]}
-              onPress={() =>
-                dispatch({
-                  type: "UPDATE_SETTINGS",
-                  payload: { roastIntensity: option.key },
-                })
-              }
-            >
-              <Text style={styles.intensityEmoji}>{option.emoji}</Text>
-              <View style={styles.intensityInfo}>
-                <Text style={styles.intensityLabel}>{option.label}</Text>
-                <Text style={styles.intensityDesc}>{option.desc}</Text>
-              </View>
-              {state.settings.roastIntensity === option.key && (
-                <Text style={styles.checkmark}>✓</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+          <Text style={styles.sectionDesc}>How hard should we go?</Text>
+          {intensityOptions.map((option) => {
+            const isActive = state.settings.roastIntensity === option.key;
+            return (
+              <TouchableOpacity
+                key={option.key}
+                style={[
+                  styles.intensityOption,
+                  isActive && {
+                    borderColor: option.color,
+                    backgroundColor: option.bg,
+                  },
+                ]}
+                activeOpacity={0.7}
+                onPress={() =>
+                  dispatch({
+                    type: "UPDATE_SETTINGS",
+                    payload: { roastIntensity: option.key },
+                  })
+                }
+              >
+                <View
+                  style={[
+                    styles.intensityEmojiContainer,
+                    { backgroundColor: isActive ? option.bg : COLORS.bgElevated },
+                  ]}
+                >
+                  <Text style={styles.intensityEmoji}>{option.emoji}</Text>
+                </View>
+                <View style={styles.intensityInfo}>
+                  <Text style={styles.intensityLabel}>{option.label}</Text>
+                  <Text style={styles.intensityDesc}>{option.desc}</Text>
+                </View>
+                {isActive && (
+                  <View
+                    style={[
+                      styles.checkBadge,
+                      { backgroundColor: option.color },
+                    ]}
+                  >
+                    <Text style={styles.checkmark}>✓</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* About */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.aboutHeader}>
+            <Text style={styles.aboutPig}>🐷</Text>
+            <View>
+              <Text style={styles.aboutName}>PayPig</Text>
+              <Text style={styles.version}>v1.0.0</Text>
+            </View>
+          </View>
           <Text style={styles.aboutText}>
-            AppLock was built because you apparently can't be trusted with your
-            own phone. You're welcome.
+            Built because you can't be trusted with your own phone. You're
+            welcome.
           </Text>
-          <Text style={styles.version}>Version 1.0.0</Text>
-          <Text style={styles.tagline}>
-            "Because apparently you need an app to tell you to stop using apps"
-          </Text>
+          <View style={styles.taglineContainer}>
+            <Text style={styles.tagline}>
+              "An app that makes you pay for using apps, because that's
+              apparently what it takes"
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -165,104 +228,123 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   content: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 40,
   },
   title: {
-    ...FONTS.title,
-    fontSize: 32,
+    ...FONTS.heroTitle,
+    marginBottom: 4,
   },
   subtitle: {
     ...FONTS.body,
-    marginTop: 4,
-    marginBottom: 20,
+    color: COLORS.textMuted,
+    marginBottom: 24,
   },
   section: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 22,
+    padding: 22,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOW,
   },
   sectionTitle: {
     ...FONTS.subtitle,
     marginBottom: 4,
   },
   sectionDesc: {
-    ...FONTS.body,
-    fontSize: 13,
-    marginBottom: 16,
+    ...FONTS.caption,
+    marginBottom: 18,
   },
   feeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
   },
   feeInputContainer: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.cardLight,
-    borderRadius: 12,
+    backgroundColor: COLORS.bgInput,
+    borderRadius: 14,
     paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginRight: 12,
   },
   feeCurrency: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "800",
-    color: COLORS.warning,
+    color: COLORS.gold,
     marginRight: 4,
   },
   feeInput: {
     flex: 1,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "800",
-    color: COLORS.warning,
-    paddingVertical: 12,
+    color: COLORS.gold,
+    paddingVertical: 14,
   },
   saveButton: {
-    backgroundColor: COLORS.accent,
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  saveButtonInner: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 14,
   },
   saveButtonText: {
     color: COLORS.text,
-    fontWeight: "700",
+    fontWeight: "800",
+    fontSize: 15,
   },
   presets: {
     flexDirection: "row",
     flexWrap: "wrap",
+    marginTop: 14,
     gap: 8,
-    marginTop: 12,
   },
   presetChip: {
-    backgroundColor: COLORS.cardLight,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    backgroundColor: COLORS.bgElevated,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  presetChipActive: {
+    borderColor: COLORS.gold,
+    backgroundColor: COLORS.goldSoft,
+  },
   presetText: {
-    color: COLORS.textSecondary,
-    fontWeight: "600",
+    color: COLORS.textMuted,
+    fontWeight: "700",
     fontSize: 13,
+  },
+  presetTextActive: {
+    color: COLORS.gold,
   },
   intensityOption: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.cardLight,
-    borderRadius: 12,
+    backgroundColor: COLORS.bgElevated,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "transparent",
+    borderColor: COLORS.border,
   },
-  intensityOptionActive: {
-    borderColor: COLORS.accent,
+  intensityEmojiContainer: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
   },
   intensityEmoji: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: 22,
   },
   intensityInfo: {
     flex: 1,
@@ -273,28 +355,54 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   intensityDesc: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    ...FONTS.caption,
     marginTop: 2,
   },
+  checkBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   checkmark: {
-    color: COLORS.accent,
-    fontSize: 20,
+    color: COLORS.text,
+    fontSize: 14,
     fontWeight: "800",
+  },
+  aboutHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  aboutPig: {
+    fontSize: 38,
+    marginRight: 14,
+  },
+  aboutName: {
+    ...FONTS.title,
+    fontSize: 22,
+  },
+  version: {
+    ...FONTS.caption,
+    marginTop: 2,
   },
   aboutText: {
     ...FONTS.body,
-    lineHeight: 22,
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  version: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginBottom: 8,
+  taglineContainer: {
+    backgroundColor: COLORS.bgElevated,
+    borderRadius: 14,
+    padding: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.pink,
   },
   tagline: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    ...FONTS.body,
+    fontSize: 13,
     fontStyle: "italic",
+    color: COLORS.textMuted,
+    lineHeight: 20,
   },
 });

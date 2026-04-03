@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   Animated,
   ScrollView,
+  Dimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
 import {
@@ -15,7 +17,9 @@ import {
   getPrePaymentTaunt,
   getPostUnlockShade,
 } from "../data/roastMessages";
-import { COLORS, FONTS } from "../utils/theme";
+import { COLORS, FONTS, SHADOW, SHADOW_PINK, GRADIENTS } from "../utils/theme";
+
+const { width } = Dimensions.get("window");
 
 export default function UnlockScreen({ route, navigation }) {
   const { appId } = route.params;
@@ -23,7 +27,7 @@ export default function UnlockScreen({ route, navigation }) {
   const lockInfo = state.lockedApps[appId];
   const appInfo = POPULAR_APPS.find((a) => a.id === appId);
 
-  const [phase, setPhase] = useState("roast"); // 'roast' | 'confirm' | 'unlocked'
+  const [phase, setPhase] = useState("roast");
   const [roasts, setRoasts] = useState([]);
   const [currentRoastIndex, setCurrentRoastIndex] = useState(0);
   const [preTaunt, setPreTaunt] = useState("");
@@ -31,11 +35,13 @@ export default function UnlockScreen({ route, navigation }) {
   const [showingRoast, setShowingRoast] = useState(true);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const buttonFadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!lockInfo?.lockedAt) {
-      // Already unlocked, show relock option
       setPhase("unlocked");
       setPostShade(getPostUnlockShade());
       return;
@@ -47,54 +53,84 @@ export default function UnlockScreen({ route, navigation }) {
     setRoasts(messages);
     setPreTaunt(getPrePaymentTaunt());
 
-    // Fade in first roast
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
-  // Cycle through roasts
   useEffect(() => {
     if (phase !== "roast" || roasts.length === 0) return;
 
     const timer = setInterval(() => {
       setCurrentRoastIndex((prev) => {
         if (prev < roasts.length - 1) {
-          // Fade transition
           Animated.sequence([
-            Animated.timing(fadeAnim, {
-              toValue: 0,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 500,
-              useNativeDriver: true,
-            }),
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+              }),
+              Animated.timing(slideAnim, {
+                toValue: -20,
+                duration: 200,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+              Animated.spring(slideAnim, {
+                toValue: 0,
+                tension: 50,
+                friction: 8,
+                useNativeDriver: true,
+              }),
+            ]),
           ]).start();
           return prev + 1;
         }
         setShowingRoast(false);
+        // Animate buttons in
+        Animated.spring(buttonFadeAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 10,
+          useNativeDriver: true,
+        }).start();
         clearInterval(timer);
         return prev;
       });
-    }, 3000);
+    }, 2500);
 
     return () => clearInterval(timer);
   }, [phase, roasts]);
 
   const handlePayToUnlock = () => {
-    // Shake the fee amount for dramatic effect
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 12, duration: 40, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -12, duration: 40, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 40, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 40, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
     ]).start();
-
     setPhase("confirm");
   };
 
@@ -119,6 +155,7 @@ export default function UnlockScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Close Button */}
       <TouchableOpacity
         style={styles.closeButton}
         onPress={() => navigation.goBack()}
@@ -130,80 +167,129 @@ export default function UnlockScreen({ route, navigation }) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* App Info */}
-        <Text style={styles.appIcon}>{appInfo.icon}</Text>
+        {/* App Icon */}
+        <View style={styles.appIconContainer}>
+          <View style={styles.appIconRing}>
+            <Text style={styles.appIcon}>{appInfo.icon}</Text>
+          </View>
+        </View>
         <Text style={styles.appName}>{appInfo.name}</Text>
 
+        {/* ROAST PHASE */}
         {phase === "roast" && (
           <View style={styles.roastSection}>
-            <Animated.Text style={[styles.roastText, { opacity: fadeAnim }]}>
-              {roasts[currentRoastIndex] || "..."}
-            </Animated.Text>
+            <Animated.View
+              style={{
+                opacity: fadeAnim,
+                transform: [
+                  { translateY: slideAnim },
+                  { scale: scaleAnim },
+                ],
+              }}
+            >
+              <Text style={styles.roastText}>
+                {roasts[currentRoastIndex] || "..."}
+              </Text>
+            </Animated.View>
 
             {!showingRoast && (
-              <View style={styles.unlockSection}>
+              <Animated.View
+                style={[
+                  styles.unlockSection,
+                  { opacity: buttonFadeAnim },
+                ]}
+              >
                 <Text style={styles.preTaunt}>{preTaunt}</Text>
 
                 <Animated.View
                   style={[
-                    styles.feeDisplay,
+                    styles.feeCard,
                     { transform: [{ translateX: shakeAnim }] },
                   ]}
                 >
-                  <Text style={styles.feeLabel}>Unlock Fee</Text>
-                  <Text style={styles.feeAmount}>
-                    ${lockInfo.unlockFee?.toFixed(2)}
-                  </Text>
-                  <Text style={styles.feeSubtext}>
-                    (You chose this amount. Remember that? When you had hope?)
-                  </Text>
+                  <LinearGradient
+                    colors={[COLORS.bgCard, COLORS.bgElevated]}
+                    style={styles.feeCardInner}
+                  >
+                    <Text style={styles.feeLabel}>UNLOCK FEE</Text>
+                    <Text style={styles.feeAmount}>
+                      ${lockInfo.unlockFee?.toFixed(2)}
+                    </Text>
+                    <Text style={styles.feeSubtext}>
+                      You set this price. When you had hope.
+                    </Text>
+                  </LinearGradient>
                 </Animated.View>
 
                 <TouchableOpacity
                   style={styles.payButton}
+                  activeOpacity={0.8}
                   onPress={handlePayToUnlock}
                 >
-                  <Text style={styles.payButtonText}>
-                    Fine, Take My Money 💸
-                  </Text>
+                  <LinearGradient
+                    colors={GRADIENTS.pink}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.payButtonInner}
+                  >
+                    <Text style={styles.payButtonText}>
+                      Fine, Take My Money
+                    </Text>
+                  </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.resistButton}
+                  activeOpacity={0.7}
                   onPress={() => navigation.goBack()}
                 >
                   <Text style={styles.resistButtonText}>
                     Actually, I Have Self Control
                   </Text>
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
             )}
           </View>
         )}
 
+        {/* CONFIRM PHASE */}
         {phase === "confirm" && (
           <View style={styles.confirmSection}>
-            <Text style={styles.confirmTitle}>Are you sure?</Text>
+            <View style={styles.confirmBadge}>
+              <Text style={styles.confirmBadgeText}>REALLY?</Text>
+            </View>
             <Text style={styles.confirmText}>
-              You're about to pay ${lockInfo.unlockFee?.toFixed(2)} because you
-              can't go without {appInfo.name}.
+              You're about to pay{" "}
+              <Text style={{ color: COLORS.gold, fontWeight: "900" }}>
+                ${lockInfo.unlockFee?.toFixed(2)}
+              </Text>{" "}
+              because you can't go without {appInfo.name}.
             </Text>
             <Text style={styles.confirmSubtext}>
-              That's ${lockInfo.unlockFee?.toFixed(2)} you'll never get back.
-              For what? Memes? Reels? Validation from strangers?
+              That money's gone forever. For memes. For reels.{"\n"}For
+              validation from strangers.
             </Text>
 
             <TouchableOpacity
               style={styles.confirmButton}
+              activeOpacity={0.8}
               onPress={handleConfirmUnlock}
             >
-              <Text style={styles.confirmButtonText}>
-                I Accept My Weakness 😔
-              </Text>
+              <LinearGradient
+                colors={GRADIENTS.pink}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.confirmButtonInner}
+              >
+                <Text style={styles.confirmButtonText}>
+                  I Accept My Weakness
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.neverMindButton}
+              activeOpacity={0.7}
               onPress={() => navigation.goBack()}
             >
               <Text style={styles.neverMindText}>
@@ -213,37 +299,57 @@ export default function UnlockScreen({ route, navigation }) {
           </View>
         )}
 
+        {/* UNLOCKED PHASE */}
         {phase === "unlocked" && (
           <View style={styles.unlockedSection}>
-            <Text style={styles.unlockedIcon}>🔓</Text>
-            <Text style={styles.unlockedTitle}>Unlocked</Text>
+            <View style={styles.unlockedBadge}>
+              <Text style={styles.unlockedBadgeEmoji}>🐽</Text>
+              <Text style={styles.unlockedBadgeText}>OINK OINK</Text>
+            </View>
             <Text style={styles.postShade}>{postShade}</Text>
 
-            <View style={styles.shameStats}>
-              <Text style={styles.shameTitle}>Your Shame Stats</Text>
-              <Text style={styles.shameStat}>
-                Total spent: ${state.totalSpent.toFixed(2)}
-              </Text>
-              <Text style={styles.shameStat}>
-                Times you've caved: {state.totalUnlocks}
-              </Text>
-              <Text style={styles.shameStat}>
-                Today's unlocks for this app:{" "}
-                {lockInfo.unlockCountToday || 0}
-              </Text>
+            <View style={styles.shameCard}>
+              <Text style={styles.shameCardTitle}>YOUR SHAME RECEIPT</Text>
+              <View style={styles.shameRow}>
+                <Text style={styles.shameLabel}>Total spent</Text>
+                <Text style={styles.shameValue}>
+                  ${state.totalSpent.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.shameDivider} />
+              <View style={styles.shameRow}>
+                <Text style={styles.shameLabel}>Times caved</Text>
+                <Text style={styles.shameValue}>{state.totalUnlocks}</Text>
+              </View>
+              <View style={styles.shameDivider} />
+              <View style={styles.shameRow}>
+                <Text style={styles.shameLabel}>Today ({appInfo.name})</Text>
+                <Text style={styles.shameValue}>
+                  {lockInfo.unlockCountToday || 0}x
+                </Text>
+              </View>
             </View>
 
             <TouchableOpacity
               style={styles.relockButton}
+              activeOpacity={0.8}
               onPress={handleRelock}
             >
-              <Text style={styles.relockButtonText}>
-                Lock It Again (Try Harder This Time)
-              </Text>
+              <LinearGradient
+                colors={GRADIENTS.pink}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.relockButtonInner}
+              >
+                <Text style={styles.relockButtonText}>
+                  Lock It Again (Try Harder)
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.goBackButton}
+              activeOpacity={0.7}
               onPress={() => navigation.goBack()}
             >
               <Text style={styles.goBackText}>Go Wallow in Shame</Text>
@@ -265,31 +371,47 @@ const styles = StyleSheet.create({
     top: 60,
     right: 20,
     zIndex: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.card,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: COLORS.bgCard,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   closeText: {
-    color: COLORS.textSecondary,
-    fontSize: 18,
+    color: COLORS.textMuted,
+    fontSize: 16,
+    fontWeight: "400",
   },
   content: {
-    flex: 1,
     alignItems: "center",
-    paddingTop: 80,
-    paddingHorizontal: 30,
-    paddingBottom: 40,
+    paddingTop: 90,
+    paddingHorizontal: 28,
+    paddingBottom: 50,
+    minHeight: "100%",
+  },
+  appIconContainer: {
+    marginBottom: 16,
+  },
+  appIconRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+    ...SHADOW,
   },
   appIcon: {
-    fontSize: 64,
-    marginBottom: 12,
+    fontSize: 40,
   },
   appName: {
     ...FONTS.title,
-    marginBottom: 30,
+    marginBottom: 28,
   },
   errorText: {
     ...FONTS.body,
@@ -297,7 +419,7 @@ const styles = StyleSheet.create({
     marginTop: 100,
   },
 
-  // Roast Phase
+  // Roast
   roastSection: {
     alignItems: "center",
     width: "100%",
@@ -305,9 +427,9 @@ const styles = StyleSheet.create({
   roastText: {
     ...FONTS.roast,
     textAlign: "center",
-    lineHeight: 30,
-    marginBottom: 30,
-    minHeight: 70,
+    marginBottom: 32,
+    minHeight: 80,
+    paddingHorizontal: 8,
   },
   unlockSection: {
     alignItems: "center",
@@ -318,161 +440,203 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontStyle: "italic",
     marginBottom: 24,
-    fontSize: 16,
+    fontSize: 15,
+    color: COLORS.textMuted,
   },
-  feeDisplay: {
-    backgroundColor: COLORS.card,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: "center",
+  feeCard: {
     width: "100%",
+    borderRadius: 22,
+    overflow: "hidden",
     marginBottom: 24,
-    borderWidth: 2,
-    borderColor: COLORS.warning,
+    borderWidth: 1,
+    borderColor: COLORS.goldSoft,
+    ...SHADOW,
+  },
+  feeCardInner: {
+    padding: 28,
+    alignItems: "center",
+    borderRadius: 22,
   },
   feeLabel: {
+    ...FONTS.label,
     color: COLORS.textMuted,
-    fontSize: 14,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   feeAmount: {
     ...FONTS.fee,
   },
   feeSubtext: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    ...FONTS.caption,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 10,
     fontStyle: "italic",
   },
   payButton: {
-    backgroundColor: COLORS.accent,
-    borderRadius: 16,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
     width: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 14,
+    ...SHADOW_PINK,
+  },
+  payButtonInner: {
+    paddingVertical: 18,
     alignItems: "center",
-    marginBottom: 12,
+    borderRadius: 16,
   },
   payButtonText: {
     color: COLORS.text,
     fontWeight: "800",
     fontSize: 17,
+    letterSpacing: 0.3,
   },
   resistButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
   },
   resistButtonText: {
-    color: COLORS.success,
-    fontWeight: "600",
+    color: COLORS.mint,
+    fontWeight: "700",
     fontSize: 15,
   },
 
-  // Confirm Phase
+  // Confirm
   confirmSection: {
     alignItems: "center",
     width: "100%",
   },
-  confirmTitle: {
-    ...FONTS.title,
-    color: COLORS.accent,
-    marginBottom: 16,
+  confirmBadge: {
+    backgroundColor: COLORS.pinkSoft,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginBottom: 20,
+  },
+  confirmBadgeText: {
+    ...FONTS.label,
+    color: COLORS.pink,
+    fontSize: 13,
   },
   confirmText: {
     ...FONTS.body,
     textAlign: "center",
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 17,
+    lineHeight: 26,
+    color: COLORS.textSecondary,
     marginBottom: 12,
   },
   confirmSubtext: {
+    ...FONTS.body,
     color: COLORS.textMuted,
     textAlign: "center",
     fontSize: 14,
-    lineHeight: 22,
     fontStyle: "italic",
     marginBottom: 32,
   },
   confirmButton: {
-    backgroundColor: COLORS.accent,
-    borderRadius: 16,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
     width: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 14,
+    ...SHADOW_PINK,
+  },
+  confirmButtonInner: {
+    paddingVertical: 18,
     alignItems: "center",
-    marginBottom: 12,
+    borderRadius: 16,
   },
   confirmButtonText: {
     color: COLORS.text,
     fontWeight: "800",
     fontSize: 17,
+    letterSpacing: 0.3,
   },
   neverMindButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
   },
   neverMindText: {
-    color: COLORS.success,
-    fontWeight: "600",
+    color: COLORS.mint,
+    fontWeight: "700",
     fontSize: 15,
   },
 
-  // Unlocked Phase
+  // Unlocked
   unlockedSection: {
     alignItems: "center",
     width: "100%",
   },
-  unlockedIcon: {
-    fontSize: 48,
-    marginBottom: 12,
+  unlockedBadge: {
+    alignItems: "center",
+    marginBottom: 20,
   },
-  unlockedTitle: {
-    ...FONTS.title,
-    color: COLORS.success,
-    marginBottom: 12,
+  unlockedBadgeEmoji: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  unlockedBadgeText: {
+    ...FONTS.label,
+    color: COLORS.pink,
+    fontSize: 16,
+    letterSpacing: 4,
   },
   postShade: {
     ...FONTS.roast,
     textAlign: "center",
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 30,
+    fontSize: 17,
+    lineHeight: 26,
+    marginBottom: 28,
   },
-  shameStats: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 20,
+  shameCard: {
     width: "100%",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 20,
+    padding: 22,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  shameTitle: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 12,
+  shameCardTitle: {
+    ...FONTS.label,
+    marginBottom: 18,
   },
-  shameStat: {
+  shameRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  shameLabel: {
     ...FONTS.body,
     fontSize: 14,
-    marginBottom: 6,
+  },
+  shameValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: COLORS.text,
+  },
+  shameDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: 12,
   },
   relockButton: {
-    backgroundColor: COLORS.accent,
-    borderRadius: 16,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
     width: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 14,
+    ...SHADOW_PINK,
+  },
+  relockButtonInner: {
+    paddingVertical: 18,
     alignItems: "center",
-    marginBottom: 12,
+    borderRadius: 16,
   },
   relockButtonText: {
     color: COLORS.text,
     fontWeight: "800",
-    fontSize: 15,
+    fontSize: 16,
+    letterSpacing: 0.3,
   },
   goBackButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
   },
   goBackText: {
     color: COLORS.textMuted,

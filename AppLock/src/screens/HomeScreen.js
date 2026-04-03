@@ -6,10 +6,14 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
+  Dimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
-import { COLORS, FONTS } from "../utils/theme";
+import { COLORS, FONTS, SHADOW, SHADOW_PINK, GRADIENTS } from "../utils/theme";
+
+const { width } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }) {
   const { state } = useAppLock();
@@ -30,41 +34,60 @@ export default function HomeScreen({ navigation }) {
     if (!app?.lockedAt) return "";
     const mins = Math.floor((Date.now() - app.lockedAt) / 60000);
     if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 60) return `${mins}m`;
     const hours = Math.floor(mins / 60);
-    return `${hours}h ${mins % 60}m ago`;
+    if (hours < 24) return `${hours}h ${mins % 60}m`;
+    return `${Math.floor(hours / 24)}d`;
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>🔒 AppLock</Text>
-        <Text style={styles.subtitle}>Your self-control assistant (LOL)</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.pigEmoji}>🐷</Text>
+          <View>
+            <Text style={styles.title}>PayPig</Text>
+            <Text style={styles.subtitle}>Pay for your weakness</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Stats Bar */}
-      <View style={styles.statsBar}>
-        <View style={styles.statItem}>
+      {/* Stats Strip */}
+      <View style={styles.statsStrip}>
+        <View style={styles.statPill}>
+          <LinearGradient
+            colors={[COLORS.pinkSoft, "transparent"]}
+            style={styles.statPillBg}
+          />
           <Text style={styles.statValue}>{lockedApps.length}</Text>
-          <Text style={styles.statLabel}>Locked</Text>
+          <Text style={styles.statLabel}>LOCKED</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
+        <View style={styles.statPill}>
+          <LinearGradient
+            colors={[COLORS.purpleSoft, "transparent"]}
+            style={styles.statPillBg}
+          />
           <Text style={styles.statValue}>{state.totalUnlocks}</Text>
-          <Text style={styles.statLabel}>Failures</Text>
+          <Text style={styles.statLabel}>CAVED</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: COLORS.warning }]}>
+        <View style={styles.statPill}>
+          <LinearGradient
+            colors={[COLORS.goldSoft, "transparent"]}
+            style={styles.statPillBg}
+          />
+          <Text style={[styles.statValue, { color: COLORS.gold }]}>
             ${state.totalSpent.toFixed(2)}
           </Text>
-          <Text style={styles.statLabel}>Wasted</Text>
+          <Text style={styles.statLabel}>WASTED</Text>
         </View>
       </View>
 
       {lockedApps.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🤳</Text>
+          <View style={styles.emptyIconContainer}>
+            <Text style={styles.emptyIcon}>🐽</Text>
+          </View>
           <Text style={styles.emptyTitle}>No apps locked yet</Text>
           <Text style={styles.emptyText}>
             Go ahead, pretend you don't need this.{"\n"}We both know you'll be
@@ -72,9 +95,17 @@ export default function HomeScreen({ navigation }) {
           </Text>
           <TouchableOpacity
             style={styles.addButton}
+            activeOpacity={0.8}
             onPress={() => navigation.navigate("AddApps")}
           >
-            <Text style={styles.addButtonText}>Lock Some Apps</Text>
+            <LinearGradient
+              colors={GRADIENTS.pink}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.addButtonGradient}
+            >
+              <Text style={styles.addButtonText}>Lock Some Apps</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       ) : (
@@ -82,43 +113,66 @@ export default function HomeScreen({ navigation }) {
           data={lockedApps}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             const status = getAppStatus(item.id);
             const lockInfo = state.lockedApps[item.id];
+            const isLocked = status === "locked";
             return (
               <TouchableOpacity
-                style={[
-                  styles.appCard,
-                  status === "unlocked" && styles.appCardUnlocked,
-                ]}
+                style={[styles.appCard, !isLocked && styles.appCardUnlocked]}
+                activeOpacity={0.7}
                 onPress={() =>
                   navigation.navigate("Unlock", { appId: item.id })
                 }
               >
-                <Text style={styles.appIcon}>{item.icon}</Text>
+                {/* Accent bar */}
+                <View
+                  style={[
+                    styles.accentBar,
+                    { backgroundColor: isLocked ? COLORS.pink : COLORS.mint },
+                  ]}
+                />
+                <View style={styles.appIconContainer}>
+                  <Text style={styles.appIcon}>{item.icon}</Text>
+                </View>
                 <View style={styles.appInfo}>
                   <Text style={styles.appName}>{item.name}</Text>
-                  <Text style={styles.appStatus}>
-                    {status === "locked"
-                      ? `🔒 Locked ${getTimeSinceLock(item.id)}`
-                      : "🔓 Temporarily unlocked"}
-                  </Text>
+                  <View style={styles.statusRow}>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor: isLocked
+                            ? COLORS.pink
+                            : COLORS.mint,
+                        },
+                      ]}
+                    />
+                    <Text style={styles.appStatus}>
+                      {isLocked
+                        ? `Locked ${getTimeSinceLock(item.id)}`
+                        : "Unlocked"}
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.feeContainer}>
-                  <Text style={styles.feeLabel}>Fee</Text>
                   <Text style={styles.feeValue}>
                     ${lockInfo?.unlockFee?.toFixed(2)}
                   </Text>
                 </View>
+                <Text style={styles.chevron}>›</Text>
               </TouchableOpacity>
             );
           }}
           ListFooterComponent={
             <TouchableOpacity
               style={styles.addMoreButton}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate("AddApps")}
             >
-              <Text style={styles.addMoreText}>+ Lock More Apps</Text>
+              <Text style={styles.addMorePlus}>+</Text>
+              <Text style={styles.addMoreText}>Lock More Apps</Text>
             </TouchableOpacity>
           }
         />
@@ -133,136 +187,212 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  title: {
-    ...FONTS.title,
-    fontSize: 32,
-  },
-  subtitle: {
-    ...FONTS.body,
-    marginTop: 4,
-  },
-  statsBar: {
+  titleRow: {
     flexDirection: "row",
-    backgroundColor: COLORS.card,
-    marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  statItem: {
-    flex: 1,
     alignItems: "center",
   },
+  pigEmoji: {
+    fontSize: 38,
+    marginRight: 14,
+  },
+  title: {
+    ...FONTS.heroTitle,
+  },
+  subtitle: {
+    ...FONTS.caption,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  statsStrip: {
+    flexDirection: "row",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  statPill: {
+    flex: 1,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  statPillBg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+  },
   statValue: {
-    fontSize: 24,
-    fontWeight: "800",
+    fontSize: 22,
+    fontWeight: "900",
     color: COLORS.text,
+    letterSpacing: -0.5,
   },
   statLabel: {
-    ...FONTS.body,
-    fontSize: 12,
+    ...FONTS.label,
+    fontSize: 9,
     marginTop: 4,
   },
-  statDivider: {
-    width: 1,
-    backgroundColor: COLORS.border,
-  },
   list: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: 4,
+    paddingBottom: 20,
   },
   appCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.accent,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: "hidden",
+    ...SHADOW,
   },
   appCardUnlocked: {
-    borderLeftColor: COLORS.success,
-    opacity: 0.7,
+    opacity: 0.55,
+  },
+  accentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
+  },
+  appIconContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: COLORS.bgElevated,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
   appIcon: {
-    fontSize: 32,
-    marginRight: 12,
+    fontSize: 24,
   },
   appInfo: {
     flex: 1,
   },
   appName: {
-    ...FONTS.subtitle,
     fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.text,
+    letterSpacing: -0.2,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
   appStatus: {
-    ...FONTS.body,
     fontSize: 12,
-    marginTop: 2,
-  },
-  feeContainer: {
-    alignItems: "center",
-    backgroundColor: COLORS.cardLight,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  feeLabel: {
-    fontSize: 10,
+    fontWeight: "500",
     color: COLORS.textMuted,
   },
+  feeContainer: {
+    backgroundColor: COLORS.goldSoft,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
   feeValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "800",
-    color: COLORS.warning,
+    color: COLORS.gold,
+    letterSpacing: -0.3,
+  },
+  chevron: {
+    fontSize: 22,
+    fontWeight: "300",
+    color: COLORS.textDim,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: 48,
+  },
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: COLORS.pinkSoft,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
   },
   emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
+    fontSize: 48,
   },
   emptyTitle: {
-    ...FONTS.subtitle,
+    ...FONTS.title,
     fontSize: 22,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   emptyText: {
     ...FONTS.body,
     textAlign: "center",
-    lineHeight: 22,
+    color: COLORS.textMuted,
   },
   addButton: {
-    backgroundColor: COLORS.accent,
-    borderRadius: 12,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    marginTop: 24,
+    marginTop: 28,
+    borderRadius: 16,
+    overflow: "hidden",
+    ...SHADOW_PINK,
+  },
+  addButtonGradient: {
+    paddingHorizontal: 36,
+    paddingVertical: 16,
+    borderRadius: 16,
   },
   addButtonText: {
     color: COLORS.text,
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 16,
+    letterSpacing: 0.3,
   },
   addMoreButton: {
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    borderStyle: "dashed",
-    borderRadius: 16,
-    padding: 16,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    borderStyle: "dashed",
+    borderRadius: 18,
+    padding: 18,
+    marginTop: 2,
+    marginBottom: 10,
+  },
+  addMorePlus: {
+    fontSize: 20,
+    fontWeight: "300",
+    color: COLORS.textMuted,
+    marginRight: 8,
   },
   addMoreText: {
     color: COLORS.textMuted,
     fontWeight: "600",
-    fontSize: 15,
+    fontSize: 14,
   },
 });

@@ -9,10 +9,27 @@ import AddAppsScreen from "./src/screens/AddAppsScreen";
 import UnlockScreen from "./src/screens/UnlockScreen";
 import StatsScreen from "./src/screens/StatsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
-import { Text } from "react-native";
+import { View, Text } from "react-native";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+function TabIcon({ emoji, focused }) {
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        width: 44,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: focused ? "rgba(255, 45, 120, 0.15)" : "transparent",
+      }}
+    >
+      <Text style={{ fontSize: 20 }}>{emoji}</Text>
+    </View>
+  );
+}
 
 function HomeTabs() {
   return (
@@ -20,18 +37,20 @@ function HomeTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#1A1A2E",
-          borderTopColor: "#2D2D4A",
+          backgroundColor: "#0E0E1A",
+          borderTopColor: "#1A1A2E",
           borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 65,
+          paddingBottom: 6,
+          paddingTop: 6,
+          height: 70,
         },
-        tabBarActiveTintColor: "#E94560",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarActiveTintColor: "#FF2D78",
+        tabBarInactiveTintColor: "#5E5E72",
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
+          fontSize: 10,
+          fontWeight: "700",
+          letterSpacing: 0.5,
+          marginTop: 2,
         },
       }}
     >
@@ -39,15 +58,19 @@ function HomeTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🔒</Text>,
-          tabBarLabel: "Locked",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="🐷" focused={focused} />
+          ),
+          tabBarLabel: "Apps",
         }}
       />
       <Tab.Screen
         name="Stats"
         component={StatsScreen}
         options={{
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>📊</Text>,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="💀" focused={focused} />
+          ),
           tabBarLabel: "Shame",
         }}
       />
@@ -55,7 +78,9 @@ function HomeTabs() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>⚙️</Text>,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="⚙️" focused={focused} />
+          ),
           tabBarLabel: "Settings",
         }}
       />

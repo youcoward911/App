@@ -8,9 +8,10 @@ import {
   SafeAreaView,
   TextInput,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS, CATEGORIES } from "../data/defaultApps";
-import { COLORS, FONTS } from "../utils/theme";
+import { COLORS, FONTS, SHADOW, GRADIENTS } from "../utils/theme";
 
 export default function AddAppsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -38,33 +39,45 @@ export default function AddAppsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Back</Text>
-        </TouchableOpacity>
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backArrow}>‹</Text>
+          </TouchableOpacity>
+          <View style={styles.headerPill}>
+            <Text style={styles.headerPillText}>
+              {Object.keys(state.lockedApps).length} locked
+            </Text>
+          </View>
+        </View>
         <Text style={styles.title}>Choose Your Poison</Text>
         <Text style={styles.subtitle}>
-          Pick the apps you can't stop using. No judgment. (Okay, lots of
-          judgment.)
+          Pick the apps you can't stop using. We won't judge.{"\n"}
+          (Okay, we absolutely will.)
         </Text>
       </View>
 
       {/* Fee Setting */}
       <View style={styles.feeSection}>
-        <Text style={styles.feeLabel}>Unlock fee for new apps:</Text>
-        <View style={styles.feeInputContainer}>
-          <Text style={styles.feeCurrency}>$</Text>
-          <TextInput
-            style={styles.feeInput}
-            value={customFee}
-            onChangeText={setCustomFee}
-            keyboardType="decimal-pad"
-            placeholder="0.50"
-            placeholderTextColor={COLORS.textMuted}
-          />
+        <View style={styles.feeRow}>
+          <View style={styles.feeLabelRow}>
+            <Text style={styles.feeLabel}>Unlock fee</Text>
+            <Text style={styles.feeHint}>per weakness</Text>
+          </View>
+          <View style={styles.feeInputContainer}>
+            <Text style={styles.feeCurrency}>$</Text>
+            <TextInput
+              style={styles.feeInput}
+              value={customFee}
+              onChangeText={setCustomFee}
+              keyboardType="decimal-pad"
+              placeholder="0.50"
+              placeholderTextColor={COLORS.textDim}
+            />
+          </View>
         </View>
-        <Text style={styles.feeHint}>
-          Make it hurt just enough to think twice 😈
-        </Text>
       </View>
 
       {/* Category Filter */}
@@ -74,22 +87,30 @@ export default function AddAppsScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           data={CATEGORIES}
           keyExtractor={(item) => item}
+          contentContainerStyle={{ paddingHorizontal: 24 }}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
                 styles.categoryChip,
                 selectedCategory === item && styles.categoryChipActive,
               ]}
+              activeOpacity={0.7}
               onPress={() => setSelectedCategory(item)}
             >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedCategory === item && styles.categoryTextActive,
-                ]}
-              >
-                {item}
-              </Text>
+              {selectedCategory === item ? (
+                <LinearGradient
+                  colors={GRADIENTS.pink}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.categoryChipGradient}
+                >
+                  <Text style={[styles.categoryText, styles.categoryTextActive]}>
+                    {item}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <Text style={styles.categoryText}>{item}</Text>
+              )}
             </TouchableOpacity>
           )}
         />
@@ -100,28 +121,36 @@ export default function AddAppsScreen({ navigation }) {
         data={filteredApps}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => {
           const locked = isLocked(item.id);
           return (
             <TouchableOpacity
               style={[styles.appRow, locked && styles.appRowLocked]}
+              activeOpacity={0.7}
               onPress={() => toggleApp(item.id)}
             >
-              <Text style={styles.appIcon}>{item.icon}</Text>
+              <View
+                style={[
+                  styles.appIconContainer,
+                  locked && styles.appIconContainerLocked,
+                ]}
+              >
+                <Text style={styles.appIcon}>{item.icon}</Text>
+              </View>
               <View style={styles.appInfo}>
                 <Text style={styles.appName}>{item.name}</Text>
                 <Text style={styles.appCategory}>{item.category}</Text>
               </View>
-              <View
-                style={[
-                  styles.lockToggle,
-                  locked && styles.lockToggleActive,
-                ]}
-              >
-                <Text style={styles.lockToggleText}>
-                  {locked ? "🔒 Locked" : "Lock"}
-                </Text>
-              </View>
+              {locked ? (
+                <View style={styles.lockToggleActive}>
+                  <Text style={styles.lockToggleTextActive}>Locked</Text>
+                </View>
+              ) : (
+                <View style={styles.lockToggle}>
+                  <Text style={styles.lockToggleText}>Lock</Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         }}
@@ -136,104 +165,165 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 24,
+    paddingBottom: 12,
   },
-  backButton: {
-    color: COLORS.accent,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: COLORS.bgCard,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  backArrow: {
+    color: COLORS.text,
+    fontSize: 22,
+    fontWeight: "300",
+    marginTop: -2,
+  },
+  headerPill: {
+    backgroundColor: COLORS.pinkSoft,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  headerPillText: {
+    color: COLORS.pink,
+    fontSize: 12,
+    fontWeight: "700",
   },
   title: {
     ...FONTS.title,
+    marginBottom: 6,
   },
   subtitle: {
     ...FONTS.body,
-    marginTop: 6,
+    color: COLORS.textMuted,
+    fontSize: 14,
     lineHeight: 20,
   },
   feeSection: {
-    backgroundColor: COLORS.card,
-    marginHorizontal: 20,
-    borderRadius: 16,
+    marginHorizontal: 24,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 18,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  feeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  feeLabelRow: {
+    flex: 1,
   },
   feeLabel: {
-    ...FONTS.body,
-    fontSize: 14,
-    marginBottom: 8,
+    ...FONTS.subtitle,
+    fontSize: 15,
+  },
+  feeHint: {
+    ...FONTS.caption,
+    fontSize: 11,
+    marginTop: 2,
   },
   feeInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.cardLight,
-    borderRadius: 12,
+    backgroundColor: COLORS.bgInput,
+    borderRadius: 14,
     paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minWidth: 110,
   },
   feeCurrency: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
-    color: COLORS.warning,
-    marginRight: 4,
+    color: COLORS.gold,
+    marginRight: 2,
   },
   feeInput: {
-    flex: 1,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
-    color: COLORS.warning,
-    paddingVertical: 12,
-  },
-  feeHint: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginTop: 8,
+    color: COLORS.gold,
+    minWidth: 60,
   },
   categories: {
-    paddingHorizontal: 20,
     marginBottom: 12,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.card,
     marginRight: 8,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: COLORS.bgCard,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   categoryChipActive: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
+    borderColor: COLORS.pink,
+    backgroundColor: "transparent",
+  },
+  categoryChipGradient: {
+    paddingHorizontal: 18,
+    paddingVertical: 9,
   },
   categoryText: {
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     fontWeight: "600",
     fontSize: 13,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
   },
   categoryTextActive: {
     color: COLORS.text,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   list: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   appRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
+    padding: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   appRowLocked: {
-    borderWidth: 1,
-    borderColor: COLORS.accent,
+    borderColor: COLORS.borderPink,
+    backgroundColor: "rgba(255, 45, 120, 0.04)",
+  },
+  appIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor: COLORS.bgElevated,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  appIconContainerLocked: {
+    backgroundColor: COLORS.pinkSoft,
   },
   appIcon: {
-    fontSize: 28,
-    marginRight: 12,
+    fontSize: 22,
   },
   appInfo: {
     flex: 1,
@@ -244,24 +334,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   appCategory: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    ...FONTS.caption,
     marginTop: 2,
   },
   lockToggle: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.cardLight,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 24,
+    backgroundColor: COLORS.bgElevated,
     borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  lockToggleActive: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
+    borderColor: COLORS.borderLight,
   },
   lockToggleText: {
-    color: COLORS.text,
+    color: COLORS.textSecondary,
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  lockToggleActive: {
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 24,
+    backgroundColor: COLORS.pinkSoft,
+    borderWidth: 1,
+    borderColor: COLORS.borderPink,
+  },
+  lockToggleTextActive: {
+    color: COLORS.pink,
     fontWeight: "700",
     fontSize: 13,
   },
