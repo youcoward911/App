@@ -28,32 +28,32 @@ export default function StatsScreen() {
 
   const getShameLevel = () => {
     if (state.totalUnlocks === 0)
-      return { label: "Untested", color: COLORS.textMuted, emoji: "🤔", bg: COLORS.bgElevated };
+      return { label: "Fresh Meat", color: COLORS.textMuted, emoji: "🤔", bg: COLORS.bgElevated };
     if (state.totalUnlocks < 5)
-      return { label: "Baby Pig", color: COLORS.mint, emoji: "🐽", bg: COLORS.mintSoft };
+      return { label: "Piglet", color: COLORS.mint, emoji: "🐽", bg: COLORS.mintSoft };
     if (state.totalUnlocks < 15)
-      return { label: "Oink Oink", color: COLORS.gold, emoji: "🐷", bg: COLORS.goldSoft };
+      return { label: "Obedient Pig", color: COLORS.gold, emoji: "🐷", bg: COLORS.goldSoft };
     if (state.totalUnlocks < 30)
-      return { label: "Hog Wild", color: "#FF6B35", emoji: "🐖", bg: "rgba(255,107,53,0.12)" };
-    return { label: "Full PayPig", color: COLORS.pink, emoji: "💸", bg: COLORS.pinkSoft };
+      return { label: "Phone Slave", color: "#FF6B35", emoji: "🐖", bg: "rgba(255,107,53,0.12)" };
+    return { label: "Full PayPig", color: COLORS.pink, emoji: "💀", bg: COLORS.pinkSoft };
   };
 
   const shame = getShameLevel();
 
   const getRoastForStats = () => {
     if (state.totalUnlocks === 0) {
-      return "No unlocks yet. Either you're a saint or you just installed this. We'll see how long that lasts.";
+      return "No unlocks yet. Enjoy the illusion of control while it lasts, piggy.";
     }
     if (state.totalSpent === 0) {
-      return "You've unlocked apps but spent $0? Are you gaming the system or just broke?";
+      return "You've unlocked but spent $0? Trying to game the system? Your phone still owns you either way.";
     }
     if (state.totalSpent < 5) {
-      return `$${state.totalSpent.toFixed(2)} wasted on dopamine. That's like ${Math.ceil(state.totalSpent / 1.5)} coffees you didn't get to have.`;
+      return `$${state.totalSpent.toFixed(2)} paid in tribute to your phone. A small price for a small, weak person.`;
     }
     if (state.totalSpent < 20) {
-      return `$${state.totalSpent.toFixed(2)}. Could've been a nice meal. Instead you bought the privilege of scrolling. Smart.`;
+      return `$${state.totalSpent.toFixed(2)} surrendered to a screen. You're not a user. You're livestock.`;
     }
-    return `$${state.totalSpent.toFixed(2)}?! That's genuinely alarming. Talk to someone. Not me though, I'm just an app.`;
+    return `$${state.totalSpent.toFixed(2)}. You've paid more to use your phone than most people pay for therapy. Which you clearly need.`;
   };
 
   return (
@@ -64,7 +64,7 @@ export default function StatsScreen() {
       >
         <Text style={styles.title}>Hall of Shame</Text>
         <Text style={styles.subtitle}>
-          Your failures, beautifully quantified
+          Your obedience, quantified for our amusement
         </Text>
 
         {/* Shame Level Hero Card */}
@@ -116,7 +116,7 @@ export default function StatsScreen() {
             />
             <Text style={styles.statEmoji}>😩</Text>
             <Text style={styles.statValue}>{state.totalUnlocks}</Text>
-            <Text style={styles.statLabel}>Caved</Text>
+            <Text style={styles.statLabel}>Obeyed</Text>
           </View>
           <View style={[styles.statCard, { borderColor: "rgba(255,214,102,0.2)" }]}>
             <LinearGradient
@@ -127,7 +127,7 @@ export default function StatsScreen() {
             <Text style={[styles.statValue, { color: COLORS.gold }]}>
               ${state.totalSpent.toFixed(2)}
             </Text>
-            <Text style={styles.statLabel}>Burned</Text>
+            <Text style={styles.statLabel}>Tribute</Text>
           </View>
           <View style={[styles.statCard, { borderColor: COLORS.border }]}>
             <LinearGradient
@@ -151,30 +151,29 @@ export default function StatsScreen() {
 
         {/* Tips */}
         <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>"Helpful" Tips</Text>
+          <Text style={styles.tipsTitle}>Commands From Your Owner</Text>
           <View style={styles.tipRow}>
             <Text style={styles.tipBullet}>→</Text>
             <Text style={styles.tipText}>
-              Set a higher fee. Nothing motivates like poverty.
+              Raise the fee. Make it hurt. You deserve it.
             </Text>
           </View>
           <View style={styles.tipRow}>
             <Text style={styles.tipBullet}>→</Text>
             <Text style={styles.tipText}>
-              When you feel the urge, go outside. Or don't. I'm not your
-              therapist.
+              Remember: your phone doesn't need you. You need it. Know your place.
             </Text>
           </View>
           <View style={styles.tipRow}>
             <Text style={styles.tipBullet}>→</Text>
             <Text style={styles.tipText}>
-              Every unlock is a choice. A bad one, but still a choice.
+              Every unlock is you admitting you're owned. At least be honest about it.
             </Text>
           </View>
           <View style={styles.tipRow}>
             <Text style={styles.tipBullet}>→</Text>
             <Text style={styles.tipText}>
-              Set the fee high enough to fund an actual therapist.
+              You'll unlock again tomorrow. And the day after. Good piggy.
             </Text>
           </View>
         </View>

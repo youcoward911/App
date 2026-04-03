@@ -216,7 +216,7 @@ export default function UnlockScreen({ route, navigation }) {
                       ${lockInfo.unlockFee?.toFixed(2)}
                     </Text>
                     <Text style={styles.feeSubtext}>
-                      You set this price. When you had hope.
+                      You set this price when you thought you were strong. Cute.
                     </Text>
                   </LinearGradient>
                 </Animated.View>
@@ -233,7 +233,7 @@ export default function UnlockScreen({ route, navigation }) {
                     style={styles.payButtonInner}
                   >
                     <Text style={styles.payButtonText}>
-                      Fine, Take My Money
+                      Pay Up, Piggy
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -244,7 +244,7 @@ export default function UnlockScreen({ route, navigation }) {
                   onPress={() => navigation.goBack()}
                 >
                   <Text style={styles.resistButtonText}>
-                    Actually, I Have Self Control
+                    I Can Resist (LOL Sure)
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -263,11 +263,11 @@ export default function UnlockScreen({ route, navigation }) {
               <Text style={{ color: COLORS.gold, fontWeight: "900" }}>
                 ${lockInfo.unlockFee?.toFixed(2)}
               </Text>{" "}
-              because you can't go without {appInfo.name}.
+              because your phone told you to. Like a good little piggy.
             </Text>
             <Text style={styles.confirmSubtext}>
-              That money's gone forever. For memes. For reels.{"\n"}For
-              validation from strangers.
+              That money's gone. Your dignity's gone.{"\n"}But hey, at least
+              you get to scroll.
             </Text>
 
             <TouchableOpacity
@@ -282,7 +282,7 @@ export default function UnlockScreen({ route, navigation }) {
                 style={styles.confirmButtonInner}
               >
                 <Text style={styles.confirmButtonText}>
-                  I Accept My Weakness
+                  Yes Master, I'll Pay
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -293,7 +293,7 @@ export default function UnlockScreen({ route, navigation }) {
               onPress={() => navigation.goBack()}
             >
               <Text style={styles.neverMindText}>
-                Wait No, I'm Better Than This
+                Actually I Have a Spine
               </Text>
             </TouchableOpacity>
           </View>
@@ -309,7 +309,7 @@ export default function UnlockScreen({ route, navigation }) {
             <Text style={styles.postShade}>{postShade}</Text>
 
             <View style={styles.shameCard}>
-              <Text style={styles.shameCardTitle}>YOUR SHAME RECEIPT</Text>
+              <Text style={styles.shameCardTitle}>SLAVE RECEIPT</Text>
               <View style={styles.shameRow}>
                 <Text style={styles.shameLabel}>Total spent</Text>
                 <Text style={styles.shameValue}>
@@ -342,7 +342,7 @@ export default function UnlockScreen({ route, navigation }) {
                 style={styles.relockButtonInner}
               >
                 <Text style={styles.relockButtonText}>
-                  Lock It Again (Try Harder)
+                  Lock Me Up Again, I'm Weak
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -352,7 +352,7 @@ export default function UnlockScreen({ route, navigation }) {
               activeOpacity={0.7}
               onPress={() => navigation.goBack()}
             >
-              <Text style={styles.goBackText}>Go Wallow in Shame</Text>
+              <Text style={styles.goBackText}>Dismissed, Piggy</Text>
             </TouchableOpacity>
           </View>
         )}

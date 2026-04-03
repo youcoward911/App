@@ -1,15 +1,17 @@
-// Roast messages that escalate based on how quickly the user tries to unlock
-// and how many times they've unlocked today
+// Roast messages — condescending, degrading, dom energy
+// The user is a pathetic phone slave and PayPig knows it
 
 export const IMMEDIATE_ROASTS = [
-  "What's the matter? Need to scroll that bad? 😏",
-  "Awww does someone have no self control? 🥺",
-  "Oh wow, that lasted long. Real impressive.",
-  "Back already? That's genuinely sad.",
-  "You literally JUST locked this. Pathetic.",
-  "Couldn't even make it 5 minutes huh?",
-  "Your willpower is... inspiring. Said no one ever.",
-  "Wow. Just... wow. You're really doing this right now?",
+  "Oh look, the little addict is back.",
+  "Couldn't help yourself could you? Pathetic.",
+  "Aww, does the little piggy need their phone? 🐽",
+  "You're so predictable it's actually embarrassing.",
+  "There it is. That sad little urge you can't control.",
+  "God you're weak. Like, genuinely weak.",
+  "You really are a slave to this thing aren't you.",
+  "I knew you'd be back. You always come back.",
+  "Wow. Not even a fight. Just instant surrender.",
+  "Look at you. Crawling back like a good little piggy.",
 ];
 
 export const TIME_BASED_ROASTS = [
@@ -17,44 +19,45 @@ export const TIME_BASED_ROASTS = [
   {
     maxMinutes: 5,
     messages: [
-      "It's been like {minutes} minutes lmao 💀",
-      "Jesus Christ it's been like {minutes} minutes lmao",
-      "{minutes} minutes. That's all you lasted. Let that sink in.",
-      "Not even {minutes} minutes?? Are you serious right now?",
-      "Bro it hasn't even been {minutes} minutes 😭",
+      "{minutes} minutes. That's genuinely humiliating for you.",
+      "It's been {minutes} minutes lmao you absolute slave 💀",
+      "{minutes} minutes and you're already begging? Jesus.",
+      "Not even {minutes} minutes. You have zero control over yourself.",
+      "{minutes} minutes 😭 you couldn't last {minutes} minutes without your precious phone",
+      "Bro. {minutes} minutes. A toddler has more discipline than you.",
     ],
   },
   // 5-15 minutes
   {
     maxMinutes: 15,
     messages: [
-      "Okay {minutes} minutes isn't terrible... but it's not good either.",
-      "{minutes} whole minutes! Want a trophy? 🏆",
-      "I mean... {minutes} minutes is technically progress I guess?",
+      "{minutes} minutes. Wow, want a medal for bare minimum? 🏆",
+      "Oh cool {minutes} minutes. Still embarrassing but slightly less pathetic.",
+      "{minutes} minutes before crawling back. Your owner would be proud. Oh wait, that's your phone.",
     ],
   },
   // 15-30 minutes
   {
     maxMinutes: 30,
     messages: [
-      "{minutes} minutes. Not bad, not great. Mediocre, just like your self-control.",
-      "Look at you making it {minutes} minutes! Your parents would be so... okay with that.",
+      "{minutes} minutes and you still couldn't resist. You really are owned by a screen.",
+      "Made it {minutes} whole minutes before giving in like the obedient little addict you are.",
     ],
   },
   // 30-60 minutes
   {
     maxMinutes: 60,
     messages: [
-      "{minutes} minutes? Okay that's actually decent. But you're still here aren't you?",
-      "Made it {minutes} minutes and still crawled back. Classic you.",
+      "{minutes} minutes? Almost impressive. Almost. But here you are, wallet out, dignity gone.",
+      "Lasted {minutes} minutes and still ended up here. The phone always wins. You never do.",
     ],
   },
   // Over an hour
   {
     maxMinutes: Infinity,
     messages: [
-      "Okay {minutes} minutes is actually impressive. But the fact that you're unlocking now ruins it.",
-      "You lasted {minutes} minutes and you're STILL giving in? After all that effort?",
+      "{minutes} minutes of pretending you don't need it. But we both know who's in charge here. Hint: it's not you.",
+      "You lasted {minutes} minutes and you're STILL giving in? All that willpower for nothing. Classic.",
     ],
   },
 ];
@@ -64,50 +67,51 @@ export const REPEAT_OFFENDER_ROASTS = [
   {
     maxUnlocks: 3,
     messages: [
-      "This is unlock #{count} today btw. Just so you know.",
-      "Unlock #{count}. I'm not judging. Okay I'm definitely judging.",
-      "That's {count} times today. You're really speedrunning failure.",
+      "That's #{count} today. You know that right? You can count that high?",
+      "Unlock #{count}. The phone has you completely trained.",
+      "#{count} times today. Good piggy. Very obedient. 🐷",
     ],
   },
   // 4-6 times
   {
     maxUnlocks: 6,
     messages: [
-      "UNLOCK #{count} TODAY. Do you even hear yourself?",
-      "{count} unlocks today. At this point just delete me, clearly I'm not helping.",
-      "Babe. {count} times. Today alone. We need to talk.",
+      "UNLOCK #{count}. At this point you're not a user, you're a servant.",
+      "{count} unlocks. {count}. You are genuinely owned by this device.",
+      "{count} times today and still paying. This is just sad now. Like actually sad.",
     ],
   },
   // 7+ times
   {
     maxUnlocks: Infinity,
     messages: [
-      "#{count}. I've genuinely lost respect for you.",
-      "{count} TIMES TODAY. You are beyond help and I am beyond caring.",
-      "Unlock #{count}. I'm not even roasting you anymore this is just sad.",
-      "At {count} unlocks you should probably just uninstall me. We both know this isn't working.",
+      "#{count}. I don't even have words anymore. Just oinks. 🐽",
+      "{count} TIMES TODAY. You should be ashamed. Like deeply, profoundly ashamed.",
+      "#{count}. At this point you're not even a PayPig. You're just a pig.",
+      "{count} unlocks. You are completely, utterly, hopelessly owned by your phone. And you'll pay again tomorrow.",
     ],
   },
 ];
 
 export const PRE_PAYMENT_TAUNTS = [
-  "Really gonna waste money on this? Okay then...",
-  "You're literally paying to prove you have no willpower 💸",
-  "This money could've gone to literally anything else.",
-  "Go ahead. Pay the fee. Feed the shame cycle. 🔄",
-  "Your wallet called. It's also disappointed in you.",
-  "Imagine explaining this charge to someone. 'Oh I paid to unlock Instagram because I'm weak.'",
-  "Fine. Get your card out, addict.",
-  "The fact that you'd rather PAY than just... not use the app... says everything.",
+  "Open that wallet, piggy. You know the drill.",
+  "Time to pay up, addict. Your phone is waiting.",
+  "Go on then. Pay the fee like a good little slave.",
+  "Your phone says jump, you say 'how much?' Pathetic. 💸",
+  "You'd literally rather pay money than have self-control. Think about that.",
+  "Imagine being so owned by a device that you PAY it to use it. That's you. That's what you are.",
+  "Get your money out. Your master is waiting. 📱",
+  "The phone owns you. The app owns you. Now pay up.",
 ];
 
 export const POST_UNLOCK_SHADE = [
-  "There you go. Was it worth it? (It wasn't.)",
-  "Unlocked. Enjoy your dopamine hit, you absolute gremlin.",
-  "Fine. Go scroll. I'll be here when you inevitably come crawling back.",
-  "Congrats on your purchase of temporary happiness and permanent shame.",
-  "Unlocked for now. Timer's ticking on your next moment of weakness.",
-  "Hope those memes are worth your dignity. Spoiler: they're not.",
+  "There you go, piggy. Oink oink. 🐽",
+  "Unlocked. Go get your fix, addict. I'll be here when you crawl back.",
+  "Good pig. Now go scroll mindlessly like the trained animal you are.",
+  "Enjoy your slop. See you in 5 minutes when you lock it again pretending you've changed.",
+  "Unlocked. Your phone thanks you for your servitude.",
+  "Congrats. You just paid to be a slave. Again.",
+  "Hope it was worth your money AND your dignity. Spoiler: it wasn't.",
 ];
 
 /**

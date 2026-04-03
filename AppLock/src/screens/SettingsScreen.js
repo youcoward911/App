@@ -74,7 +74,7 @@ export default function SettingsScreen() {
       return;
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: fee } });
-    Alert.alert("Saved", `$${fee.toFixed(2)} per moment of weakness. Nice.`);
+    Alert.alert("Saved", `$${fee.toFixed(2)} per act of obedience. Good piggy.`);
   };
 
   return (
@@ -84,13 +84,13 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Configure your suffering</Text>
+        <Text style={styles.subtitle}>Configure your servitude</Text>
 
         {/* Default Fee */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Default Unlock Fee</Text>
           <Text style={styles.sectionDesc}>
-            The price of your weakness, per offense
+            How much does your obedience cost?
           </Text>
 
           <View style={styles.feeRow}>
@@ -148,8 +148,8 @@ export default function SettingsScreen() {
 
         {/* Roast Intensity */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Roast Intensity</Text>
-          <Text style={styles.sectionDesc}>How hard should we go?</Text>
+          <Text style={styles.sectionTitle}>Degradation Level</Text>
+          <Text style={styles.sectionDesc}>How hard do you want to be put in your place?</Text>
           {intensityOptions.map((option) => {
             const isActive = state.settings.roastIntensity === option.key;
             return (
@@ -207,13 +207,12 @@ export default function SettingsScreen() {
             </View>
           </View>
           <Text style={styles.aboutText}>
-            Built because you can't be trusted with your own phone. You're
-            welcome.
+            Built because you're a slave to your phone and you know it.
+            This app doesn't help you. It owns you.
           </Text>
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>
-              "An app that makes you pay for using apps, because that's
-              apparently what it takes"
+              "You're not the user. You're the product. Now pay up, piggy."
             </Text>
           </View>
         </View>

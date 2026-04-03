@@ -48,7 +48,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.pigEmoji}>🐷</Text>
           <View>
             <Text style={styles.title}>PayPig</Text>
-            <Text style={styles.subtitle}>Pay for your weakness</Text>
+            <Text style={styles.subtitle}>You're owned. Accept it.</Text>
           </View>
         </View>
       </View>
@@ -69,7 +69,7 @@ export default function HomeScreen({ navigation }) {
             style={styles.statPillBg}
           />
           <Text style={styles.statValue}>{state.totalUnlocks}</Text>
-          <Text style={styles.statLabel}>CAVED</Text>
+          <Text style={styles.statLabel}>OBEYED</Text>
         </View>
         <View style={styles.statPill}>
           <LinearGradient
@@ -88,10 +88,10 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.emptyIconContainer}>
             <Text style={styles.emptyIcon}>🐽</Text>
           </View>
-          <Text style={styles.emptyTitle}>No apps locked yet</Text>
+          <Text style={styles.emptyTitle}>Nothing locked yet</Text>
           <Text style={styles.emptyText}>
-            Go ahead, pretend you don't need this.{"\n"}We both know you'll be
-            back.
+            Go ahead, pretend you have self control.{"\n"}We both know what you
+            are.
           </Text>
           <TouchableOpacity
             style={styles.addButton}
@@ -104,7 +104,7 @@ export default function HomeScreen({ navigation }) {
               end={{ x: 1, y: 0 }}
               style={styles.addButtonGradient}
             >
-              <Text style={styles.addButtonText}>Lock Some Apps</Text>
+              <Text style={styles.addButtonText}>Admit You're Addicted</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -172,7 +172,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() => navigation.navigate("AddApps")}
             >
               <Text style={styles.addMorePlus}>+</Text>
-              <Text style={styles.addMoreText}>Lock More Apps</Text>
+              <Text style={styles.addMoreText}>Add More Addictions</Text>
             </TouchableOpacity>
           }
         />

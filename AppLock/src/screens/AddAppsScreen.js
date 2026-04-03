@@ -52,10 +52,10 @@ export default function AddAppsScreen({ navigation }) {
             </Text>
           </View>
         </View>
-        <Text style={styles.title}>Choose Your Poison</Text>
+        <Text style={styles.title}>Your Addictions</Text>
         <Text style={styles.subtitle}>
-          Pick the apps you can't stop using. We won't judge.{"\n"}
-          (Okay, we absolutely will.)
+          Pick the apps that own you. Don't worry,{"\n"}
+          we already know you can't stop.
         </Text>
       </View>
 
@@ -63,8 +63,8 @@ export default function AddAppsScreen({ navigation }) {
       <View style={styles.feeSection}>
         <View style={styles.feeRow}>
           <View style={styles.feeLabelRow}>
-            <Text style={styles.feeLabel}>Unlock fee</Text>
-            <Text style={styles.feeHint}>per weakness</Text>
+            <Text style={styles.feeLabel}>Your price tag</Text>
+            <Text style={styles.feeHint}>per act of obedience</Text>
           </View>
           <View style={styles.feeInputContainer}>
             <Text style={styles.feeCurrency}>$</Text>
