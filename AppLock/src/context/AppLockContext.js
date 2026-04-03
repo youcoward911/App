@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AppLockContext = createContext();
 
-const STORAGE_KEY = "@paypig_state";
+const STORAGE_KEY = "@paypig_state_v2";
 
 export const COIN_PACKAGES = [
   { id: "small", coins: 100, price: 9.99, label: "100 Coins", bonus: null },
@@ -18,8 +18,11 @@ const initialState = {
   totalCoinsPurchased: 0,
   totalMoneySpent: 0,
   totalUnlocks: 0,
+  tributesToday: 0,
+  tributesTodayDate: null,
+  lastTributeTime: null,
   settings: {
-    defaultFee: 5, // in coins now
+    defaultFee: 5,
     currency: "USD",
     roastIntensity: "medium",
   },
@@ -56,11 +59,16 @@ function reducer(state, action) {
       const isNewDay = app.lastUnlockDate !== today;
       const newCount = isNewDay ? 1 : (app.unlockCountToday || 0) + 1;
 
+      const isTodaySame = state.tributesTodayDate === today;
+
       return {
         ...state,
         piggyCoins: Math.max(0, state.piggyCoins - fee),
         totalCoinsSpent: state.totalCoinsSpent + fee,
         totalUnlocks: state.totalUnlocks + 1,
+        tributesToday: isTodaySame ? (state.tributesToday || 0) + 1 : 1,
+        tributesTodayDate: today,
+        lastTributeTime: Date.now(),
         lockedApps: {
           ...state.lockedApps,
           [appId]: {
@@ -119,6 +127,8 @@ export function AppLockProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
+        // Clear old v1 data
+        await AsyncStorage.removeItem("@paypig_state");
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
           dispatch({ type: "LOAD_STATE", payload: JSON.parse(stored) });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,14 +10,49 @@ import {
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
-import PigMascot, { PigIcon } from "../components/PigMascot";
+import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
-import { C, T, CARD_SHADOW } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+
+function getTributeClock(lastTributeTime) {
+  if (!lastTributeTime) return { text: "No tributes yet", minutes: Infinity };
+  const mins = Math.floor((Date.now() - lastTributeTime) / 60000);
+  if (mins < 1) return { text: "Just now", minutes: mins };
+  if (mins < 60) return { text: `${mins}m ago`, minutes: mins };
+  const h = Math.floor(mins / 60);
+  if (h < 24) return { text: `${h}h ${mins % 60}m ago`, minutes: mins };
+  const d = Math.floor(h / 24);
+  return { text: `${d}d ${h % 24}h ago`, minutes: mins };
+}
+
+function getPigMood(minutes) {
+  if (minutes < 30) return "normal";
+  if (minutes < 120) return "solemn";
+  if (minutes < 360) return "pain";
+  return "crying";
+}
+
+function getMoodMessage(mood) {
+  if (mood === "normal") return "Good piggy. Recently fed.";
+  if (mood === "solemn") return "Your piggy is getting restless...";
+  if (mood === "pain") return "Your piggy is suffering. Pay a tribute.";
+  return "Your piggy is in agony. Feed it now, you monster.";
+}
 
 export default function HomeScreen({ navigation }) {
   const { state } = useAppLock();
   const lockedAppIds = Object.keys(state.lockedApps);
   const lockedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
+  const [now, setNow] = useState(Date.now());
+
+  // Refresh clock every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const tribute = getTributeClock(state.lastTributeTime);
+  const pigMood = getPigMood(tribute.minutes);
 
   const getTimeSince = (appId) => {
     const app = state.lockedApps[appId];
@@ -50,27 +85,20 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statCard, CARD_SHADOW]}>
-            <Text style={styles.statNum}>{lockedApps.length}</Text>
-            <Text style={styles.statLabel}>Locked</Text>
-          </View>
-          <View style={[styles.statCard, CARD_SHADOW]}>
-            <Text style={styles.statNum}>{state.totalUnlocks}</Text>
-            <Text style={styles.statLabel}>Obeyed</Text>
-          </View>
-          <View style={[styles.statCard, CARD_SHADOW]}>
-            <Text style={[styles.statNum, { color: C.pink }]}>
-              {state.totalCoinsSpent}
+        {/* Pig mascot + tribute clock */}
+        <View style={[styles.pigCard, CARD_SHADOW_LG]}>
+          <PigMascot size={120} mood={pigMood} />
+          <View style={styles.tributeClockWrap}>
+            <Text style={styles.tributeLabel}>LAST TRIBUTE</Text>
+            <Text style={[styles.tributeTime, pigMood === "crying" && { color: "#CC2244" }]}>
+              {tribute.text}
             </Text>
-            <Text style={styles.statLabel}>Spent</Text>
+            <Text style={styles.moodMsg}>{getMoodMessage(pigMood)}</Text>
           </View>
         </View>
 
         {lockedApps.length === 0 ? (
           <View style={styles.empty}>
-            <PigMascot size={100} />
             <Text style={styles.emptyTitle}>Nothing locked yet</Text>
             <Text style={styles.emptyBody}>
               Pretending you have self control?{"\n"}We both know what you are.
@@ -145,28 +173,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: 12,
   },
   greeting: { ...T.hero },
   sub: { ...T.caption, marginTop: 2 },
   coinBtn: {},
 
-  // Stats
-  statsRow: {
-    flexDirection: "row",
-    paddingHorizontal: 24,
-    gap: 10,
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
+  // Pig card
+  pigCard: {
     backgroundColor: C.white,
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: 24,
+    marginHorizontal: 24,
+    padding: 24,
     alignItems: "center",
+    marginBottom: 16,
   },
-  statNum: { ...T.stat, fontSize: 22 },
-  statLabel: { ...T.caption, marginTop: 4 },
+  tributeClockWrap: {
+    alignItems: "center",
+    marginTop: 16,
+  },
+  tributeLabel: { ...T.label, marginBottom: 4 },
+  tributeTime: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: C.pink,
+    letterSpacing: -0.5,
+  },
+  moodMsg: {
+    ...T.caption,
+    fontStyle: "italic",
+    marginTop: 6,
+    textAlign: "center",
+  },
 
   // List
   list: { paddingHorizontal: 24, paddingBottom: 20 },
@@ -233,7 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 48,
   },
-  emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8, marginTop: 20 },
+  emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8 },
   emptyBody: { ...T.body, textAlign: "center", lineHeight: 22 },
   primaryBtn: {
     backgroundColor: C.pink,

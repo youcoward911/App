@@ -2,32 +2,34 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 
 // Animated pig mascot built with pure RN Views — no emojis
-// A cute, minimal pig face that bobs gently
+// Supports mood prop: "normal", "solemn", "pain", "crying"
 
-export default function PigMascot({ size = 80, animate = true }) {
+export default function PigMascot({ size = 80, animate = true, mood = "normal" }) {
   const bob = useRef(new Animated.Value(0)).current;
   const blink = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!animate) return;
 
-    // Gentle bobbing
+    const bobSpeed = mood === "crying" ? 800 : mood === "pain" ? 1000 : 1200;
+    const bobHeight = mood === "crying" ? -3 : mood === "pain" ? -4 : -6;
+
     Animated.loop(
       Animated.sequence([
         Animated.timing(bob, {
-          toValue: -6,
-          duration: 1200,
+          toValue: bobHeight,
+          duration: bobSpeed,
           useNativeDriver: true,
         }),
         Animated.timing(bob, {
           toValue: 0,
-          duration: 1200,
+          duration: bobSpeed,
           useNativeDriver: true,
         }),
       ])
     ).start();
 
-    // Blinking
+    const blinkRate = mood === "pain" || mood === "crying" ? 1500 : 3500;
     const blinkInterval = setInterval(() => {
       Animated.sequence([
         Animated.timing(blink, {
@@ -41,12 +43,40 @@ export default function PigMascot({ size = 80, animate = true }) {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 3500);
+    }, blinkRate);
 
     return () => clearInterval(blinkInterval);
-  }, [animate]);
+  }, [animate, mood]);
 
-  const s = size / 80; // scale factor
+  const s = size / 80;
+
+  // Colors change based on mood
+  const faceColor =
+    mood === "crying" ? "#FF8A8A" :
+    mood === "pain" ? "#FFA0A0" :
+    mood === "solemn" ? "#FFBCC7" :
+    "#FFB6C1";
+
+  const earColor =
+    mood === "crying" ? "#D06070" :
+    mood === "pain" ? "#D87888" :
+    "#E8899A";
+
+  const snoutColor =
+    mood === "crying" ? "#E07080" :
+    mood === "pain" ? "#E08898" :
+    "#F09AAF";
+
+  // Eye shape changes with mood
+  const eyeHeight =
+    mood === "crying" ? 5 * s :
+    mood === "pain" ? 4 * s :
+    8 * s;
+
+  const eyeTop =
+    mood === "crying" ? 18 * s :
+    mood === "pain" ? 19 * s :
+    16 * s;
 
   return (
     <Animated.View
@@ -66,6 +96,7 @@ export default function PigMascot({ size = 80, animate = true }) {
             borderRadius: 8 * s,
             top: 2 * s,
             left: 6 * s,
+            backgroundColor: earColor,
           },
         ]}
       />
@@ -79,6 +110,7 @@ export default function PigMascot({ size = 80, animate = true }) {
             borderRadius: 8 * s,
             top: 2 * s,
             right: 6 * s,
+            backgroundColor: earColor,
           },
         ]}
       />
@@ -92,6 +124,7 @@ export default function PigMascot({ size = 80, animate = true }) {
             height: 60 * s,
             borderRadius: 30 * s,
             top: 12 * s,
+            backgroundColor: faceColor,
           },
         ]}
       >
@@ -99,12 +132,11 @@ export default function PigMascot({ size = 80, animate = true }) {
         <Animated.View
           style={[
             styles.eye,
-            styles.eyeLeft,
             {
               width: 8 * s,
-              height: 8 * s,
+              height: eyeHeight,
               borderRadius: 4 * s,
-              top: 16 * s,
+              top: eyeTop,
               left: 14 * s,
               transform: [{ scaleY: blink }],
             },
@@ -113,17 +145,100 @@ export default function PigMascot({ size = 80, animate = true }) {
         <Animated.View
           style={[
             styles.eye,
-            styles.eyeRight,
             {
               width: 8 * s,
-              height: 8 * s,
+              height: eyeHeight,
               borderRadius: 4 * s,
-              top: 16 * s,
+              top: eyeTop,
               right: 14 * s,
               transform: [{ scaleY: blink }],
             },
           ]}
         />
+
+        {/* Eyebrows for sad moods */}
+        {(mood === "solemn" || mood === "pain" || mood === "crying") && (
+          <>
+            <View
+              style={[
+                styles.brow,
+                {
+                  width: 10 * s,
+                  height: 2 * s,
+                  top: (eyeTop - 4 * s),
+                  left: 12 * s,
+                  transform: [{ rotate: "15deg" }],
+                  backgroundColor: mood === "crying" ? "#8B3A3A" : "#7A5555",
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.brow,
+                {
+                  width: 10 * s,
+                  height: 2 * s,
+                  top: (eyeTop - 4 * s),
+                  right: 12 * s,
+                  transform: [{ rotate: "-15deg" }],
+                  backgroundColor: mood === "crying" ? "#8B3A3A" : "#7A5555",
+                },
+              ]}
+            />
+          </>
+        )}
+
+        {/* Tears for crying mood */}
+        {mood === "crying" && (
+          <>
+            <View
+              style={[
+                styles.tear,
+                {
+                  width: 4 * s,
+                  height: 8 * s,
+                  borderRadius: 2 * s,
+                  top: (eyeTop + 6 * s),
+                  left: 16 * s,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.tear,
+                {
+                  width: 4 * s,
+                  height: 8 * s,
+                  borderRadius: 2 * s,
+                  top: (eyeTop + 6 * s),
+                  right: 16 * s,
+                },
+              ]}
+            />
+          </>
+        )}
+
+        {/* Mouth — frown for sad moods */}
+        {(mood === "solemn" || mood === "pain" || mood === "crying") && (
+          <View
+            style={[
+              styles.mouth,
+              {
+                width: 12 * s,
+                height: 6 * s,
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                borderTopLeftRadius: 6 * s,
+                borderTopRightRadius: 6 * s,
+                bottom: 14 * s,
+                borderWidth: 2 * s,
+                borderBottomWidth: 0,
+                borderColor: mood === "crying" ? "#8B3A3A" : "#B06070",
+                backgroundColor: "transparent",
+              },
+            ]}
+          />
+        )}
 
         {/* Snout */}
         <View
@@ -134,10 +249,10 @@ export default function PigMascot({ size = 80, animate = true }) {
               height: 20 * s,
               borderRadius: 10 * s,
               bottom: 8 * s,
+              backgroundColor: snoutColor,
             },
           ]}
         >
-          {/* Nostrils */}
           <View
             style={[
               styles.nostril,
@@ -166,7 +281,6 @@ export default function PigMascot({ size = 80, animate = true }) {
   );
 }
 
-// Smaller static pig for inline use (tab bar, headers)
 export function PigIcon({ size = 24 }) {
   return <PigMascot size={size} animate={false} />;
 }
@@ -178,9 +292,7 @@ const styles = StyleSheet.create({
   },
   ear: {
     position: "absolute",
-    backgroundColor: "#E8899A",
     zIndex: 0,
-    transform: [{ rotate: "-15deg" }],
   },
   earLeft: {
     transform: [{ rotate: "-15deg" }],
@@ -190,7 +302,6 @@ const styles = StyleSheet.create({
   },
   face: {
     position: "absolute",
-    backgroundColor: "#FFB6C1",
     zIndex: 1,
     alignSelf: "center",
   },
@@ -199,11 +310,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#2C2C2E",
     zIndex: 2,
   },
-  eyeLeft: {},
-  eyeRight: {},
+  brow: {
+    position: "absolute",
+    zIndex: 3,
+    borderRadius: 1,
+  },
+  tear: {
+    position: "absolute",
+    backgroundColor: "#5CB8FF",
+    zIndex: 3,
+  },
+  mouth: {
+    position: "absolute",
+    alignSelf: "center",
+    zIndex: 3,
+  },
   snout: {
     position: "absolute",
-    backgroundColor: "#F09AAF",
     alignSelf: "center",
     zIndex: 2,
     flexDirection: "row",

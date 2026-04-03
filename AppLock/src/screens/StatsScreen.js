@@ -1,28 +1,37 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Dimensions,
+  Animated,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
 
-const W = Dimensions.get("window").width;
-const CARD_W = (W - 48 - 10) / 2;
+const COMMANDS = [
+  "Raise the fee. Make it hurt. You deserve it.",
+  "Your phone doesn't need you. You need it. Know your place.",
+  "Every unlock is you admitting you're owned.",
+  "You'll unlock again tomorrow. Good piggy.",
+  "Stop pretending you're in control. You never were.",
+  "Your wallet exists to serve your phone. Accept that.",
+  "The pig always pays. Always.",
+  "You locked these apps because you're weak. You unlock them because you're weaker.",
+  "More coins. More tributes. More obedience. That's your life now.",
+  "You're not quitting. We both know that. Just pay.",
+  "One day you'll delete this app. But not today. Today you pay.",
+  "Your willpower is a joke. Your phone is the punchline.",
+];
 
 export default function StatsScreen() {
   const { state } = useAppLock();
-  const lockedCount = Object.keys(state.lockedApps).length;
-  const avgFee =
-    lockedCount > 0
-      ? Object.values(state.lockedApps).reduce(
-          (s, a) => s + (a.unlockFee || 0), 0
-        ) / lockedCount
-      : 0;
+  const flashAnim = useRef(new Animated.Value(0)).current;
+
+  const today = new Date().toDateString();
+  const tribToday = state.tributesTodayDate === today ? (state.tributesToday || 0) : 0;
 
   const getShame = () => {
     if (state.totalUnlocks === 0)
@@ -39,15 +48,24 @@ export default function StatsScreen() {
   const shame = getShame();
   const progress = Math.min((state.totalUnlocks / 30) * 100, 100);
 
-  const getAnalysis = () => {
-    if (state.totalUnlocks === 0)
-      return "No unlocks yet. Enjoy the illusion of control while it lasts, piggy.";
-    if (state.totalCoinsSpent < 20)
-      return `${state.totalCoinsSpent} coins surrendered. Barely a nibble. You'll be hemorrhaging coins in no time.`;
-    if (state.totalCoinsSpent < 100)
-      return `${state.totalCoinsSpent} coins burned through. You're not a user. You're livestock.`;
-    return `${state.totalCoinsSpent} coins gone. You've fed more to this app than most people spend on food.`;
-  };
+  const command = COMMANDS[Math.floor(Math.random() * COMMANDS.length)];
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(flashAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(flashAnim, {
+          toValue: 0.3,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -72,54 +90,22 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {/* Grid */}
-        <View style={styles.grid}>
-          <View style={[styles.gridCard, CARD_SHADOW]}>
-            <View style={[styles.gridDot, { backgroundColor: C.pink }]} />
-            <Text style={styles.gridVal}>{lockedCount}</Text>
-            <Text style={styles.gridLabel}>Locked</Text>
+        {/* Tributes */}
+        <View style={styles.tributeRow}>
+          <View style={[styles.tributeCard, CARD_SHADOW]}>
+            <Text style={styles.tributeVal}>{tribToday}</Text>
+            <Text style={styles.tributeLabel}>Tributes Today</Text>
           </View>
-          <View style={[styles.gridCard, CARD_SHADOW]}>
-            <View style={[styles.gridDot, { backgroundColor: C.gold }]} />
-            <Text style={styles.gridVal}>{state.totalUnlocks}</Text>
-            <Text style={styles.gridLabel}>Obeyed</Text>
-          </View>
-          <View style={[styles.gridCard, CARD_SHADOW]}>
-            <View style={[styles.gridDot, { backgroundColor: C.green }]} />
-            <Text style={[styles.gridVal, { color: C.pink }]}>
-              {state.totalCoinsSpent}
-            </Text>
-            <Text style={styles.gridLabel}>Coins Spent</Text>
-          </View>
-          <View style={[styles.gridCard, CARD_SHADOW]}>
-            <View style={[styles.gridDot, { backgroundColor: "#FF6B35" }]} />
-            <Text style={styles.gridVal}>{Math.round(avgFee)}</Text>
-            <Text style={styles.gridLabel}>Avg Fee</Text>
+          <View style={[styles.tributeCard, CARD_SHADOW]}>
+            <Text style={[styles.tributeVal, { color: C.pink }]}>{state.totalUnlocks}</Text>
+            <Text style={styles.tributeLabel}>Total Tributes Paid</Text>
           </View>
         </View>
 
-        {/* Analysis */}
-        <View style={[styles.analysisCard, CARD_SHADOW]}>
-          <View style={styles.analysisDot} />
-          <Text style={styles.analysisLabel}>ANALYSIS</Text>
-          <Text style={styles.analysisBody}>{getAnalysis()}</Text>
-        </View>
-
-        {/* Commands */}
-        <View style={[styles.cmdCard, CARD_SHADOW]}>
-          <Text style={styles.cmdTitle}>Commands From Your Owner</Text>
-          {[
-            "Raise the fee. Make it hurt. You deserve it.",
-            "Your phone doesn't need you. You need it. Know your place.",
-            "Every unlock is you admitting you're owned.",
-            "You'll unlock again tomorrow. Good piggy.",
-          ].map((tip, i) => (
-            <View key={i} style={styles.tipRow}>
-              <Text style={styles.tipArrow}>-</Text>
-              <Text style={styles.tipText}>{tip}</Text>
-            </View>
-          ))}
-        </View>
+        {/* Command */}
+        <Animated.View style={[styles.cmdCard, CARD_SHADOW, { opacity: flashAnim }]}>
+          <Text style={styles.cmdText}>{command}</Text>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -150,52 +136,33 @@ const styles = StyleSheet.create({
   },
   meterFill: { height: "100%", borderRadius: 3 },
 
-  grid: {
+  tributeRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: 10,
     marginBottom: 16,
   },
-  gridCard: {
-    width: CARD_W,
-    backgroundColor: C.white,
-    borderRadius: 20,
-    padding: 18,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  gridDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  gridVal: { ...T.stat, fontSize: 24 },
-  gridLabel: { ...T.caption, marginTop: 4 },
-
-  analysisCard: {
+  tributeCard: {
+    flex: 1,
     backgroundColor: C.white,
     borderRadius: 20,
     padding: 22,
-    marginBottom: 16,
+    alignItems: "center",
   },
-  analysisDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: C.pink,
-    marginBottom: 10,
-  },
-  analysisLabel: { ...T.label, color: C.pink, marginBottom: 10 },
-  analysisBody: { ...T.body, fontStyle: "italic", lineHeight: 24 },
+  tributeVal: { ...T.stat, fontSize: 32 },
+  tributeLabel: { ...T.caption, marginTop: 6, textAlign: "center" },
 
   cmdCard: {
-    backgroundColor: C.white,
+    backgroundColor: C.pink,
     borderRadius: 20,
-    padding: 22,
+    padding: 28,
+    alignItems: "center",
   },
-  cmdTitle: { ...T.h2, fontSize: 16, marginBottom: 14 },
-  tipRow: { flexDirection: "row", marginBottom: 10 },
-  tipArrow: { color: C.pink, fontWeight: "700", fontSize: 14, marginRight: 10, marginTop: 1 },
-  tipText: { ...T.body, flex: 1, fontSize: 14 },
+  cmdText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
+    fontStyle: "italic",
+    textAlign: "center",
+    lineHeight: 28,
+  },
 });

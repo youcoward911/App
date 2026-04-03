@@ -14,11 +14,30 @@ import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import {
-  getRoastMessage,
   getPrePaymentTaunt,
   getPostUnlockShade,
+  IMMEDIATE_ROASTS,
+  TIME_BASED_ROASTS,
 } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getSingleRoast(minutesSinceLock) {
+  // Pick one good roast based on time
+  const timeBucket = TIME_BASED_ROASTS.find(
+    (b) => minutesSinceLock < b.maxMinutes
+  );
+  if (timeBucket) {
+    return pickRandom(timeBucket.messages).replace(
+      "{minutes}",
+      Math.floor(minutesSinceLock)
+    );
+  }
+  return pickRandom(IMMEDIATE_ROASTS);
+}
 
 export default function UnlockScreen({ route, navigation }) {
   const { appId } = route.params;
@@ -27,11 +46,9 @@ export default function UnlockScreen({ route, navigation }) {
   const appInfo = POPULAR_APPS.find((a) => a.id === appId);
 
   const [phase, setPhase] = useState("roast");
-  const [roasts, setRoasts] = useState([]);
-  const [roastIdx, setRoastIdx] = useState(0);
+  const [roast, setRoast] = useState("");
   const [preTaunt, setPreTaunt] = useState("");
   const [postShade, setPostShade] = useState("");
-  const [showButtons, setShowButtons] = useState(false);
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(20)).current;
@@ -48,38 +65,21 @@ export default function UnlockScreen({ route, navigation }) {
       return;
     }
     const mins = (Date.now() - lockInfo.lockedAt) / 60000;
-    const count = lockInfo.unlockCountToday || 0;
-    setRoasts(getRoastMessage(mins, count + 1));
+    setRoast(getSingleRoast(mins));
     setPreTaunt(getPrePaymentTaunt());
+
+    // Animate roast in, then show buttons after delay
     Animated.parallel([
       Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(slide, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }),
     ]).start();
-  }, []);
 
-  useEffect(() => {
-    if (phase !== "roast" || !roasts.length) return;
-    const t = setInterval(() => {
-      setRoastIdx((prev) => {
-        if (prev < roasts.length - 1) {
-          Animated.sequence([
-            Animated.timing(fade, { toValue: 0, duration: 150, useNativeDriver: true }),
-            Animated.parallel([
-              Animated.timing(fade, { toValue: 1, duration: 350, useNativeDriver: true }),
-              Animated.spring(slide, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }),
-            ]),
-          ]).start();
-          slide.setValue(15);
-          return prev + 1;
-        }
-        setShowButtons(true);
-        Animated.spring(btnFade, { toValue: 1, tension: 50, friction: 10, useNativeDriver: true }).start();
-        clearInterval(t);
-        return prev;
-      });
-    }, 2500);
-    return () => clearInterval(t);
-  }, [phase, roasts]);
+    const timer = setTimeout(() => {
+      Animated.spring(btnFade, { toValue: 1, tension: 50, friction: 10, useNativeDriver: true }).start();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handlePay = () => {
     if (!canAfford) {
@@ -129,7 +129,7 @@ export default function UnlockScreen({ route, navigation }) {
         </View>
         <Text style={styles.appName}>{appInfo.name}</Text>
 
-        {/* ROAST */}
+        {/* ROAST — single message */}
         {phase === "roast" && (
           <View style={styles.section}>
             <Animated.Text
@@ -138,49 +138,45 @@ export default function UnlockScreen({ route, navigation }) {
                 { opacity: fade, transform: [{ translateY: slide }] },
               ]}
             >
-              {roasts[roastIdx] || "..."}
+              {roast}
             </Animated.Text>
 
-            {showButtons && (
-              <Animated.View style={[styles.section, { opacity: btnFade }]}>
-                <Text style={styles.taunt}>{preTaunt}</Text>
+            <Animated.View style={[styles.section, { opacity: btnFade }]}>
+              <Text style={styles.taunt}>{preTaunt}</Text>
 
-                <Animated.View
-                  style={[styles.feeCard, CARD_SHADOW_LG, { transform: [{ translateX: shake }] }]}
-                >
-                  <Text style={styles.feeLabel}>UNLOCK FEE</Text>
-                  <View style={styles.feeCoinRow}>
-                    <View style={styles.feeCoinIcon}>
-                      <Text style={styles.feeCoinP}>P</Text>
-                    </View>
-                    <Text style={styles.feeAmount}>{fee}</Text>
+              <Animated.View
+                style={[styles.feeCard, CARD_SHADOW_LG, { transform: [{ translateX: shake }] }]}
+              >
+                <Text style={styles.feeLabel}>UNLOCK FEE</Text>
+                <View style={styles.feeCoinRow}>
+                  <View style={styles.feeCoinIcon}>
+                    <Text style={styles.feeCoinP}>P</Text>
                   </View>
-                  <Text style={styles.feeSub}>
-                    You set this when you thought you were strong.
-                  </Text>
-                  <View style={styles.balanceRow}>
-                    <Text style={styles.balanceLabel}>Your balance:</Text>
-                    <CoinBadge amount={state.piggyCoins} size="small" />
-                  </View>
-                </Animated.View>
-
-                <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handlePay}>
-                  <Text style={styles.pinkBtnText}>
-                    {canAfford ? "Pay Up, Piggy" : "Pay Up, Piggy"}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-                  <Text style={styles.ghostBtnText}>I Can Resist (LOL Sure)</Text>
-                </TouchableOpacity>
+                  <Text style={styles.feeAmount}>{fee}</Text>
+                </View>
+                <Text style={styles.feeSub}>
+                  You set this when you thought you were strong.
+                </Text>
+                <View style={styles.balanceRow}>
+                  <Text style={styles.balanceLabel}>Your balance:</Text>
+                  <CoinBadge amount={state.piggyCoins} size="small" />
+                </View>
               </Animated.View>
-            )}
+
+              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handlePay}>
+                <Text style={styles.pinkBtnText}>Pay Up, Piggy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
+                <Text style={styles.ghostBtnText}>I Can Resist (LOL Sure)</Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         )}
 
-        {/* BROKE — can't afford */}
+        {/* BROKE */}
         {phase === "broke" && (
           <View style={styles.section}>
-            <PigMascot size={90} />
+            <PigMascot size={90} mood="crying" />
             <Text style={styles.brokeTitle}>EMPTY TROUGH</Text>
             <Text style={styles.brokeBody}>
               You need {fee} coins but you only have {state.piggyCoins}.
