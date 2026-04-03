@@ -10,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
+import PigMascot from "../components/PigMascot";
 import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function SettingsScreen() {
@@ -17,26 +18,26 @@ export default function SettingsScreen() {
   const [fee, setFee] = useState(state.settings.defaultFee.toString());
 
   const intensities = [
-    { key: "mild", label: "Mild", desc: "Gentle nudges. For the delicate.", emoji: "😊", color: C.green },
-    { key: "medium", label: "Medium", desc: "The sweet spot of shame.", emoji: "😏", color: C.gold },
-    { key: "savage", label: "Savage", desc: "No mercy. You asked for this.", emoji: "💀", color: C.pink },
+    { key: "mild", label: "Mild", desc: "Gentle nudges. For the delicate.", color: C.green },
+    { key: "medium", label: "Medium", desc: "The sweet spot of shame.", color: C.gold },
+    { key: "savage", label: "Savage", desc: "No mercy. You asked for this.", color: C.pink },
   ];
 
   const saveFee = () => {
-    const val = parseFloat(fee);
+    const val = parseInt(fee, 10);
     if (isNaN(val) || val < 0) {
       Alert.alert("Nice Try", "Enter a real number.");
       return;
     }
     if (val === 0) {
-      Alert.alert("Really? $0.00?", "That defeats the purpose.", [
+      Alert.alert("Really? 0 coins?", "That defeats the purpose.", [
         { text: "I'll raise it", style: "cancel" },
-        { text: "I want $0", onPress: () => dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: 0 } }) },
+        { text: "I want 0", onPress: () => dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: 0 } }) },
       ]);
       return;
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
-    Alert.alert("Saved", `$${val.toFixed(2)} per act of obedience.`);
+    Alert.alert("Saved", `${val} coins per act of obedience.`);
   };
 
   return (
@@ -48,17 +49,19 @@ export default function SettingsScreen() {
         {/* Fee */}
         <View style={[styles.card, CARD_SHADOW]}>
           <Text style={styles.cardTitle}>Default Unlock Fee</Text>
-          <Text style={styles.cardDesc}>How much does your obedience cost?</Text>
+          <Text style={styles.cardDesc}>How many coins does your obedience cost?</Text>
 
           <View style={styles.feeRow}>
             <View style={styles.feeInputWrap}>
-              <Text style={styles.feeDollar}>$</Text>
+              <View style={styles.feeCoinIcon}>
+                <Text style={styles.feeCoinP}>P</Text>
+              </View>
               <TextInput
                 style={styles.feeInput}
                 value={fee}
                 onChangeText={setFee}
-                keyboardType="decimal-pad"
-                placeholder="0.50"
+                keyboardType="number-pad"
+                placeholder="5"
                 placeholderTextColor={C.textTertiary}
               />
             </View>
@@ -68,14 +71,14 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.presets}>
-            {[0.25, 0.5, 1, 2, 5, 10].map((amt) => (
+            {[1, 3, 5, 10, 20, 50].map((amt) => (
               <TouchableOpacity
                 key={amt}
-                style={[styles.preset, parseFloat(fee) === amt && styles.presetActive]}
+                style={[styles.preset, parseInt(fee, 10) === amt && styles.presetActive]}
                 onPress={() => setFee(amt.toString())}
               >
-                <Text style={[styles.presetText, parseFloat(fee) === amt && styles.presetTextActive]}>
-                  ${amt.toFixed(2)}
+                <Text style={[styles.presetText, parseInt(fee, 10) === amt && styles.presetTextActive]}>
+                  {amt}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -96,9 +99,7 @@ export default function SettingsScreen() {
                 activeOpacity={0.7}
                 onPress={() => dispatch({ type: "UPDATE_SETTINGS", payload: { roastIntensity: opt.key } })}
               >
-                <View style={[styles.intensityIcon, { backgroundColor: active ? C.pinkPale : "#F5F5F5" }]}>
-                  <Text style={{ fontSize: 20 }}>{opt.emoji}</Text>
-                </View>
+                <View style={[styles.intensityDot, { backgroundColor: opt.color }]} />
                 <View style={styles.intensityInfo}>
                   <Text style={styles.intensityLabel}>{opt.label}</Text>
                   <Text style={styles.intensityDesc}>{opt.desc}</Text>
@@ -116,7 +117,7 @@ export default function SettingsScreen() {
         {/* About */}
         <View style={[styles.card, CARD_SHADOW]}>
           <View style={styles.aboutHeader}>
-            <Text style={{ fontSize: 32 }}>🐷</Text>
+            <PigMascot size={48} animate={false} />
             <View style={{ marginLeft: 14 }}>
               <Text style={styles.aboutName}>PayPig</Text>
               <Text style={styles.aboutVer}>v1.0.0</Text>
@@ -162,7 +163,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginRight: 10,
   },
-  feeDollar: { fontSize: 20, fontWeight: "800", color: C.pink },
+  feeCoinIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: C.pink,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  feeCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
   feeInput: { flex: 1, fontSize: 20, fontWeight: "800", color: C.pink, paddingVertical: 13 },
   saveBtn: {
     backgroundColor: C.pink,
@@ -191,12 +201,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: "#F8F8F8",
   },
-  intensityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  intensityDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     marginRight: 12,
   },
   intensityInfo: { flex: 1 },

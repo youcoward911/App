@@ -9,20 +9,42 @@ import AddAppsScreen from "./src/screens/AddAppsScreen";
 import UnlockScreen from "./src/screens/UnlockScreen";
 import StatsScreen from "./src/screens/StatsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
-import { View, Text, StyleSheet } from "react-native";
+import CoinShopScreen from "./src/screens/CoinShopScreen";
+import { View, StyleSheet } from "react-native";
+import { PigIcon } from "./src/components/PigMascot";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-function TabIcon({ label, focused }) {
-  const icons = {
-    Apps: "🐷",
-    Shame: "📊",
-    Settings: "⚙️",
-  };
+function TabIcon({ type, focused }) {
   return (
     <View style={styles.tabIconWrap}>
-      <Text style={{ fontSize: 22 }}>{icons[label]}</Text>
+      {type === "apps" && (
+        <View style={[styles.tabBox, focused && styles.tabBoxActive]}>
+          <View style={styles.tabBoxInner}>
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+          </View>
+        </View>
+      )}
+      {type === "shame" && (
+        <View style={styles.tabBarIcon}>
+          <View style={[styles.barGroup]}>
+            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+          </View>
+        </View>
+      )}
+      {type === "settings" && (
+        <View style={[styles.gearWrap]}>
+          <View style={[styles.gearOuter, { borderColor: focused ? "#FF2D55" : "#AEAEB2" }]}>
+            <View style={[styles.gearInner, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+          </View>
+        </View>
+      )}
       {focused && <View style={styles.tabDot} />}
     </View>
   );
@@ -58,7 +80,7 @@ function HomeTabs() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Apps" focused={focused} />
+            <TabIcon type="apps" focused={focused} />
           ),
           tabBarLabel: "Apps",
         }}
@@ -68,7 +90,7 @@ function HomeTabs() {
         component={StatsScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Shame" focused={focused} />
+            <TabIcon type="shame" focused={focused} />
           ),
           tabBarLabel: "Shame",
         }}
@@ -78,7 +100,7 @@ function HomeTabs() {
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Settings" focused={focused} />
+            <TabIcon type="settings" focused={focused} />
           ),
           tabBarLabel: "Settings",
         }}
@@ -104,6 +126,11 @@ export default function App() {
             component={UnlockScreen}
             options={{ presentation: "modal" }}
           />
+          <Stack.Screen
+            name="CoinShop"
+            component={CoinShopScreen}
+            options={{ presentation: "modal" }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </AppLockProvider>
@@ -120,5 +147,64 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
     backgroundColor: "#FF2D55",
     marginTop: 4,
+  },
+  // Apps grid icon
+  tabBox: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabBoxInner: {
+    width: 20,
+    height: 20,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignContent: "space-between",
+  },
+  miniSquare: {
+    width: 8,
+    height: 8,
+    borderRadius: 2,
+  },
+  // Bar chart icon
+  tabBarIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  barGroup: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 3,
+  },
+  bar: {
+    width: 5,
+    borderRadius: 1.5,
+  },
+  barShort: { height: 8 },
+  barMed: { height: 14 },
+  barTall: { height: 20 },
+  // Gear icon
+  gearWrap: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gearOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gearInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 });

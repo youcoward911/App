@@ -10,6 +10,8 @@ import {
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
+import PigMascot, { PigIcon } from "../components/PigMascot";
+import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function HomeScreen({ navigation }) {
@@ -39,9 +41,13 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.greeting}>PayPig</Text>
             <Text style={styles.sub}>You're owned. Accept it.</Text>
           </View>
-          <View style={styles.avatarWrap}>
-            <Text style={styles.avatar}>🐷</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.coinBtn}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate("CoinShop")}
+          >
+            <CoinBadge amount={state.piggyCoins} size="small" />
+          </TouchableOpacity>
         </View>
 
         {/* Quick Stats */}
@@ -56,17 +62,15 @@ export default function HomeScreen({ navigation }) {
           </View>
           <View style={[styles.statCard, CARD_SHADOW]}>
             <Text style={[styles.statNum, { color: C.pink }]}>
-              ${state.totalSpent.toFixed(2)}
+              {state.totalCoinsSpent}
             </Text>
-            <Text style={styles.statLabel}>Wasted</Text>
+            <Text style={styles.statLabel}>Spent</Text>
           </View>
         </View>
 
         {lockedApps.length === 0 ? (
           <View style={styles.empty}>
-            <View style={styles.emptyCircle}>
-              <Text style={{ fontSize: 44 }}>🐽</Text>
-            </View>
+            <PigMascot size={100} />
             <Text style={styles.emptyTitle}>Nothing locked yet</Text>
             <Text style={styles.emptyBody}>
               Pretending you have self control?{"\n"}We both know what you are.
@@ -103,9 +107,12 @@ export default function HomeScreen({ navigation }) {
                       {locked ? `Locked ${getTimeSince(item.id)}` : "Unlocked"}
                     </Text>
                   </View>
-                  <Text style={styles.appFee}>
-                    ${info?.unlockFee?.toFixed(2)}
-                  </Text>
+                  <View style={styles.feeWrap}>
+                    <View style={styles.feeCoin}>
+                      <Text style={styles.feeCoinP}>P</Text>
+                    </View>
+                    <Text style={styles.appFee}>{info?.unlockFee}</Text>
+                  </View>
                   <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
               );
@@ -142,15 +149,7 @@ const styles = StyleSheet.create({
   },
   greeting: { ...T.hero },
   sub: { ...T.caption, marginTop: 2 },
-  avatarWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: C.pinkPale,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatar: { fontSize: 26 },
+  coinBtn: {},
 
   // Stats
   statsRow: {
@@ -182,11 +181,25 @@ const styles = StyleSheet.create({
   appInfo: { flex: 1, marginLeft: 14 },
   appName: { ...T.bodyBold },
   appMeta: { ...T.caption, marginTop: 2 },
+  feeWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  feeCoin: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: C.pink,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 4,
+  },
+  feeCoinP: { color: "#FFF", fontSize: 9, fontWeight: "900" },
   appFee: {
     fontSize: 16,
     fontWeight: "700",
     color: C.pink,
-    marginRight: 8,
   },
   chevron: {
     fontSize: 20,
@@ -220,16 +233,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 48,
   },
-  emptyCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: C.pinkPale,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8 },
+  emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8, marginTop: 20 },
   emptyBody: { ...T.body, textAlign: "center", lineHeight: 22 },
   primaryBtn: {
     backgroundColor: C.pink,

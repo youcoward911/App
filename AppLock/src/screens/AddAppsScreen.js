@@ -31,7 +31,7 @@ export default function AddAppsScreen({ navigation }) {
     if (isLocked(id)) {
       dispatch({ type: "REMOVE_APP", payload: { appId: id } });
     } else {
-      const fee = parseFloat(customFee) || state.settings.defaultFee;
+      const fee = parseInt(customFee, 10) || state.settings.defaultFee;
       dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: fee } });
     }
   };
@@ -53,16 +53,18 @@ export default function AddAppsScreen({ navigation }) {
       <View style={[styles.feeCard, CARD_SHADOW]}>
         <View>
           <Text style={styles.feeTitle}>Unlock fee</Text>
-          <Text style={styles.feeCaption}>per act of obedience</Text>
+          <Text style={styles.feeCaption}>coins per act of obedience</Text>
         </View>
         <View style={styles.feeInput}>
-          <Text style={styles.feeDollar}>$</Text>
+          <View style={styles.feeCoinIcon}>
+            <Text style={styles.feeCoinP}>P</Text>
+          </View>
           <TextInput
             style={styles.feeValue}
             value={customFee}
             onChangeText={setCustomFee}
-            keyboardType="decimal-pad"
-            placeholder="0.50"
+            keyboardType="number-pad"
+            placeholder="5"
             placeholderTextColor={C.textTertiary}
           />
         </View>
@@ -156,13 +158,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  feeDollar: { fontSize: 20, fontWeight: "800", color: C.pink },
+  feeCoinIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: C.pink,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+  },
+  feeCoinP: { color: "#FFF", fontSize: 10, fontWeight: "900" },
   feeValue: {
     fontSize: 20,
     fontWeight: "800",
     color: C.pink,
     minWidth: 50,
-    marginLeft: 2,
   },
 
   // Categories

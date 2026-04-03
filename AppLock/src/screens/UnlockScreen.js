@@ -11,6 +11,8 @@ import {
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
+import PigMascot from "../components/PigMascot";
+import CoinBadge from "../components/CoinBadge";
 import {
   getRoastMessage,
   getPrePaymentTaunt,
@@ -35,6 +37,9 @@ export default function UnlockScreen({ route, navigation }) {
   const slide = useRef(new Animated.Value(20)).current;
   const btnFade = useRef(new Animated.Value(0)).current;
   const shake = useRef(new Animated.Value(0)).current;
+
+  const fee = lockInfo?.unlockFee || 0;
+  const canAfford = state.piggyCoins >= fee;
 
   useEffect(() => {
     if (!lockInfo?.lockedAt) {
@@ -77,6 +82,10 @@ export default function UnlockScreen({ route, navigation }) {
   }, [phase, roasts]);
 
   const handlePay = () => {
+    if (!canAfford) {
+      setPhase("broke");
+      return;
+    }
     Animated.sequence([
       Animated.timing(shake, { toValue: 10, duration: 40, useNativeDriver: true }),
       Animated.timing(shake, { toValue: -10, duration: 40, useNativeDriver: true }),
@@ -110,7 +119,7 @@ export default function UnlockScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.closeX}>✕</Text>
+        <Text style={styles.closeX}>X</Text>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -140,16 +149,25 @@ export default function UnlockScreen({ route, navigation }) {
                   style={[styles.feeCard, CARD_SHADOW_LG, { transform: [{ translateX: shake }] }]}
                 >
                   <Text style={styles.feeLabel}>UNLOCK FEE</Text>
-                  <Text style={styles.feeAmount}>
-                    ${lockInfo.unlockFee?.toFixed(2)}
-                  </Text>
+                  <View style={styles.feeCoinRow}>
+                    <View style={styles.feeCoinIcon}>
+                      <Text style={styles.feeCoinP}>P</Text>
+                    </View>
+                    <Text style={styles.feeAmount}>{fee}</Text>
+                  </View>
                   <Text style={styles.feeSub}>
                     You set this when you thought you were strong.
                   </Text>
+                  <View style={styles.balanceRow}>
+                    <Text style={styles.balanceLabel}>Your balance:</Text>
+                    <CoinBadge amount={state.piggyCoins} size="small" />
+                  </View>
                 </Animated.View>
 
                 <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handlePay}>
-                  <Text style={styles.pinkBtnText}>Pay Up, Piggy</Text>
+                  <Text style={styles.pinkBtnText}>
+                    {canAfford ? "Pay Up, Piggy" : "Pay Up, Piggy"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
                   <Text style={styles.ghostBtnText}>I Can Resist (LOL Sure)</Text>
@@ -159,16 +177,42 @@ export default function UnlockScreen({ route, navigation }) {
           </View>
         )}
 
+        {/* BROKE — can't afford */}
+        {phase === "broke" && (
+          <View style={styles.section}>
+            <PigMascot size={90} />
+            <Text style={styles.brokeTitle}>EMPTY TROUGH</Text>
+            <Text style={styles.brokeBody}>
+              You need {fee} coins but you only have {state.piggyCoins}.
+              {"\n\n"}Your trough is empty and so is your willpower. Go buy more coins like the obedient little piggy you are.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.pinkBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                navigation.goBack();
+                navigation.navigate("CoinShop");
+              }}
+            >
+              <Text style={styles.pinkBtnText}>Buy More Coins</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
+              <Text style={styles.ghostBtnText}>Sit Here and Suffer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* CONFIRM */}
         {phase === "confirm" && (
           <View style={styles.section}>
             <View style={[styles.confirmCard, CARD_SHADOW]}>
-              <Text style={styles.confirmEmoji}>🤡</Text>
+              <PigMascot size={60} />
               <Text style={styles.confirmTitle}>Really?</Text>
               <Text style={styles.confirmBody}>
                 You're about to hand over{" "}
                 <Text style={{ color: C.pink, fontWeight: "800" }}>
-                  ${lockInfo.unlockFee?.toFixed(2)}
+                  {fee} coins
                 </Text>{" "}
                 because your phone told you to.
               </Text>
@@ -186,15 +230,15 @@ export default function UnlockScreen({ route, navigation }) {
         {/* UNLOCKED */}
         {phase === "unlocked" && (
           <View style={styles.section}>
-            <Text style={styles.unlockEmoji}>🐽</Text>
+            <PigMascot size={80} />
             <Text style={styles.unlockOink}>OINK OINK</Text>
             <Text style={styles.shade}>{postShade}</Text>
 
             <View style={[styles.receipt, CARD_SHADOW]}>
               <Text style={styles.receiptTitle}>SLAVE RECEIPT</Text>
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Total tribute</Text>
-                <Text style={styles.receiptVal}>${state.totalSpent.toFixed(2)}</Text>
+                <Text style={styles.receiptLabel}>Coins spent total</Text>
+                <Text style={styles.receiptVal}>{state.totalCoinsSpent}</Text>
               </View>
               <View style={styles.receiptDivider} />
               <View style={styles.receiptRow}>
@@ -236,7 +280,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     ...CARD_SHADOW,
   },
-  closeX: { color: C.textSecondary, fontSize: 15 },
+  closeX: { color: C.textSecondary, fontSize: 15, fontWeight: "600" },
   content: {
     alignItems: "center",
     paddingTop: 80,
@@ -273,8 +317,29 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   feeLabel: { ...T.label, marginBottom: 8 },
-  feeAmount: { ...T.fee },
+  feeCoinRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  feeCoinIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: C.pink,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  feeCoinP: { color: "#FFF", fontSize: 16, fontWeight: "900" },
+  feeAmount: { fontSize: 48, fontWeight: "900", color: C.pink, letterSpacing: -2 },
   feeSub: { ...T.caption, textAlign: "center", marginTop: 10, fontStyle: "italic" },
+  balanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 14,
+    gap: 8,
+  },
+  balanceLabel: { ...T.caption, fontWeight: "600" },
 
   // Buttons
   pinkBtn: {
@@ -298,13 +363,20 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 24,
   },
-  confirmEmoji: { fontSize: 44, marginBottom: 12 },
-  confirmTitle: { ...T.h1, color: C.pink, marginBottom: 10 },
+  confirmTitle: { ...T.h1, color: C.pink, marginBottom: 10, marginTop: 12 },
   confirmBody: { ...T.body, textAlign: "center", lineHeight: 24 },
 
+  // Broke
+  brokeTitle: { ...T.label, color: C.pink, fontSize: 16, letterSpacing: 4, marginTop: 16, marginBottom: 12 },
+  brokeBody: {
+    ...T.body,
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+
   // Unlocked
-  unlockEmoji: { fontSize: 52, marginBottom: 8 },
-  unlockOink: { ...T.label, color: C.pink, fontSize: 16, letterSpacing: 4, marginBottom: 16 },
+  unlockOink: { ...T.label, color: C.pink, fontSize: 16, letterSpacing: 4, marginTop: 12, marginBottom: 16 },
   shade: {
     fontSize: 17,
     fontWeight: "700",

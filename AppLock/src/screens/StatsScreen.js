@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
+import PigMascot from "../components/PigMascot";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
 
 const W = Dimensions.get("window").width;
@@ -25,14 +26,14 @@ export default function StatsScreen() {
 
   const getShame = () => {
     if (state.totalUnlocks === 0)
-      return { label: "Fresh Meat", emoji: "🤔", color: C.textTertiary };
+      return { label: "Fresh Meat", color: C.textTertiary };
     if (state.totalUnlocks < 5)
-      return { label: "Piglet", emoji: "🐽", color: C.green };
+      return { label: "Piglet", color: C.green };
     if (state.totalUnlocks < 15)
-      return { label: "Obedient Pig", emoji: "🐷", color: C.gold };
+      return { label: "Obedient Pig", color: C.gold };
     if (state.totalUnlocks < 30)
-      return { label: "Phone Slave", emoji: "🐖", color: "#FF6B35" };
-    return { label: "Full PayPig", emoji: "💀", color: C.pink };
+      return { label: "Phone Slave", color: "#FF6B35" };
+    return { label: "Full PayPig", color: C.pink };
   };
 
   const shame = getShame();
@@ -41,11 +42,11 @@ export default function StatsScreen() {
   const getAnalysis = () => {
     if (state.totalUnlocks === 0)
       return "No unlocks yet. Enjoy the illusion of control while it lasts, piggy.";
-    if (state.totalSpent < 5)
-      return `$${state.totalSpent.toFixed(2)} paid in tribute. A small price for a small, weak person.`;
-    if (state.totalSpent < 20)
-      return `$${state.totalSpent.toFixed(2)} surrendered to a screen. You're not a user. You're livestock.`;
-    return `$${state.totalSpent.toFixed(2)}. You've paid more to use your phone than most pay for therapy.`;
+    if (state.totalCoinsSpent < 20)
+      return `${state.totalCoinsSpent} coins surrendered. Barely a nibble. You'll be hemorrhaging coins in no time.`;
+    if (state.totalCoinsSpent < 100)
+      return `${state.totalCoinsSpent} coins burned through. You're not a user. You're livestock.`;
+    return `${state.totalCoinsSpent} coins gone. You've fed more to this app than most people spend on food.`;
   };
 
   return (
@@ -56,7 +57,7 @@ export default function StatsScreen() {
 
         {/* Shame Level */}
         <View style={[styles.heroCard, CARD_SHADOW_LG]}>
-          <Text style={styles.heroEmoji}>{shame.emoji}</Text>
+          <PigMascot size={70} />
           <Text style={styles.heroLabel}>SHAME LEVEL</Text>
           <Text style={[styles.heroValue, { color: shame.color }]}>
             {shame.label}
@@ -74,25 +75,25 @@ export default function StatsScreen() {
         {/* Grid */}
         <View style={styles.grid}>
           <View style={[styles.gridCard, CARD_SHADOW]}>
-            <Text style={styles.gridEmoji}>🔒</Text>
+            <View style={[styles.gridDot, { backgroundColor: C.pink }]} />
             <Text style={styles.gridVal}>{lockedCount}</Text>
             <Text style={styles.gridLabel}>Locked</Text>
           </View>
           <View style={[styles.gridCard, CARD_SHADOW]}>
-            <Text style={styles.gridEmoji}>😩</Text>
+            <View style={[styles.gridDot, { backgroundColor: C.gold }]} />
             <Text style={styles.gridVal}>{state.totalUnlocks}</Text>
             <Text style={styles.gridLabel}>Obeyed</Text>
           </View>
           <View style={[styles.gridCard, CARD_SHADOW]}>
-            <Text style={styles.gridEmoji}>💸</Text>
+            <View style={[styles.gridDot, { backgroundColor: C.green }]} />
             <Text style={[styles.gridVal, { color: C.pink }]}>
-              ${state.totalSpent.toFixed(2)}
+              {state.totalCoinsSpent}
             </Text>
-            <Text style={styles.gridLabel}>Tribute</Text>
+            <Text style={styles.gridLabel}>Coins Spent</Text>
           </View>
           <View style={[styles.gridCard, CARD_SHADOW]}>
-            <Text style={styles.gridEmoji}>💰</Text>
-            <Text style={styles.gridVal}>${avgFee.toFixed(2)}</Text>
+            <View style={[styles.gridDot, { backgroundColor: "#FF6B35" }]} />
+            <Text style={styles.gridVal}>{Math.round(avgFee)}</Text>
             <Text style={styles.gridLabel}>Avg Fee</Text>
           </View>
         </View>
@@ -114,7 +115,7 @@ export default function StatsScreen() {
             "You'll unlock again tomorrow. Good piggy.",
           ].map((tip, i) => (
             <View key={i} style={styles.tipRow}>
-              <Text style={styles.tipArrow}>→</Text>
+              <Text style={styles.tipArrow}>-</Text>
               <Text style={styles.tipText}>{tip}</Text>
             </View>
           ))}
@@ -137,8 +138,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  heroEmoji: { fontSize: 52, marginBottom: 10 },
-  heroLabel: { ...T.label, marginBottom: 6 },
+  heroLabel: { ...T.label, marginBottom: 6, marginTop: 14 },
   heroValue: { fontSize: 26, fontWeight: "900", letterSpacing: -0.5 },
   meterTrack: {
     width: "100%",
@@ -164,7 +164,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  gridEmoji: { fontSize: 26, marginBottom: 8 },
+  gridDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
   gridVal: { ...T.stat, fontSize: 24 },
   gridLabel: { ...T.caption, marginTop: 4 },
 

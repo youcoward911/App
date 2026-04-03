@@ -5,15 +5,23 @@ const AppLockContext = createContext();
 
 const STORAGE_KEY = "@paypig_state";
 
+export const COIN_PACKAGES = [
+  { id: "small", coins: 100, price: 9.99, label: "100 Coins", bonus: null },
+  { id: "medium", coins: 220, price: 19.99, label: "220 Coins", bonus: "+20 bonus" },
+  { id: "large", coins: 625, price: 49.99, label: "625 Coins", bonus: "+125 bonus" },
+];
+
 const initialState = {
   lockedApps: {},
-  // { [appId]: { lockedAt: timestamp, unlockFee: number, unlockCountToday: number, lastUnlockDate: string } }
-  totalSpent: 0,
+  piggyCoins: 0,
+  totalCoinsSpent: 0,
+  totalCoinsPurchased: 0,
+  totalMoneySpent: 0,
   totalUnlocks: 0,
   settings: {
-    defaultFee: 0.5,
+    defaultFee: 5, // in coins now
     currency: "USD",
-    roastIntensity: "medium", // 'mild', 'medium', 'savage'
+    roastIntensity: "medium",
   },
 };
 
@@ -31,10 +39,8 @@ function reducer(state, action) {
           [appId]: {
             lockedAt: Date.now(),
             unlockFee: unlockFee ?? state.settings.defaultFee,
-            unlockCountToday:
-              state.lockedApps[appId]?.unlockCountToday ?? 0,
-            lastUnlockDate:
-              state.lockedApps[appId]?.lastUnlockDate ?? null,
+            unlockCountToday: state.lockedApps[appId]?.unlockCountToday ?? 0,
+            lastUnlockDate: state.lockedApps[appId]?.lastUnlockDate ?? null,
           },
         },
       };
@@ -45,23 +51,25 @@ function reducer(state, action) {
       const app = state.lockedApps[appId];
       if (!app) return state;
 
+      const fee = app.unlockFee || 0;
       const today = new Date().toDateString();
       const isNewDay = app.lastUnlockDate !== today;
       const newCount = isNewDay ? 1 : (app.unlockCountToday || 0) + 1;
 
       return {
         ...state,
+        piggyCoins: Math.max(0, state.piggyCoins - fee),
+        totalCoinsSpent: state.totalCoinsSpent + fee,
+        totalUnlocks: state.totalUnlocks + 1,
         lockedApps: {
           ...state.lockedApps,
           [appId]: {
             ...app,
-            lockedAt: null, // Temporarily unlocked
+            lockedAt: null,
             unlockCountToday: newCount,
             lastUnlockDate: today,
           },
         },
-        totalSpent: state.totalSpent + (app.unlockFee || 0),
-        totalUnlocks: state.totalUnlocks + 1,
       };
     }
 
@@ -73,10 +81,7 @@ function reducer(state, action) {
         ...state,
         lockedApps: {
           ...state.lockedApps,
-          [appId]: {
-            ...app,
-            lockedAt: Date.now(),
-          },
+          [appId]: { ...app, lockedAt: Date.now() },
         },
       };
     }
@@ -87,16 +92,13 @@ function reducer(state, action) {
       return { ...state, lockedApps: newLocked };
     }
 
-    case "UPDATE_FEE": {
-      const { appId, fee } = action.payload;
-      const app = state.lockedApps[appId];
-      if (!app) return state;
+    case "BUY_COINS": {
+      const { coins, price } = action.payload;
       return {
         ...state,
-        lockedApps: {
-          ...state.lockedApps,
-          [appId]: { ...app, unlockFee: fee },
-        },
+        piggyCoins: state.piggyCoins + coins,
+        totalCoinsPurchased: state.totalCoinsPurchased + coins,
+        totalMoneySpent: state.totalMoneySpent + price,
       };
     }
 
@@ -114,7 +116,6 @@ function reducer(state, action) {
 export function AppLockProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Load persisted state on mount
   useEffect(() => {
     (async () => {
       try {
@@ -128,7 +129,6 @@ export function AppLockProvider({ children }) {
     })();
   }, []);
 
-  // Persist state on changes
   useEffect(() => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch((e) =>
       console.warn("Failed to save state:", e)
@@ -144,8 +144,6 @@ export function AppLockProvider({ children }) {
 
 export function useAppLock() {
   const context = useContext(AppLockContext);
-  if (!context) {
-    throw new Error("useAppLock must be used within AppLockProvider");
-  }
+  if (!context) throw new Error("useAppLock must be used within AppLockProvider");
   return context;
 }
