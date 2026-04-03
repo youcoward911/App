@@ -6,393 +6,237 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
-  Dimensions,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
-import { COLORS, FONTS, SHADOW, SHADOW_PINK, GRADIENTS } from "../utils/theme";
-
-const { width } = Dimensions.get("window");
+import AppIcon from "../components/AppIcon";
+import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function HomeScreen({ navigation }) {
   const { state } = useAppLock();
   const lockedAppIds = Object.keys(state.lockedApps);
-  const lockedApps = POPULAR_APPS.filter((app) =>
-    lockedAppIds.includes(app.id)
-  );
+  const lockedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
 
-  const getAppStatus = (appId) => {
-    const app = state.lockedApps[appId];
-    if (!app) return null;
-    if (!app.lockedAt) return "unlocked";
-    return "locked";
-  };
-
-  const getTimeSinceLock = (appId) => {
+  const getTimeSince = (appId) => {
     const app = state.lockedApps[appId];
     if (!app?.lockedAt) return "";
     const mins = Math.floor((Date.now() - app.lockedAt) / 60000);
     if (mins < 1) return "just now";
     if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ${mins % 60}m`;
-    return `${Math.floor(hours / 24)}d`;
+    const h = Math.floor(mins / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
   };
 
+  const isLocked = (appId) => !!state.lockedApps[appId]?.lockedAt;
+
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <Text style={styles.pigEmoji}>🐷</Text>
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
           <View>
-            <Text style={styles.title}>PayPig</Text>
-            <Text style={styles.subtitle}>You're owned. Accept it.</Text>
+            <Text style={styles.greeting}>PayPig</Text>
+            <Text style={styles.sub}>You're owned. Accept it.</Text>
+          </View>
+          <View style={styles.avatarWrap}>
+            <Text style={styles.avatar}>🐷</Text>
           </View>
         </View>
-      </View>
 
-      {/* Stats Strip */}
-      <View style={styles.statsStrip}>
-        <View style={styles.statPill}>
-          <LinearGradient
-            colors={[COLORS.pinkSoft, "transparent"]}
-            style={styles.statPillBg}
-          />
-          <Text style={styles.statValue}>{lockedApps.length}</Text>
-          <Text style={styles.statLabel}>LOCKED</Text>
-        </View>
-        <View style={styles.statPill}>
-          <LinearGradient
-            colors={[COLORS.purpleSoft, "transparent"]}
-            style={styles.statPillBg}
-          />
-          <Text style={styles.statValue}>{state.totalUnlocks}</Text>
-          <Text style={styles.statLabel}>OBEYED</Text>
-        </View>
-        <View style={styles.statPill}>
-          <LinearGradient
-            colors={[COLORS.goldSoft, "transparent"]}
-            style={styles.statPillBg}
-          />
-          <Text style={[styles.statValue, { color: COLORS.gold }]}>
-            ${state.totalSpent.toFixed(2)}
-          </Text>
-          <Text style={styles.statLabel}>WASTED</Text>
-        </View>
-      </View>
-
-      {lockedApps.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconContainer}>
-            <Text style={styles.emptyIcon}>🐽</Text>
+        {/* Quick Stats */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, CARD_SHADOW]}>
+            <Text style={styles.statNum}>{lockedApps.length}</Text>
+            <Text style={styles.statLabel}>Locked</Text>
           </View>
-          <Text style={styles.emptyTitle}>Nothing locked yet</Text>
-          <Text style={styles.emptyText}>
-            Go ahead, pretend you have self control.{"\n"}We both know what you
-            are.
-          </Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate("AddApps")}
-          >
-            <LinearGradient
-              colors={GRADIENTS.pink}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.addButtonGradient}
-            >
-              <Text style={styles.addButtonText}>Admit You're Addicted</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          <View style={[styles.statCard, CARD_SHADOW]}>
+            <Text style={styles.statNum}>{state.totalUnlocks}</Text>
+            <Text style={styles.statLabel}>Obeyed</Text>
+          </View>
+          <View style={[styles.statCard, CARD_SHADOW]}>
+            <Text style={[styles.statNum, { color: C.pink }]}>
+              ${state.totalSpent.toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Wasted</Text>
+          </View>
         </View>
-      ) : (
-        <FlatList
-          data={lockedApps}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => {
-            const status = getAppStatus(item.id);
-            const lockInfo = state.lockedApps[item.id];
-            const isLocked = status === "locked";
-            return (
-              <TouchableOpacity
-                style={[styles.appCard, !isLocked && styles.appCardUnlocked]}
-                activeOpacity={0.7}
-                onPress={() =>
-                  navigation.navigate("Unlock", { appId: item.id })
-                }
-              >
-                {/* Accent bar */}
-                <View
-                  style={[
-                    styles.accentBar,
-                    { backgroundColor: isLocked ? COLORS.pink : COLORS.mint },
-                  ]}
-                />
-                <View style={styles.appIconContainer}>
-                  <Text style={styles.appIcon}>{item.icon}</Text>
-                </View>
-                <View style={styles.appInfo}>
-                  <Text style={styles.appName}>{item.name}</Text>
-                  <View style={styles.statusRow}>
-                    <View
-                      style={[
-                        styles.statusDot,
-                        {
-                          backgroundColor: isLocked
-                            ? COLORS.pink
-                            : COLORS.mint,
-                        },
-                      ]}
-                    />
-                    <Text style={styles.appStatus}>
-                      {isLocked
-                        ? `Locked ${getTimeSinceLock(item.id)}`
-                        : "Unlocked"}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.feeContainer}>
-                  <Text style={styles.feeValue}>
-                    ${lockInfo?.unlockFee?.toFixed(2)}
-                  </Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </TouchableOpacity>
-            );
-          }}
-          ListFooterComponent={
+
+        {lockedApps.length === 0 ? (
+          <View style={styles.empty}>
+            <View style={styles.emptyCircle}>
+              <Text style={{ fontSize: 44 }}>🐽</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Nothing locked yet</Text>
+            <Text style={styles.emptyBody}>
+              Pretending you have self control?{"\n"}We both know what you are.
+            </Text>
             <TouchableOpacity
-              style={styles.addMoreButton}
-              activeOpacity={0.7}
+              style={styles.primaryBtn}
+              activeOpacity={0.85}
               onPress={() => navigation.navigate("AddApps")}
             >
-              <Text style={styles.addMorePlus}>+</Text>
-              <Text style={styles.addMoreText}>Add More Addictions</Text>
+              <Text style={styles.primaryBtnText}>Admit You're Addicted</Text>
             </TouchableOpacity>
-          }
-        />
-      )}
+          </View>
+        ) : (
+          <FlatList
+            data={lockedApps}
+            keyExtractor={(i) => i.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.list}
+            renderItem={({ item }) => {
+              const locked = isLocked(item.id);
+              const info = state.lockedApps[item.id];
+              return (
+                <TouchableOpacity
+                  style={[styles.appRow, CARD_SHADOW]}
+                  activeOpacity={0.8}
+                  onPress={() =>
+                    navigation.navigate("Unlock", { appId: item.id })
+                  }
+                >
+                  <AppIcon app={item} size={46} />
+                  <View style={styles.appInfo}>
+                    <Text style={styles.appName}>{item.name}</Text>
+                    <Text style={styles.appMeta}>
+                      {locked ? `Locked ${getTimeSince(item.id)}` : "Unlocked"}
+                    </Text>
+                  </View>
+                  <Text style={styles.appFee}>
+                    ${info?.unlockFee?.toFixed(2)}
+                  </Text>
+                  <Text style={styles.chevron}>›</Text>
+                </TouchableOpacity>
+              );
+            }}
+            ListFooterComponent={
+              <TouchableOpacity
+                style={styles.addRow}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate("AddApps")}
+              >
+                <View style={styles.addCircle}>
+                  <Text style={styles.addPlus}>+</Text>
+                </View>
+                <Text style={styles.addText}>Add More Addictions</Text>
+              </TouchableOpacity>
+            }
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
+  safe: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1 },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  titleRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
-  pigEmoji: {
-    fontSize: 38,
-    marginRight: 14,
+  greeting: { ...T.hero },
+  sub: { ...T.caption, marginTop: 2 },
+  avatarWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: C.pinkPale,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  title: {
-    ...FONTS.heroTitle,
-  },
-  subtitle: {
-    ...FONTS.caption,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  statsStrip: {
+  avatar: { fontSize: 26 },
+
+  // Stats
+  statsRow: {
     flexDirection: "row",
     paddingHorizontal: 24,
-    paddingVertical: 12,
     gap: 10,
+    marginBottom: 20,
   },
-  statPill: {
+  statCard: {
     flex: 1,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: C.white,
     borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: 16,
     alignItems: "center",
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
-  statPillBg: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 16,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: COLORS.text,
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    ...FONTS.label,
-    fontSize: 9,
-    marginTop: 4,
-  },
-  list: {
-    paddingHorizontal: 24,
-    paddingTop: 4,
-    paddingBottom: 20,
-  },
-  appCard: {
+  statNum: { ...T.stat, fontSize: 22 },
+  statLabel: { ...T.caption, marginTop: 4 },
+
+  // List
+  list: { paddingHorizontal: 24, paddingBottom: 20 },
+  appRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 18,
+    backgroundColor: C.white,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: "hidden",
-    ...SHADOW,
   },
-  appCardUnlocked: {
-    opacity: 0.55,
-  },
-  accentBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    borderTopLeftRadius: 18,
-    borderBottomLeftRadius: 18,
-  },
-  appIconContainer: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: COLORS.bgElevated,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  appIcon: {
-    fontSize: 24,
-  },
-  appInfo: {
-    flex: 1,
-  },
-  appName: {
+  appInfo: { flex: 1, marginLeft: 14 },
+  appName: { ...T.bodyBold },
+  appMeta: { ...T.caption, marginTop: 2 },
+  appFee: {
     fontSize: 16,
     fontWeight: "700",
-    color: COLORS.text,
-    letterSpacing: -0.2,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  appStatus: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: COLORS.textMuted,
-  },
-  feeContainer: {
-    backgroundColor: COLORS.goldSoft,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    color: C.pink,
     marginRight: 8,
-  },
-  feeValue: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: COLORS.gold,
-    letterSpacing: -0.3,
   },
   chevron: {
-    fontSize: 22,
+    fontSize: 20,
+    color: C.textTertiary,
     fontWeight: "300",
-    color: COLORS.textDim,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 48,
-  },
-  emptyIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: COLORS.pinkSoft,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  emptyIcon: {
-    fontSize: 48,
-  },
-  emptyTitle: {
-    ...FONTS.title,
-    fontSize: 22,
-    marginBottom: 10,
-  },
-  emptyText: {
-    ...FONTS.body,
-    textAlign: "center",
-    color: COLORS.textMuted,
-  },
-  addButton: {
-    marginTop: 28,
-    borderRadius: 16,
-    overflow: "hidden",
-    ...SHADOW_PINK,
-  },
-  addButtonGradient: {
-    paddingHorizontal: 36,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  addButtonText: {
-    color: COLORS.text,
-    fontWeight: "800",
-    fontSize: 16,
-    letterSpacing: 0.3,
-  },
-  addMoreButton: {
+
+  // Add row
+  addRow: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 16,
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    borderStyle: "dashed",
-    borderRadius: 18,
-    padding: 18,
-    marginTop: 2,
-    marginBottom: 10,
   },
-  addMorePlus: {
-    fontSize: 20,
-    fontWeight: "300",
-    color: COLORS.textMuted,
-    marginRight: 8,
+  addCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: C.pinkPale,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
-  addMoreText: {
-    color: COLORS.textMuted,
-    fontWeight: "600",
-    fontSize: 14,
+  addPlus: { fontSize: 18, color: C.pink, fontWeight: "600" },
+  addText: { ...T.body, color: C.pink, fontWeight: "600" },
+
+  // Empty
+  empty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 48,
   },
+  emptyCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: C.pinkPale,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8 },
+  emptyBody: { ...T.body, textAlign: "center", lineHeight: 22 },
+  primaryBtn: {
+    backgroundColor: C.pink,
+    borderRadius: 14,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    marginTop: 24,
+  },
+  primaryBtnText: { ...T.button },
 });

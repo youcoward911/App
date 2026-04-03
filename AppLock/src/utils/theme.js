@@ -1,115 +1,126 @@
-export const COLORS = {
+import { Platform } from "react-native";
+
+// Soft pink-based palette inspired by modern iOS apps
+export const C = {
   // Backgrounds
-  bg: "#08080F",
-  bgCard: "#12121E",
-  bgCardHover: "#1A1A2E",
-  bgElevated: "#1E1E32",
-  bgInput: "#16162A",
+  bg: "#FFF0F3",
+  bgSoft: "#FFE4EC",
+  white: "#FFFFFF",
+  card: "#FFFFFF",
 
   // Brand
-  pink: "#FF2D78",
-  pinkDark: "#D4205F",
-  pinkSoft: "rgba(255, 45, 120, 0.12)",
-  pinkGlow: "rgba(255, 45, 120, 0.25)",
-
-  // Accents
-  gold: "#FFD666",
-  goldDark: "#E5B84C",
-  goldSoft: "rgba(255, 214, 102, 0.12)",
-  mint: "#5CFFB1",
-  mintSoft: "rgba(92, 255, 177, 0.12)",
-  purple: "#A855F7",
-  purpleSoft: "rgba(168, 85, 247, 0.12)",
+  pink: "#FF2D55",
+  pinkLight: "#FF6B8A",
+  pinkPale: "#FFE0E8",
+  pinkBg: "#FFF5F7",
 
   // Text
-  text: "#FFFFFF",
-  textSecondary: "#A1A1B5",
-  textMuted: "#5E5E72",
-  textDim: "#3D3D52",
+  text: "#1C1C1E",
+  textSecondary: "#8E8E93",
+  textTertiary: "#AEAEB2",
+  textOnPink: "#FFFFFF",
 
-  // Borders
-  border: "#1F1F35",
-  borderLight: "#2A2A45",
-  borderPink: "rgba(255, 45, 120, 0.3)",
+  // Accent
+  gold: "#FF9500",
+  green: "#34C759",
+  red: "#FF3B30",
+  blue: "#007AFF",
+  purple: "#AF52DE",
 
   // Utility
-  overlay: "rgba(8, 8, 15, 0.92)",
-  shadow: "#000000",
+  border: "rgba(0,0,0,0.04)",
+  shadow: "rgba(0,0,0,0.08)",
+  overlay: "rgba(0,0,0,0.4)",
+  divider: "rgba(0,0,0,0.06)",
 };
 
-export const GRADIENTS = {
-  card: [COLORS.bgCard, "#0F0F1A"],
-  pink: ["#FF2D78", "#FF6B9D"],
-  pinkDark: ["#D4205F", "#FF2D78"],
-  gold: ["#FFD666", "#FFAB40"],
-  dark: ["#12121E", "#08080F"],
-  header: ["rgba(8,8,15,1)", "rgba(8,8,15,0)"],
-};
-
-export const SHADOW = {
-  shadowColor: COLORS.shadow,
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
+// Consistent shadow for cards — like ChatGPT/Instagram
+export const CARD_SHADOW = {
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06,
   shadowRadius: 12,
-  elevation: 8,
+  elevation: 3,
 };
 
-export const SHADOW_PINK = {
-  shadowColor: COLORS.pink,
+export const CARD_SHADOW_LG = {
+  shadowColor: "#000",
   shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
-  shadowRadius: 16,
-  elevation: 8,
+  shadowOpacity: 0.1,
+  shadowRadius: 20,
+  elevation: 5,
 };
 
-export const FONTS = {
-  heroTitle: {
-    fontSize: 34,
-    fontWeight: "900",
-    color: COLORS.text,
-    letterSpacing: -0.5,
-  },
-  title: {
-    fontSize: 26,
+// System font on iOS = SF Pro, Android = Roboto
+const FONT = Platform.OS === "ios" ? "System" : "Roboto";
+
+export const T = {
+  hero: {
+    fontSize: 32,
     fontWeight: "800",
-    color: COLORS.text,
-    letterSpacing: -0.3,
+    color: C.text,
+    letterSpacing: -0.5,
+    fontFamily: FONT,
   },
-  subtitle: {
-    fontSize: 17,
+  h1: {
+    fontSize: 24,
     fontWeight: "700",
-    color: COLORS.text,
+    color: C.text,
+    letterSpacing: -0.3,
+    fontFamily: FONT,
+  },
+  h2: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: C.text,
+    fontFamily: FONT,
   },
   body: {
     fontSize: 15,
     fontWeight: "400",
-    color: COLORS.textSecondary,
+    color: C.textSecondary,
     lineHeight: 22,
+    fontFamily: FONT,
+  },
+  bodyBold: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: C.text,
+    fontFamily: FONT,
   },
   caption: {
     fontSize: 12,
     fontWeight: "500",
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
-  },
-  roast: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: COLORS.pink,
-    fontStyle: "italic",
-    lineHeight: 32,
-  },
-  fee: {
-    fontSize: 42,
-    fontWeight: "900",
-    color: COLORS.gold,
-    letterSpacing: -1,
+    color: C.textTertiary,
+    letterSpacing: 0.2,
+    fontFamily: FONT,
   },
   label: {
     fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.textMuted,
+    fontWeight: "600",
+    color: C.textTertiary,
+    letterSpacing: 0.8,
     textTransform: "uppercase",
-    letterSpacing: 1.5,
+    fontFamily: FONT,
+  },
+  stat: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: C.text,
+    letterSpacing: -0.5,
+    fontFamily: FONT,
+  },
+  fee: {
+    fontSize: 44,
+    fontWeight: "900",
+    color: C.pink,
+    letterSpacing: -1,
+    fontFamily: FONT,
+  },
+  button: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: C.textOnPink,
+    fontFamily: FONT,
   },
 };

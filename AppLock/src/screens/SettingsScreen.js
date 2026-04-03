@@ -9,187 +9,103 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAppLock } from "../context/AppLockContext";
-import { COLORS, FONTS, SHADOW, GRADIENTS } from "../utils/theme";
+import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function SettingsScreen() {
   const { state, dispatch } = useAppLock();
-  const [defaultFee, setDefaultFee] = useState(
-    state.settings.defaultFee.toString()
-  );
+  const [fee, setFee] = useState(state.settings.defaultFee.toString());
 
-  const intensityOptions = [
-    {
-      key: "mild",
-      label: "Mild",
-      desc: "Gentle nudges. For the delicate.",
-      emoji: "😊",
-      color: COLORS.mint,
-      bg: COLORS.mintSoft,
-    },
-    {
-      key: "medium",
-      label: "Medium",
-      desc: "The sweet spot of shame.",
-      emoji: "😏",
-      color: COLORS.gold,
-      bg: COLORS.goldSoft,
-    },
-    {
-      key: "savage",
-      label: "Savage",
-      desc: "No mercy. You asked for this.",
-      emoji: "💀",
-      color: COLORS.pink,
-      bg: COLORS.pinkSoft,
-    },
+  const intensities = [
+    { key: "mild", label: "Mild", desc: "Gentle nudges. For the delicate.", emoji: "😊", color: C.green },
+    { key: "medium", label: "Medium", desc: "The sweet spot of shame.", emoji: "😏", color: C.gold },
+    { key: "savage", label: "Savage", desc: "No mercy. You asked for this.", emoji: "💀", color: C.pink },
   ];
 
   const saveFee = () => {
-    const fee = parseFloat(defaultFee);
-    if (isNaN(fee) || fee < 0) {
-      Alert.alert(
-        "Nice Try",
-        "Enter a real number. Preferably one that hurts."
-      );
+    const val = parseFloat(fee);
+    if (isNaN(val) || val < 0) {
+      Alert.alert("Nice Try", "Enter a real number.");
       return;
     }
-    if (fee === 0) {
-      Alert.alert(
-        "Really? $0.00?",
-        "That defeats the entire purpose. But sure, it's your life.",
-        [
-          { text: "I'll raise it", style: "cancel" },
-          {
-            text: "I want $0",
-            onPress: () =>
-              dispatch({
-                type: "UPDATE_SETTINGS",
-                payload: { defaultFee: 0 },
-              }),
-          },
-        ]
-      );
+    if (val === 0) {
+      Alert.alert("Really? $0.00?", "That defeats the purpose.", [
+        { text: "I'll raise it", style: "cancel" },
+        { text: "I want $0", onPress: () => dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: 0 } }) },
+      ]);
       return;
     }
-    dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: fee } });
-    Alert.alert("Saved", `$${fee.toFixed(2)} per act of obedience. Good piggy.`);
+    dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
+    Alert.alert("Saved", `$${val.toFixed(2)} per act of obedience.`);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Configure your servitude</Text>
+        <Text style={styles.sub}>Configure your servitude</Text>
 
-        {/* Default Fee */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Default Unlock Fee</Text>
-          <Text style={styles.sectionDesc}>
-            How much does your obedience cost?
-          </Text>
+        {/* Fee */}
+        <View style={[styles.card, CARD_SHADOW]}>
+          <Text style={styles.cardTitle}>Default Unlock Fee</Text>
+          <Text style={styles.cardDesc}>How much does your obedience cost?</Text>
 
           <View style={styles.feeRow}>
-            <View style={styles.feeInputContainer}>
-              <Text style={styles.feeCurrency}>$</Text>
+            <View style={styles.feeInputWrap}>
+              <Text style={styles.feeDollar}>$</Text>
               <TextInput
                 style={styles.feeInput}
-                value={defaultFee}
-                onChangeText={setDefaultFee}
+                value={fee}
+                onChangeText={setFee}
                 keyboardType="decimal-pad"
                 placeholder="0.50"
-                placeholderTextColor={COLORS.textDim}
+                placeholderTextColor={C.textTertiary}
               />
             </View>
-            <TouchableOpacity
-              style={styles.saveButton}
-              activeOpacity={0.8}
-              onPress={saveFee}
-            >
-              <LinearGradient
-                colors={GRADIENTS.pink}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.saveButtonInner}
-              >
-                <Text style={styles.saveButtonText}>Save</Text>
-              </LinearGradient>
+            <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85} onPress={saveFee}>
+              <Text style={styles.saveBtnText}>Save</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.presets}>
-            {[0.25, 0.5, 1.0, 2.0, 5.0, 10.0].map((amount) => (
+            {[0.25, 0.5, 1, 2, 5, 10].map((amt) => (
               <TouchableOpacity
-                key={amount}
-                style={[
-                  styles.presetChip,
-                  parseFloat(defaultFee) === amount && styles.presetChipActive,
-                ]}
-                activeOpacity={0.7}
-                onPress={() => setDefaultFee(amount.toString())}
+                key={amt}
+                style={[styles.preset, parseFloat(fee) === amt && styles.presetActive]}
+                onPress={() => setFee(amt.toString())}
               >
-                <Text
-                  style={[
-                    styles.presetText,
-                    parseFloat(defaultFee) === amount &&
-                      styles.presetTextActive,
-                  ]}
-                >
-                  ${amount.toFixed(2)}
+                <Text style={[styles.presetText, parseFloat(fee) === amt && styles.presetTextActive]}>
+                  ${amt.toFixed(2)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Roast Intensity */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Degradation Level</Text>
-          <Text style={styles.sectionDesc}>How hard do you want to be put in your place?</Text>
-          {intensityOptions.map((option) => {
-            const isActive = state.settings.roastIntensity === option.key;
+        {/* Intensity */}
+        <View style={[styles.card, CARD_SHADOW]}>
+          <Text style={styles.cardTitle}>Degradation Level</Text>
+          <Text style={styles.cardDesc}>How hard should we put you in your place?</Text>
+
+          {intensities.map((opt) => {
+            const active = state.settings.roastIntensity === opt.key;
             return (
               <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.intensityOption,
-                  isActive && {
-                    borderColor: option.color,
-                    backgroundColor: option.bg,
-                  },
-                ]}
+                key={opt.key}
+                style={[styles.intensityRow, active && { backgroundColor: C.pinkPale }]}
                 activeOpacity={0.7}
-                onPress={() =>
-                  dispatch({
-                    type: "UPDATE_SETTINGS",
-                    payload: { roastIntensity: option.key },
-                  })
-                }
+                onPress={() => dispatch({ type: "UPDATE_SETTINGS", payload: { roastIntensity: opt.key } })}
               >
-                <View
-                  style={[
-                    styles.intensityEmojiContainer,
-                    { backgroundColor: isActive ? option.bg : COLORS.bgElevated },
-                  ]}
-                >
-                  <Text style={styles.intensityEmoji}>{option.emoji}</Text>
+                <View style={[styles.intensityIcon, { backgroundColor: active ? C.pinkPale : "#F5F5F5" }]}>
+                  <Text style={{ fontSize: 20 }}>{opt.emoji}</Text>
                 </View>
                 <View style={styles.intensityInfo}>
-                  <Text style={styles.intensityLabel}>{option.label}</Text>
-                  <Text style={styles.intensityDesc}>{option.desc}</Text>
+                  <Text style={styles.intensityLabel}>{opt.label}</Text>
+                  <Text style={styles.intensityDesc}>{opt.desc}</Text>
                 </View>
-                {isActive && (
-                  <View
-                    style={[
-                      styles.checkBadge,
-                      { backgroundColor: option.color },
-                    ]}
-                  >
-                    <Text style={styles.checkmark}>✓</Text>
+                {active && (
+                  <View style={[styles.check, { backgroundColor: opt.color }]}>
+                    <Text style={styles.checkMark}>✓</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -198,20 +114,19 @@ export default function SettingsScreen() {
         </View>
 
         {/* About */}
-        <View style={styles.section}>
+        <View style={[styles.card, CARD_SHADOW]}>
           <View style={styles.aboutHeader}>
-            <Text style={styles.aboutPig}>🐷</Text>
-            <View>
+            <Text style={{ fontSize: 32 }}>🐷</Text>
+            <View style={{ marginLeft: 14 }}>
               <Text style={styles.aboutName}>PayPig</Text>
-              <Text style={styles.version}>v1.0.0</Text>
+              <Text style={styles.aboutVer}>v1.0.0</Text>
             </View>
           </View>
-          <Text style={styles.aboutText}>
+          <Text style={styles.aboutBody}>
             Built because you're a slave to your phone and you know it.
-            This app doesn't help you. It owns you.
           </Text>
-          <View style={styles.taglineContainer}>
-            <Text style={styles.tagline}>
+          <View style={styles.quote}>
+            <Text style={styles.quoteText}>
               "You're not the user. You're the product. Now pay up, piggy."
             </Text>
           </View>
@@ -222,186 +137,91 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
-  content: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  title: {
-    ...FONTS.heroTitle,
-    marginBottom: 4,
-  },
-  subtitle: {
-    ...FONTS.body,
-    color: COLORS.textMuted,
-    marginBottom: 24,
-  },
-  section: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 22,
+  safe: { flex: 1, backgroundColor: C.bg },
+  content: { padding: 24, paddingBottom: 40 },
+  title: { ...T.hero },
+  sub: { ...T.caption, marginTop: 2, marginBottom: 20 },
+
+  card: {
+    backgroundColor: C.white,
+    borderRadius: 20,
     padding: 22,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    ...SHADOW,
+    marginBottom: 14,
   },
-  sectionTitle: {
-    ...FONTS.subtitle,
-    marginBottom: 4,
-  },
-  sectionDesc: {
-    ...FONTS.caption,
-    marginBottom: 18,
-  },
-  feeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  feeInputContainer: {
+  cardTitle: { ...T.h2, marginBottom: 4 },
+  cardDesc: { ...T.caption, marginBottom: 16 },
+
+  // Fee
+  feeRow: { flexDirection: "row", alignItems: "center" },
+  feeInputWrap: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.bgInput,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    marginRight: 10,
+  },
+  feeDollar: { fontSize: 20, fontWeight: "800", color: C.pink },
+  feeInput: { flex: 1, fontSize: 20, fontWeight: "800", color: C.pink, paddingVertical: 13 },
+  saveBtn: {
+    backgroundColor: C.pink,
+    borderRadius: 12,
+    paddingHorizontal: 22,
+    paddingVertical: 15,
+  },
+  saveBtnText: { ...T.button, fontSize: 14 },
+  presets: { flexDirection: "row", flexWrap: "wrap", marginTop: 12, gap: 8 },
+  preset: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#F5F5F5",
+  },
+  presetActive: { backgroundColor: C.pinkPale },
+  presetText: { fontSize: 13, fontWeight: "600", color: C.textSecondary },
+  presetTextActive: { color: C.pink },
+
+  // Intensity
+  intensityRow: {
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 14,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    padding: 12,
+    marginBottom: 8,
+    backgroundColor: "#F8F8F8",
+  },
+  intensityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
-  feeCurrency: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: COLORS.gold,
-    marginRight: 4,
-  },
-  feeInput: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: "800",
-    color: COLORS.gold,
-    paddingVertical: 14,
-  },
-  saveButton: {
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  saveButtonInner: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 14,
-  },
-  saveButtonText: {
-    color: COLORS.text,
-    fontWeight: "800",
-    fontSize: 15,
-  },
-  presets: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 14,
-    gap: 8,
-  },
-  presetChip: {
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    backgroundColor: COLORS.bgElevated,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  presetChipActive: {
-    borderColor: COLORS.gold,
-    backgroundColor: COLORS.goldSoft,
-  },
-  presetText: {
-    color: COLORS.textMuted,
-    fontWeight: "700",
-    fontSize: 13,
-  },
-  presetTextActive: {
-    color: COLORS.gold,
-  },
-  intensityOption: {
-    flexDirection: "row",
+  intensityInfo: { flex: 1 },
+  intensityLabel: { ...T.bodyBold },
+  intensityDesc: { ...T.caption, marginTop: 2 },
+  check: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
-    backgroundColor: COLORS.bgElevated,
-    borderRadius: 16,
+    justifyContent: "center",
+  },
+  checkMark: { color: "#FFF", fontSize: 13, fontWeight: "800" },
+
+  // About
+  aboutHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  aboutName: { ...T.h1, fontSize: 20 },
+  aboutVer: { ...T.caption, marginTop: 2 },
+  aboutBody: { ...T.body, marginBottom: 14 },
+  quote: {
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
     padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  intensityEmojiContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
-  },
-  intensityEmoji: {
-    fontSize: 22,
-  },
-  intensityInfo: {
-    flex: 1,
-  },
-  intensityLabel: {
-    color: COLORS.text,
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  intensityDesc: {
-    ...FONTS.caption,
-    marginTop: 2,
-  },
-  checkBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkmark: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  aboutHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  aboutPig: {
-    fontSize: 38,
-    marginRight: 14,
-  },
-  aboutName: {
-    ...FONTS.title,
-    fontSize: 22,
-  },
-  version: {
-    ...FONTS.caption,
-    marginTop: 2,
-  },
-  aboutText: {
-    ...FONTS.body,
-    marginBottom: 16,
-  },
-  taglineContainer: {
-    backgroundColor: COLORS.bgElevated,
-    borderRadius: 14,
-    padding: 16,
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.pink,
+    borderLeftColor: C.pink,
   },
-  tagline: {
-    ...FONTS.body,
-    fontSize: 13,
-    fontStyle: "italic",
-    color: COLORS.textMuted,
-    lineHeight: 20,
-  },
+  quoteText: { ...T.body, fontSize: 13, fontStyle: "italic", lineHeight: 20 },
 });
