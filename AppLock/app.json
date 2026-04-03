@@ -32,6 +32,18 @@
     },
     "plugins": [
       "./plugins/withScreenTime"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    },
+    "owner": "youcoward911",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": ""
+    }
   }
 }
