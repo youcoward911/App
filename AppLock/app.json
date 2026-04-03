@@ -5,19 +5,22 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#08080F"
+      "backgroundColor": "#FFF0F3"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.paypig.app"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.paypig.app",
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "PayPig uses this to track your app usage and lock apps you choose."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#08080F",
+        "backgroundColor": "#FFF0F3",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -26,6 +29,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "./plugins/withScreenTime"
+    ]
   }
 }
