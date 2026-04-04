@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
+  Dimensions,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
@@ -14,6 +15,11 @@ import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+
+const { width: SCREEN_W } = Dimensions.get("window");
+const CARD_W = SCREEN_W - 64;
+const CARD_SPACING = 12;
+const SNAP_INTERVAL = CARD_W + CARD_SPACING;
 
 const NO_TRIBUTE_LINES = [
   "Oink oink, piggy needs to scroll",
@@ -36,12 +42,11 @@ function getTributeClock(lastTributeTime) {
   return { text: `${d}d ${h % 24}h ago`, minutes: mins };
 }
 
-// Pig gets dirtier and angrier the longer it goes without paying
 function getPigMood(minutes) {
-  if (minutes < 30) return "happy";       // Just fed — clean, smiling
-  if (minutes < 120) return "restless";   // Getting antsy
-  if (minutes < 360) return "dirty";      // Mud-covered, angry brows
-  return "feral";                          // Filthy, shaking, furious
+  if (minutes < 30) return "happy";
+  if (minutes < 120) return "restless";
+  if (minutes < 360) return "dirty";
+  return "feral";
 }
 
 export default function HomeScreen({ navigation }) {
@@ -49,6 +54,7 @@ export default function HomeScreen({ navigation }) {
   const lockedAppIds = Object.keys(state.lockedApps);
   const lockedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
   const [now, setNow] = useState(Date.now());
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
@@ -72,17 +78,49 @@ export default function HomeScreen({ navigation }) {
 
   const isLocked = (appId) => !!state.lockedApps[appId]?.lockedAt;
 
+  const onScroll = (e) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
+    setActiveIndex(idx);
+  };
+
+  const renderCarouselCard = ({ item }) => {
+    const locked = isLocked(item.id);
+    const info = state.lockedApps[item.id];
+    return (
+      <TouchableOpacity
+        style={[styles.carouselCard, CARD_SHADOW_LG]}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate("Unlock", { appId: item.id })}
+      >
+        <AppIcon app={item} size={90} />
+        <Text style={styles.cardAppName}>{item.name}</Text>
+        <Text style={styles.cardStatus}>
+          {locked ? `Locked ${getTimeSince(item.id)}` : "Unlocked"}
+        </Text>
+        <View style={styles.cardFeeRow}>
+          <View style={styles.cardFeeCoin}>
+            <Text style={styles.cardFeeCoinP}>P</Text>
+          </View>
+          <Text style={styles.cardFeeAmount}>{info?.unlockFee}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.unlockBtn}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate("Unlock", { appId: item.id })}
+        >
+          <Text style={styles.unlockBtnText}>Pay Tribute</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Coin badge */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>PayPig</Text>
-            <Text style={styles.sub}>Your master is watching.</Text>
-          </View>
+          <View />
           <TouchableOpacity
-            style={styles.coinBtn}
             activeOpacity={0.8}
             onPress={() => navigation.navigate("CoinShop")}
           >
@@ -117,52 +155,44 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         ) : (
-          <FlatList
-            data={lockedApps}
-            keyExtractor={(i) => i.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.list}
-            renderItem={({ item }) => {
-              const locked = isLocked(item.id);
-              const info = state.lockedApps[item.id];
-              return (
-                <TouchableOpacity
-                  style={[styles.appRow, CARD_SHADOW]}
-                  activeOpacity={0.8}
-                  onPress={() =>
-                    navigation.navigate("Unlock", { appId: item.id })
-                  }
-                >
-                  <AppIcon app={item} size={46} />
-                  <View style={styles.appInfo}>
-                    <Text style={styles.appName}>{item.name}</Text>
-                    <Text style={styles.appMeta}>
-                      {locked ? `Locked ${getTimeSince(item.id)}` : "Unlocked"}
-                    </Text>
-                  </View>
-                  <View style={styles.feeWrap}>
-                    <View style={styles.feeCoin}>
-                      <Text style={styles.feeCoinP}>P</Text>
-                    </View>
-                    <Text style={styles.appFee}>{info?.unlockFee}</Text>
-                  </View>
-                  <Text style={styles.chevron}>›</Text>
-                </TouchableOpacity>
-              );
-            }}
-            ListFooterComponent={
-              <TouchableOpacity
-                style={styles.addRow}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate("AddApps")}
-              >
-                <View style={styles.addCircle}>
-                  <Text style={styles.addPlus}>+</Text>
-                </View>
-                <Text style={styles.addText}>Add More Addictions</Text>
-              </TouchableOpacity>
-            }
-          />
+          <View style={styles.carouselWrap}>
+            <FlatList
+              data={lockedApps}
+              keyExtractor={(i) => i.id}
+              horizontal
+              pagingEnabled={false}
+              snapToInterval={SNAP_INTERVAL}
+              snapToAlignment="start"
+              decelerationRate="fast"
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContent}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+              renderItem={renderCarouselCard}
+            />
+            {/* Dots */}
+            {lockedApps.length > 1 && (
+              <View style={styles.dots}>
+                {lockedApps.map((_, i) => (
+                  <View
+                    key={i}
+                    style={[styles.dot, i === activeIndex && styles.dotActive]}
+                  />
+                ))}
+              </View>
+            )}
+            {/* Add more */}
+            <TouchableOpacity
+              style={styles.addRow}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate("AddApps")}
+            >
+              <View style={styles.addCircle}>
+                <Text style={styles.addPlus}>+</Text>
+              </View>
+              <Text style={styles.addText}>Add More Addictions</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -180,9 +210,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 12,
   },
-  greeting: { ...T.hero },
-  sub: { ...T.caption, marginTop: 2 },
-  coinBtn: {},
 
   pigCard: {
     backgroundColor: C.white,
@@ -197,22 +224,43 @@ const styles = StyleSheet.create({
   tributeTime: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
   moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 6, textAlign: "center", paddingHorizontal: 16 },
 
-  list: { paddingHorizontal: 24, paddingBottom: 20 },
-  appRow: {
-    flexDirection: "row", alignItems: "center", backgroundColor: C.white,
-    borderRadius: 16, padding: 14, marginBottom: 10,
+  // Carousel
+  carouselWrap: { flex: 1 },
+  carouselContent: { paddingLeft: 32, paddingRight: 32 },
+  carouselCard: {
+    width: CARD_W,
+    backgroundColor: C.white,
+    borderRadius: 24,
+    padding: 28,
+    marginRight: CARD_SPACING,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  appInfo: { flex: 1, marginLeft: 14 },
-  appName: { ...T.bodyBold },
-  appMeta: { ...T.caption, marginTop: 2 },
-  feeWrap: { flexDirection: "row", alignItems: "center", marginRight: 8 },
-  feeCoin: {
-    width: 16, height: 16, borderRadius: 8, backgroundColor: C.pink,
-    alignItems: "center", justifyContent: "center", marginRight: 4,
+  cardAppName: { ...T.h1, marginTop: 16, textAlign: "center" },
+  cardStatus: { ...T.caption, marginTop: 6 },
+  cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 16 },
+  cardFeeCoin: {
+    width: 24, height: 24, borderRadius: 12, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center", marginRight: 8,
   },
-  feeCoinP: { color: "#FFF", fontSize: 9, fontWeight: "900" },
-  appFee: { fontSize: 16, fontWeight: "700", color: C.pink },
-  chevron: { fontSize: 20, color: C.textTertiary, fontWeight: "300" },
+  cardFeeCoinP: { color: "#FFF", fontSize: 13, fontWeight: "900" },
+  cardFeeAmount: { fontSize: 28, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
+  unlockBtn: {
+    backgroundColor: C.pink,
+    borderRadius: 16,
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    marginTop: 20,
+  },
+  unlockBtnText: { ...T.button },
+
+  // Dots
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: 16 },
+  dot: {
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: C.pinkPale, marginHorizontal: 4,
+  },
+  dotActive: { backgroundColor: C.pink, width: 20 },
 
   addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 16, justifyContent: "center" },
   addCircle: {
