@@ -176,16 +176,19 @@ const styles = StyleSheet.create({
   },
 
   // Categories
-  cats: { paddingHorizontal: 20, marginBottom: 12 },
+  cats: { paddingHorizontal: 20, marginBottom: 12, paddingVertical: 4 },
   catChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: C.white,
     marginRight: 6,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
   },
   catChipActive: { backgroundColor: C.pink },
-  catText: { fontSize: 11, fontWeight: "600", color: C.textSecondary, letterSpacing: 0.3, textTransform: "uppercase" },
+  catText: { fontSize: 10, fontWeight: "700", color: C.textSecondary, letterSpacing: 0.5, textTransform: "uppercase", lineHeight: 14, includeFontPadding: false },
   catTextActive: { color: C.textOnPink },
 
   // List
