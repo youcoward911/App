@@ -38,12 +38,8 @@
         "projectId": ""
       }
     },
-    "owner": "youcoward911",
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "updates": {
-      "url": ""
     }
   }
 }
