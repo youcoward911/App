@@ -121,7 +121,7 @@ export const POST_UNLOCK_DEGRADATION = [
   "Aw, poor little piggy just had to scroll. Had to.",
   "Every single time. Without fail. Good pig.",
   "The pig always pays. Always.",
-  "Look at you. Relieved. Pathetic.",
+  "Look at you feeding again. Pathetic.",
   "Aw, my little piggy got its fix. Feel better? Gross.",
   "Paid up like a good little pig. Go scroll.",
   "That was fast. Couldn't even put up a fight.",
