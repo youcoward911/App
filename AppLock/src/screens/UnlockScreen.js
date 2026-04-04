@@ -19,8 +19,9 @@ import {
   getConfirmMessage,
   getBrokeMessage,
 } from "../data/roastMessages";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
 import { playPigSqueal } from "../utils/sounds";
+import GlowButton from "../components/GlowButton";
 
 export default function UnlockScreen({ route, navigation }) {
   const { appId } = route.params;
@@ -117,7 +118,7 @@ export default function UnlockScreen({ route, navigation }) {
               {roast}
             </Animated.Text>
 
-            <Animated.View style={[styles.feeCard, CARD_SHADOW_LG, { transform: [{ translateX: shake }] }]}>
+            <Animated.View style={[styles.feeCard, NEON_GLOW, { transform: [{ translateX: shake }] }]}>
               <Text style={styles.feeLabel}>TRIBUTE DEMANDED</Text>
               <View style={styles.feeCoinRow}>
                 <View style={styles.feeCoinIcon}><Text style={styles.feeCoinP}>P</Text></View>
@@ -175,43 +176,26 @@ export default function UnlockScreen({ route, navigation }) {
         <View style={styles.buttons}>
           {phase === "roast" && (
             <>
-              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handlePay}>
-                <Text style={styles.pinkBtnText}>Pay Tribute, Piggy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-                <Text style={styles.ghostBtnText}>Try to Resist</Text>
-              </TouchableOpacity>
+              <GlowButton title="Pay Tribute, Piggy" onPress={handlePay} />
+              <GlowButton title="Try to Resist" ghost onPress={() => navigation.goBack()} />
             </>
           )}
           {phase === "broke" && (
             <>
-              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85}
-                onPress={() => { navigation.goBack(); navigation.navigate("CoinShop"); }}>
-                <Text style={styles.pinkBtnText}>Buy More Coins</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-                <Text style={styles.ghostBtnText}>Starve</Text>
-              </TouchableOpacity>
+              <GlowButton title="Buy More Coins" onPress={() => { navigation.goBack(); navigation.navigate("CoinShop"); }} />
+              <GlowButton title="Starve" ghost onPress={() => navigation.goBack()} />
             </>
           )}
           {phase === "confirm" && (
             <>
-              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handleConfirm}>
-                <Text style={styles.pinkBtnText}>Yes Master, I'll Pay</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-                <Text style={styles.ghostBtnText}>Disobey</Text>
-              </TouchableOpacity>
+              <GlowButton title="Yes Master, I'll Pay" onPress={handleConfirm} />
+              <GlowButton title="Disobey" ghost onPress={() => navigation.goBack()} />
             </>
           )}
           {phase === "unlocked" && (
             <>
-              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handleRelock}>
-                <Text style={styles.pinkBtnText}>Lock Me Up Again</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-                <Text style={styles.ghostBtnText}>Dismissed</Text>
-              </TouchableOpacity>
+              <GlowButton title="Lock Me Up Again" onPress={handleRelock} />
+              <GlowButton title="Dismissed" ghost onPress={() => navigation.goBack()} />
             </>
           )}
         </View>

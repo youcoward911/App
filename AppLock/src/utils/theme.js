@@ -36,19 +36,36 @@ export const C = {
 
 // Consistent shadow for cards
 export const CARD_SHADOW = {
-  shadowColor: "#000",
+  shadowColor: C.pink,
   shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.06,
+  shadowOpacity: 0.15,
   shadowRadius: 12,
   elevation: 3,
 };
 
 export const CARD_SHADOW_LG = {
-  shadowColor: "#000",
+  shadowColor: C.pink,
   shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.1,
+  shadowOpacity: 0.25,
   shadowRadius: 20,
   elevation: 5,
+};
+
+// Neon glow for accent elements
+export const NEON_GLOW = {
+  shadowColor: C.pink,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.6,
+  shadowRadius: 16,
+  elevation: 10,
+};
+
+export const NEON_GLOW_LG = {
+  shadowColor: C.pink,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.8,
+  shadowRadius: 28,
+  elevation: 15,
 };
 
 // Font #2: Ultra Condensed — heavy tight headings, light wide body

@@ -11,7 +11,7 @@ import {
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
 
 export default function CoinShopScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -106,7 +106,7 @@ export default function CoinShopScreen({ navigation }) {
               key={pkg.id}
               style={[
                 styles.pkgCard,
-                CARD_SHADOW,
+                isPopular ? NEON_GLOW : CARD_SHADOW,
                 isPopular && styles.pkgCardPopular,
               ]}
               activeOpacity={0.85}

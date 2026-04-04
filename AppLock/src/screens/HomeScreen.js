@@ -14,7 +14,8 @@ import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
+import GlowButton from "../components/GlowButton";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 64;
@@ -108,13 +109,11 @@ export default function HomeScreen({ navigation }) {
           </View>
           <Text style={styles.cardFeeAmount}>{info?.unlockFee}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.unlockBtn}
-          activeOpacity={0.85}
+        <GlowButton
+          title="Pay Tribute"
           onPress={() => navigation.navigate("Unlock", { appId: item.id })}
-        >
-          <Text style={styles.unlockBtnText}>Pay Tribute</Text>
-        </TouchableOpacity>
+          style={{ marginTop: 16 }}
+        />
       </TouchableOpacity>
     );
   };
