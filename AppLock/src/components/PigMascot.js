@@ -11,6 +11,8 @@ import { View, StyleSheet, Animated } from "react-native";
 export default function PigMascot({ size = 80, animate = true, mood = "happy" }) {
   const bob = useRef(new Animated.Value(0)).current;
   const blink = useRef(new Animated.Value(1)).current;
+  const tearOpacity = useRef(new Animated.Value(0)).current;
+  const tearDrop = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!animate) return;
@@ -50,7 +52,22 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
       ]).start();
     }, blinkRate);
 
-    return () => clearInterval(blinkInterval);
+    // Occasional crying tears — fade in, drip down, fade out
+    const tearInterval = mood === "feral" ? 4000 : mood === "dirty" ? 6000 : mood === "restless" ? 10000 : 8000;
+    const tearTimer = setInterval(() => {
+      tearDrop.setValue(0);
+      Animated.parallel([
+        Animated.timing(tearOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(tearDrop, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ]).start(() => {
+        Animated.timing(tearOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+      });
+    }, tearInterval);
+
+    return () => {
+      clearInterval(blinkInterval);
+      clearInterval(tearTimer);
+    };
   }, [animate, mood]);
 
   const s = size / 80;
@@ -154,6 +171,24 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
           }]}
         />
 
+        {/* Tears — occasional crying */}
+        <Animated.View
+          style={[styles.tear, {
+            width: 4 * s, height: 8 * s, borderRadius: 2 * s,
+            top: (eyeTop + eyeHeight + 2 * s), left: 16 * s,
+            opacity: tearOpacity,
+            transform: [{ translateY: Animated.multiply(tearDrop, 12 * s) }],
+          }]}
+        />
+        <Animated.View
+          style={[styles.tear, {
+            width: 4 * s, height: 8 * s, borderRadius: 2 * s,
+            top: (eyeTop + eyeHeight + 2 * s), right: 16 * s,
+            opacity: tearOpacity,
+            transform: [{ translateY: Animated.multiply(tearDrop, 12 * s) }],
+          }]}
+        />
+
         {/* Angry brows — V-shaped for dirty/feral */}
         {showAngryBrows && (
           <>
@@ -224,6 +259,7 @@ const styles = StyleSheet.create({
   earRight: { transform: [{ rotate: "15deg" }] },
   face: { position: "absolute", zIndex: 1, alignSelf: "center", overflow: "hidden" },
   eye: { position: "absolute", backgroundColor: "#2C2C2E", zIndex: 2 },
+  tear: { position: "absolute", backgroundColor: "#7AC5E8", zIndex: 4 },
   brow: { position: "absolute", zIndex: 3, borderRadius: 1 },
   mud: { position: "absolute", zIndex: 0, opacity: 0.6 },
   mouth: { position: "absolute", alignSelf: "center", zIndex: 3 },

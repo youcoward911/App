@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 // Soft pink-based palette inspired by modern iOS apps
 export const C = {
   // Backgrounds
-  bg: "#FFF0F3",
+  bg: "#FFE8EE",
   bgSoft: "#FFE4EC",
   white: "#FFFFFF",
   card: "#FFFFFF",

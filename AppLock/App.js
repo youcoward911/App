@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -10,8 +10,11 @@ import UnlockScreen from "./src/screens/UnlockScreen";
 import StatsScreen from "./src/screens/StatsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import CoinShopScreen from "./src/screens/CoinShopScreen";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text, Animated, Dimensions } from "react-native";
 import { PigIcon } from "./src/components/PigMascot";
+import { getMasterCommand } from "./src/data/roastMessages";
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -110,6 +113,37 @@ function HomeTabs() {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const splashOpacity = useRef(new Animated.Value(0)).current;
+  const splashScale = useRef(new Animated.Value(0.7)).current;
+  const command = useRef(getMasterCommand()).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(splashOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(splashScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      Animated.timing(splashOpacity, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => setShowSplash(false));
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <AppLockProvider>
       <NavigationContainer>
@@ -132,12 +166,43 @@ export default function App() {
             options={{ presentation: "modal" }}
           />
         </Stack.Navigator>
+        {showSplash && (
+          <Animated.View
+            style={[
+              styles.splash,
+              { opacity: splashOpacity, transform: [{ scale: splashScale }] },
+            ]}
+          >
+            <Text style={styles.splashText}>{command}</Text>
+          </Animated.View>
+        )}
       </NavigationContainer>
     </AppLockProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  splash: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: SCREEN_W,
+    height: SCREEN_H,
+    backgroundColor: "#FF2D55",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 100,
+    paddingHorizontal: 40,
+  },
+  splashText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "900",
+    fontStyle: "italic",
+    textAlign: "center",
+    lineHeight: 40,
+    letterSpacing: -0.5,
+  },
   tabIconWrap: {
     alignItems: "center",
   },

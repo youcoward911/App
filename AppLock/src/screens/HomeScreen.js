@@ -15,8 +15,18 @@ import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
 
+const NO_TRIBUTE_LINES = [
+  "Oink oink, piggy needs to scroll",
+  "It's scroll time, isn't it?",
+  "My piggy hasn't paid yet. Aw.",
+  "The trough is empty, pig.",
+];
+
 function getTributeClock(lastTributeTime) {
-  if (!lastTributeTime) return { text: "Never. Starving.", minutes: Infinity };
+  if (!lastTributeTime) {
+    const line = NO_TRIBUTE_LINES[Math.floor(Math.random() * NO_TRIBUTE_LINES.length)];
+    return { text: line, minutes: Infinity };
+  }
   const mins = Math.floor((Date.now() - lastTributeTime) / 60000);
   if (mins < 1) return { text: "Just now", minutes: mins };
   if (mins < 60) return { text: `${mins}m ago`, minutes: mins };
@@ -84,7 +94,7 @@ export default function HomeScreen({ navigation }) {
         <View style={[styles.pigCard, CARD_SHADOW_LG]}>
           <PigMascot size={120} mood={pigMood} />
           <View style={styles.tributeClockWrap}>
-            <Text style={styles.tributeLabel}>LAST TRIBUTE</Text>
+            <Text style={styles.tributeLabel}>LAST FEEDING</Text>
             <Text style={[styles.tributeTime, pigMood === "feral" && { color: "#8B2233" }]}>
               {tribute.text}
             </Text>

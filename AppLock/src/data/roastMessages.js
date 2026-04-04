@@ -189,7 +189,7 @@ export const STARVING_MESSAGES = {
   // Furious and desperate — pig is in full withdrawal
   feral: [
     "FERAL PIG. Covered in filth. Shaking. Starving. Just pay, you miserable animal.",
-    "Your master is ANGRY. You haven't paid in too long, pig. Get back in line.",
+    "What's wrong buddy? Can't stop scrolling?",
     "You look disgusting. A wild, filthy, starving pig. Your master demands a tribute. NOW.",
     "Aw, my little piggy thought it could resist. Look at you now. Feral. Filthy. Pay up.",
     "Your master doesn't like waiting this long. Get your dirty hooves on that button, pig.",
