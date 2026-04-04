@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Scroll Pig",
+    "name": "PayPig",
     "slug": "PayPig",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.paypig.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your location to show you the local leaderboard for your city.",
+        "NSUserTrackingUsageDescription": "PayPig uses this to track your app usage and lock apps you choose.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -36,7 +36,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "fa4752e0-9878-4988-9def-e0111d9ab43f"
       }
     },
     "runtimeVersion": {
