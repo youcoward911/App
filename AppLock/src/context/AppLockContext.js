@@ -115,11 +115,18 @@ function reducer(state, action) {
       };
     }
 
-    case "UPDATE_SETTINGS":
-      return {
-        ...state,
-        settings: { ...state.settings, ...action.payload },
-      };
+    case "UPDATE_SETTINGS": {
+      const newSettings = { ...state.settings, ...action.payload };
+      // If time lock turned off, clear expiry on all unlocked apps
+      if (newSettings.timeLockMinutes === 0 && state.settings.timeLockMinutes > 0) {
+        const updated = {};
+        Object.entries(state.lockedApps).forEach(([id, app]) => {
+          updated[id] = app.unlockExpiresAt ? { ...app, unlockExpiresAt: null } : app;
+        });
+        return { ...state, settings: newSettings, lockedApps: updated };
+      }
+      return { ...state, settings: newSettings };
+    }
 
     default:
       return state;
