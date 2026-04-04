@@ -128,15 +128,15 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Pig mascot + tribute clock */}
+        {/* Pig mascot + tribute clock — compact horizontal */}
         <View style={[styles.pigCard, CARD_SHADOW_LG]}>
-          <PigMascot size={120} mood={pigMood} />
+          <PigMascot size={70} mood={pigMood} />
           <View style={styles.tributeClockWrap}>
             <Text style={styles.tributeLabel}>LAST FEEDING</Text>
             <Text style={[styles.tributeTime, pigMood === "feral" && { color: "#8B2233" }]}>
               {tribute.text}
             </Text>
-            <Text style={styles.moodMsg}>{moodMessage}</Text>
+            <Text style={styles.moodMsg} numberOfLines={2}>{moodMessage}</Text>
           </View>
         </View>
 
@@ -213,16 +213,18 @@ const styles = StyleSheet.create({
 
   pigCard: {
     backgroundColor: C.white,
-    borderRadius: 24,
+    borderRadius: 20,
     marginHorizontal: 24,
-    padding: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  tributeClockWrap: { alignItems: "center", marginTop: 16 },
-  tributeLabel: { ...T.label, marginBottom: 4 },
-  tributeTime: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
-  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 6, textAlign: "center", paddingHorizontal: 16 },
+  tributeClockWrap: { flex: 1, marginLeft: 16 },
+  tributeLabel: { ...T.label, marginBottom: 2 },
+  tributeTime: { fontSize: 18, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
+  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 4 },
 
   // Carousel
   carouselWrap: { flex: 1 },
@@ -231,26 +233,28 @@ const styles = StyleSheet.create({
     width: CARD_W,
     backgroundColor: C.white,
     borderRadius: 24,
-    padding: 28,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     marginRight: CARD_SPACING,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 260,
   },
-  cardAppName: { ...T.h1, marginTop: 16, textAlign: "center" },
-  cardStatus: { ...T.caption, marginTop: 6 },
-  cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 16 },
+  cardAppName: { ...T.h1, marginTop: 14, textAlign: "center" },
+  cardStatus: { ...T.caption, marginTop: 4 },
+  cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
   cardFeeCoin: {
-    width: 24, height: 24, borderRadius: 12, backgroundColor: C.pink,
-    alignItems: "center", justifyContent: "center", marginRight: 8,
+    width: 22, height: 22, borderRadius: 11, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center", marginRight: 6,
   },
-  cardFeeCoinP: { color: "#FFF", fontSize: 13, fontWeight: "900" },
-  cardFeeAmount: { fontSize: 28, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
+  cardFeeCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
+  cardFeeAmount: { fontSize: 26, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
   unlockBtn: {
     backgroundColor: C.pink,
-    borderRadius: 16,
-    paddingHorizontal: 40,
-    paddingVertical: 14,
-    marginTop: 20,
+    borderRadius: 14,
+    paddingHorizontal: 36,
+    paddingVertical: 12,
+    marginTop: 16,
   },
   unlockBtnText: { ...T.button },
 
