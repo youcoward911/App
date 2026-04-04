@@ -44,7 +44,14 @@ function getPigMood(minutes) {
 export default function HomeScreen({ navigation }) {
   const { state } = useAppLock();
   const lockedAppIds = Object.keys(state.lockedApps);
-  const lockedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
+  const allTrackedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
+  // Sort: locked apps first, unlocked apps at the end
+  const lockedApps = [...allTrackedApps].sort((a, b) => {
+    const aLocked = !!state.lockedApps[a.id]?.lockedAt;
+    const bLocked = !!state.lockedApps[b.id]?.lockedAt;
+    if (aLocked === bLocked) return 0;
+    return aLocked ? -1 : 1;
+  });
   const [now, setNow] = useState(Date.now());
   const [activeIndex, setActiveIndex] = useState(0);
 
