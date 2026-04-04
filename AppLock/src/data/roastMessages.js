@@ -97,7 +97,7 @@ export const PRE_PAYMENT_TAUNTS = [
   "Be a good piggy and hand over the coins.",
   "Your master gave you an order. Obey.",
   "Open your wallet, pig. That's how this works.",
-  "Aw, poor little piggy's gonna open its wallet for me so it can do a little scroll?",
+  "Aw, piggy's gonna open its wallet for a little scroll?",
   "Aw, is my baby pig gonna pay its master so it can stare at its phone?",
   "Come on, piggy. Open up that wallet. You know you're going to.",
   "Aw, does my little pig want to pay so badly? Look at you. Pathetic and eager.",
