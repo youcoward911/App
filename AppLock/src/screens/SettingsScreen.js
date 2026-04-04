@@ -17,7 +17,9 @@ import { C, T, CARD_SHADOW } from "../utils/theme";
 export default function SettingsScreen() {
   const { state, dispatch } = useAppLock();
   const [customFee, setCustomFee] = useState("");
+  const [customTime, setCustomTime] = useState("");
   const currentFee = state.settings.defaultFee;
+  const currentTimeLock = state.settings.timeLockMinutes || 0;
 
   const presets = [1, 5, 10];
 
@@ -105,6 +107,55 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {/* Time Lock */}
+        <View style={[styles.card, CARD_SHADOW]}>
+          <Text style={styles.cardTitle}>Time Lock</Text>
+          <Text style={styles.cardDesc}>
+            {currentTimeLock > 0
+              ? `Apps auto-relock after ${currentTimeLock} min`
+              : "Apps stay unlocked until you relock them"}
+          </Text>
+
+          <View style={styles.presets}>
+            {[0, 5, 15, 30, 60].map((mins) => (
+              <TouchableOpacity
+                key={mins}
+                style={[styles.preset, customTime === mins.toString() && styles.presetActive]}
+                onPress={() => setCustomTime(mins.toString())}
+              >
+                <Text style={[styles.presetText, styles.presetTextSm, customTime === mins.toString() && styles.presetTextActive]}>
+                  {mins === 0 ? "Off" : `${mins}m`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <GlowButton
+            title="Set Timer"
+            onPress={() => {
+              const val = parseInt(customTime, 10);
+              if (isNaN(val) || val < 0) {
+                Alert.alert("Nice Try", "Pick a real number, piggy.");
+                return;
+              }
+              dispatch({ type: "UPDATE_SETTINGS", payload: { timeLockMinutes: val } });
+              if (val === 0) {
+                Alert.alert("Time Lock Off", "No leash. Enjoy your freedom while it lasts.");
+              } else {
+                const taunts = [
+                  `${val} minutes? That's all you trust yourself with. Smart pig.`,
+                  `${val} minutes of slop, then back in the pen. Deal.`,
+                  `Tick tock, piggy. ${val} minutes and you're done.`,
+                  `Your master will drag you back in ${val} minutes. Count on it.`,
+                ];
+                Alert.alert("Time Lock Set", taunts[Math.floor(Math.random() * taunts.length)]);
+              }
+              setCustomTime("");
+            }}
+            style={{ marginTop: 8 }}
+          />
+        </View>
+
         {/* About */}
         <View style={[styles.card, CARD_SHADOW, styles.aboutCard]}>
           <PigMascot size={100} />
@@ -143,6 +194,7 @@ const styles = StyleSheet.create({
   presetActive: { backgroundColor: C.pink },
   presetText: { fontSize: 18, fontWeight: "800", color: C.textSecondary, textTransform: "uppercase" },
   presetTextActive: { color: "#FFF" },
+  presetTextSm: { fontSize: 14 },
   customRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
   customLabel: { ...T.bodyBold, marginRight: 10 },
   feeInputWrap: {

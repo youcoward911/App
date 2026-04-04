@@ -23,6 +23,7 @@ const initialState = {
   lastTributeTime: null,
   settings: {
     defaultFee: 5,
+    timeLockMinutes: 0,
     currency: "USD",
     roastIntensity: "medium",
   },
@@ -61,6 +62,9 @@ function reducer(state, action) {
 
       const isTodaySame = state.tributesTodayDate === today;
 
+      const timeLock = state.settings.timeLockMinutes;
+      const unlockExpiresAt = timeLock > 0 ? Date.now() + timeLock * 60 * 1000 : null;
+
       return {
         ...state,
         piggyCoins: Math.max(0, state.piggyCoins - fee),
@@ -76,6 +80,7 @@ function reducer(state, action) {
             lockedAt: null,
             unlockCountToday: newCount,
             lastUnlockDate: today,
+            unlockExpiresAt,
           },
         },
       };
@@ -138,6 +143,19 @@ export function AppLockProvider({ children }) {
       }
     })();
   }, []);
+
+  // Auto-relock expired apps
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      Object.entries(state.lockedApps).forEach(([appId, app]) => {
+        if (!app.lockedAt && app.unlockExpiresAt && now >= app.unlockExpiresAt) {
+          dispatch({ type: "RELOCK_APP", payload: { appId } });
+        }
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [state.lockedApps]);
 
   useEffect(() => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch((e) =>
