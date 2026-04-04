@@ -27,11 +27,19 @@ export default function SettingsScreen() {
   };
 
   const FEE_TAUNTS = [
-    "Really, you're gonna pay that much? Hahahaha.",
-    "You set it yourself and you'll still complain. Pathetic.",
-    "Your master approves. Now go waste them.",
+    "Jesus Christ lmao.",
+    "Pathetic but ok.",
+    "Sure thing, piggy.",
+    "Lol. Done.",
+    "Wow. Ok.",
+    "That's adorable.",
     "Cute. You think choosing the price gives you control.",
-    "Set. Not that it matters — you'll pay whatever I tell you.",
+    "Not that it matters — you'll pay whatever I tell you.",
+    "Hahahaha. Set.",
+    "Oh you're serious? Alright.",
+    "Your master approves. Now go waste them.",
+    "You set it yourself and you'll still complain.",
+    "Really, you're gonna pay that much? Hahahaha.",
   ];
 
   const saveCustom = () => {
