@@ -16,6 +16,7 @@ import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
 export default function CoinShopScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [buying, setBuying] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const isLow = state.piggyCoins < 10;
   const isEmpty = state.piggyCoins === 0;
@@ -136,26 +137,38 @@ export default function CoinShopScreen({ navigation }) {
           );
         })}
 
-        {/* Purchase history */}
-        <View style={[styles.historyCard, CARD_SHADOW]}>
-          <Text style={styles.historyTitle}>YOUR TRIBUTE HISTORY</Text>
-          <View style={styles.historyRow}>
-            <Text style={styles.historyLabel}>Coins purchased</Text>
-            <Text style={styles.historyVal}>{state.totalCoinsPurchased}</Text>
+        {/* Purchase history — collapsible */}
+        <TouchableOpacity
+          style={[styles.historyCard, CARD_SHADOW]}
+          activeOpacity={0.8}
+          onPress={() => setHistoryOpen(!historyOpen)}
+        >
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyTitle}>YOUR TRIBUTE HISTORY</Text>
+            <Text style={styles.historyChevron}>{historyOpen ? "▲" : "▼"}</Text>
           </View>
-          <View style={styles.divider} />
-          <View style={styles.historyRow}>
-            <Text style={styles.historyLabel}>Coins spent on unlocks</Text>
-            <Text style={styles.historyVal}>{state.totalCoinsSpent}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.historyRow}>
-            <Text style={styles.historyLabel}>Real money spent</Text>
-            <Text style={[styles.historyVal, { color: C.pink }]}>
-              ${state.totalMoneySpent.toFixed(2)}
-            </Text>
-          </View>
-        </View>
+          {historyOpen && (
+            <>
+              <View style={[styles.divider, { marginTop: 12 }]} />
+              <View style={styles.historyRow}>
+                <Text style={styles.historyLabel}>Coins purchased</Text>
+                <Text style={styles.historyVal}>{state.totalCoinsPurchased}</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.historyRow}>
+                <Text style={styles.historyLabel}>Coins spent on unlocks</Text>
+                <Text style={styles.historyVal}>{state.totalCoinsSpent}</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.historyRow}>
+                <Text style={styles.historyLabel}>Real money spent</Text>
+                <Text style={[styles.historyVal, { color: C.pink }]}>
+                  ${state.totalMoneySpent.toFixed(2)}
+                </Text>
+              </View>
+            </>
+          )}
+        </TouchableOpacity>
 
         {/* Footer taunt */}
         <Text style={styles.footer}>
@@ -252,7 +265,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
-  historyTitle: { ...T.label, marginBottom: 14 },
+  historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  historyTitle: { ...T.label },
+  historyChevron: { fontSize: 12, color: C.textSecondary },
   historyRow: {
     flexDirection: "row",
     justifyContent: "space-between",
