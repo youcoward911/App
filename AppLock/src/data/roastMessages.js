@@ -147,13 +147,7 @@ export const CONFIRM_MESSAGES = [
 // BROKE — pig can't afford its slop
 // ============================================================
 export const BROKE_MESSAGES = [
-  "Empty trough. Broke pig. Go buy more coins before your master gets impatient.",
-  "No coins? No slop. Your master doesn't feed pigs for free.",
-  "You burned through your coins already? Greedy little piggy. Go buy more.",
-  "A pig with no coins is just a pig with no purpose. Fill the trough.",
-  "Aw, my poor piggy is broke. Can't even afford its own slop. How sad.",
-  "No coins left? Aw. The little piggy spent it all. Better go buy more, pet.",
-  "Broke and desperate. Your master loves this look on you. Now go fill the trough.",
+  "You're pathetic AND broke? Christ. Hurry up and buy more coins so I can fill your trough.",
 ];
 
 // ============================================================
