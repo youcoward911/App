@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
+import GlowButton from "../components/GlowButton";
 import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function SettingsScreen() {
@@ -25,6 +26,14 @@ export default function SettingsScreen() {
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
   };
 
+  const FEE_TAUNTS = [
+    "Really, you're gonna pay that much? Hahahaha.",
+    "You set it yourself and you'll still complain. Pathetic.",
+    "Your master approves. Now go waste them.",
+    "Cute. You think choosing the price gives you control.",
+    "Set. Not that it matters — you'll pay whatever I tell you.",
+  ];
+
   const saveCustom = () => {
     const val = parseInt(customFee, 10);
     if (isNaN(val) || val < 0) {
@@ -32,7 +41,8 @@ export default function SettingsScreen() {
       return;
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
-    Alert.alert("Saved", `${val} coins per act of obedience.`);
+    const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
+    Alert.alert(`${val} coins per unlock`, taunt);
   };
 
   return (
@@ -73,12 +83,15 @@ export default function SettingsScreen() {
                 keyboardType="number-pad"
                 placeholder="Enter amount"
                 placeholderTextColor={C.textTertiary}
+                onSubmitEditing={saveCustom}
               />
             </View>
-            <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85} onPress={saveCustom}>
-              <Text style={styles.saveBtnText}>Set</Text>
-            </TouchableOpacity>
           </View>
+          <GlowButton
+            title="Set Fee"
+            onPress={saveCustom}
+            style={{ marginTop: 14 }}
+          />
 
           <Text style={styles.currentFeeText}>
             Current: {currentFee} coins
@@ -157,13 +170,6 @@ const styles = StyleSheet.create({
   },
   feeCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
   feeInput: { flex: 1, fontSize: 18, fontWeight: "800", color: C.pink, paddingVertical: 12 },
-  saveBtn: {
-    backgroundColor: C.pink,
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 13,
-  },
-  saveBtnText: { ...T.button, fontSize: 13 },
   currentFeeText: { ...T.caption, color: C.pink, marginTop: 14, textAlign: "center", fontWeight: "700" },
 
   // About
