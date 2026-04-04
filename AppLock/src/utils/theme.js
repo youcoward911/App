@@ -1,23 +1,23 @@
 import { Platform } from "react-native";
 
-// Soft pink-based palette inspired by modern iOS apps
+// Palette #5: Piggy Pastel — soft lavender pink bg, hot pink accent
 export const C = {
-  // Backgrounds — pink theme
-  bg: "#FFE8EE",
-  bgSoft: "#FFE4EC",
+  // Backgrounds
+  bg: "#FFF0F5",
+  bgSoft: "#FFECF2",
   white: "#FFFFFF",
   card: "#FFFFFF",
 
-  // Brand
-  pink: "#FF2D55",
-  pinkLight: "#FF6B8A",
-  pinkPale: "#FFE0E8",
-  pinkBg: "#FFF5F7",
+  // Brand — hot pink accent
+  pink: "#FF69B4",
+  pinkLight: "#FF8AC6",
+  pinkPale: "#FFD6EB",
+  pinkBg: "#FFF5FA",
 
-  // Text
-  text: "#1C1C1E",
-  textSecondary: "#8E8E93",
-  textTertiary: "#AEAEB2",
+  // Text — black
+  text: "#4A2040",
+  textSecondary: "#8E6080",
+  textTertiary: "#B898A8",
   textOnPink: "#FFFFFF",
 
   // Accent
@@ -34,7 +34,7 @@ export const C = {
   divider: "rgba(0,0,0,0.06)",
 };
 
-// Consistent shadow for cards — like ChatGPT/Instagram
+// Consistent shadow for cards
 export const CARD_SHADOW = {
   shadowColor: "#000",
   shadowOffset: { width: 0, height: 2 },
@@ -51,38 +51,40 @@ export const CARD_SHADOW_LG = {
   elevation: 5,
 };
 
-// System font on iOS = SF Pro, Android = Roboto
+// Font #2: Ultra Condensed — heavy tight headings, light wide body
 const FONT = Platform.OS === "ios" ? "System" : "Roboto";
 
 export const T = {
   hero: {
     fontSize: 32,
-    fontWeight: "800",
+    fontWeight: "900",
     color: C.text,
-    letterSpacing: -0.5,
+    letterSpacing: -1.5,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
   h1: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "900",
     color: C.text,
-    letterSpacing: -0.3,
+    letterSpacing: -1.2,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
   h2: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "900",
     color: C.text,
+    letterSpacing: -0.8,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
   body: {
     fontSize: 15,
-    fontWeight: "400",
+    fontWeight: "300",
     color: C.textSecondary,
     lineHeight: 22,
+    letterSpacing: 1,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
@@ -90,14 +92,15 @@ export const T = {
     fontSize: 15,
     fontWeight: "600",
     color: C.text,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
   caption: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "300",
     color: C.textTertiary,
-    letterSpacing: 0.2,
+    letterSpacing: 1,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
@@ -105,15 +108,15 @@ export const T = {
     fontSize: 11,
     fontWeight: "600",
     color: C.textTertiary,
-    letterSpacing: 0.8,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
   stat: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: "900",
     color: C.text,
-    letterSpacing: -0.5,
+    letterSpacing: -1.5,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
@@ -121,14 +124,15 @@ export const T = {
     fontSize: 44,
     fontWeight: "900",
     color: C.pink,
-    letterSpacing: -1,
+    letterSpacing: -2,
     textTransform: "uppercase",
     fontFamily: FONT,
   },
   button: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "900",
     color: C.textOnPink,
+    letterSpacing: 1,
     textTransform: "uppercase",
     fontFamily: FONT,
   },

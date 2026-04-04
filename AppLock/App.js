@@ -26,37 +26,37 @@ function TabIcon({ type, focused }) {
       {type === "apps" && (
         <View style={[styles.tabBox, focused && styles.tabBoxActive]}>
           <View style={styles.tabBoxInner}>
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
       {type === "shame" && (
         <View style={styles.tabBarIcon}>
           <View style={[styles.barGroup]}>
-            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
-            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
-            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
       {type === "templates" && (
         <View style={styles.tabBarIcon}>
           <View style={styles.templateIcon}>
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2", width: 8, height: 8 }]} />
+            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2", width: 8, height: 8 }]} />
             <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF6B8A" : "#C7C7CC", width: 8, height: 8 }]} />
             <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FFB6C1" : "#D1D1D6", width: 8, height: 8 }]} />
-            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
-            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2", width: 14 }]} />
+            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2", width: 14 }]} />
           </View>
         </View>
       )}
       {type === "settings" && (
         <View style={[styles.gearWrap]}>
-          <View style={[styles.gearOuter, { borderColor: focused ? "#FF2D55" : "#AEAEB2" }]}>
-            <View style={[styles.gearInner, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+          <View style={[styles.gearOuter, { borderColor: focused ? "#FF69B4" : "#AEAEB2" }]}>
+            <View style={[styles.gearInner, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
@@ -81,7 +81,7 @@ function HomeTabs() {
           shadowRadius: 12,
           elevation: 5,
         },
-        tabBarActiveTintColor: "#FF2D55",
+        tabBarActiveTintColor: "#FF69B4",
         tabBarInactiveTintColor: "#AEAEB2",
         tabBarLabelStyle: {
           fontSize: 11,
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: SCREEN_W,
     height: SCREEN_H,
-    backgroundColor: "#FF2D55",
+    backgroundColor: "#FF69B4",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 100,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: "#FF2D55",
+    backgroundColor: "#FF69B4",
     marginTop: 4,
   },
   // Apps grid icon
