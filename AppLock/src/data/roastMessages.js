@@ -43,7 +43,7 @@ export const TIME_BASED_ROASTS = [
       "{minutes} minutes. You didn't even try, piggy.",
       "{minutes} minutes of freedom and you're already back at the trough. Pathetic pig.",
       "It took you {minutes} minutes to break. I've trained you well.",
-      "{minutes} minutes. That's barely enough time to miss you. Get back in the mud.",
+      "{minutes} minutes. That's absolutely pathetic.",
       "My pig lasted {minutes} minutes. A new record in weakness.",
       "Aw, my little piggy couldn't even last {minutesPlusOne} minutes? Sooo pathetic.",
       "{minutes} minutes and my baby pig is already back. Aw. So needy.",
