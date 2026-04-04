@@ -161,6 +161,7 @@ export default function UnlockScreen({ route, navigation }) {
             <PigMascot size={64} mood="happy" />
             <Text style={styles.unlockOink}>OINK OINK</Text>
             <Text style={styles.shade} numberOfLines={3}>{postShade}</Text>
+            <Text style={styles.statsTitle}>TODAY'S STATS</Text>
             <View style={styles.receiptRow}>
               <Text style={styles.receiptLabel}>Coins spent</Text>
               <Text style={styles.receiptVal}>{state.totalCoinsSpent}</Text>
@@ -264,6 +265,7 @@ const styles = StyleSheet.create({
   // Unlocked
   unlockOink: { ...T.label, color: C.pink, fontSize: 14, letterSpacing: 3, marginTop: 8, marginBottom: 10 },
   shade: { fontSize: 16, fontWeight: "700", color: C.pink, fontStyle: "italic", textAlign: "center", lineHeight: 24, marginBottom: 16 },
+  statsTitle: { ...T.label, marginTop: 16, marginBottom: 8 },
   receiptRow: { flexDirection: "row", justifyContent: "space-between", width: "100%", paddingVertical: 4 },
   receiptLabel: { ...T.caption },
   receiptVal: { ...T.bodyBold, fontSize: 14 },
