@@ -1,25 +1,29 @@
-const { withXcodeProject, withEntitlementsPlist, withInfoPlist } = require("@expo/config-plugins");
+const { withXcodeProject, withEntitlementsPlist } = require("@expo/config-plugins");
 
-// This config plugin adds the FamilyControls entitlement and
-// embeds the ScreenTimeModule into the Xcode project at prebuild time.
+// This config plugin sets up the project for Screen Time API.
+// The FamilyControls entitlement is commented out until Apple approves it.
+// To enable: uncomment the entitlement line below after approval.
 
 function withScreenTime(config) {
-  // 1. Add FamilyControls entitlement
-  config = withEntitlementsPlist(config, (mod) => {
-    mod.modResults["com.apple.developer.family-controls.application"] = true;
-    return mod;
-  });
+  // 1. FamilyControls entitlement — DISABLED until Apple approves
+  // To request: Apple Developer > Account > Identifiers > com.paypig.app >
+  //   Capabilities > Family Controls > Request
+  // Once approved, uncomment the next block:
+  //
+  // config = withEntitlementsPlist(config, (mod) => {
+  //   mod.modResults["com.apple.developer.family-controls.application"] = true;
+  //   return mod;
+  // });
 
   // 2. Set minimum iOS deployment target to 16.0 (Screen Time API requirement)
   config = withXcodeProject(config, (mod) => {
     const project = mod.modResults;
-    const targetId = project.getFirstTarget().uuid;
     const buildConfigs = project.pbxXCBuildConfigurationSection();
 
     for (const key in buildConfigs) {
-      const config = buildConfigs[key];
-      if (config.buildSettings) {
-        config.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = "16.0";
+      const cfg = buildConfigs[key];
+      if (cfg.buildSettings) {
+        cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = "16.0";
       }
     }
     return mod;
