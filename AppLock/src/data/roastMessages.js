@@ -255,9 +255,11 @@ export function getSingleRoast(minutesSinceLock) {
   );
   if (timeBucket) {
     const mins = Math.floor(minutesSinceLock);
+    const minWord = mins === 1 ? "minute" : "minutes";
     return pickRandom(timeBucket.messages)
       .replace("{minutes}", mins)
-      .replace("{minutesPlusOne}", mins + 1);
+      .replace("{minutesPlusOne}", mins + 1)
+      .replace("minutes", minWord);
   }
   return pickRandom(UNLOCK_ROASTS);
 }
