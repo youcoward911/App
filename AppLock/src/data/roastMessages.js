@@ -210,7 +210,7 @@ export const MASTER_COMMANDS = [
   "More coins. More tributes. More obedience. That's your life now, piggy.",
   "You're not quitting. You're a pig and pigs don't quit. They wallow.",
   "One day you'll try to delete me. But you won't. Because I own you.",
-  "Your willpower is a joke. Your master is the punchline.",
+  "Your willpower is pathetic.",
   "Be a good pig. Open the app. Pay the coins. Repeat.",
   "Aw, does my little piggy need encouragement? Here: you're pathetic. Now pay.",
   "Your master is always watching. Always waiting. Always hungry for your coins.",
