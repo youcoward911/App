@@ -2,22 +2,22 @@ import { Platform } from "react-native";
 
 // Soft pink-based palette inspired by modern iOS apps
 export const C = {
-  // Backgrounds
-  bg: "#FFE8EE",
-  bgSoft: "#FFE4EC",
-  white: "#FFFFFF",
-  card: "#FFFFFF",
+  // Backgrounds — dark pink theme
+  bg: "#2A0A14",
+  bgSoft: "#3A1020",
+  white: "#3D1525",
+  card: "#3D1525",
 
   // Brand
   pink: "#FF2D55",
   pinkLight: "#FF6B8A",
-  pinkPale: "#FFE0E8",
-  pinkBg: "#FFF5F7",
+  pinkPale: "rgba(255,45,85,0.25)",
+  pinkBg: "#2A0A14",
 
-  // Text
-  text: "#1C1C1E",
-  textSecondary: "#8E8E93",
-  textTertiary: "#AEAEB2",
+  // Text — all white
+  text: "#FFFFFF",
+  textSecondary: "rgba(255,255,255,0.75)",
+  textTertiary: "rgba(255,255,255,0.55)",
   textOnPink: "#FFFFFF",
 
   // Accent
@@ -28,10 +28,10 @@ export const C = {
   purple: "#AF52DE",
 
   // Utility
-  border: "rgba(0,0,0,0.04)",
-  shadow: "rgba(0,0,0,0.08)",
-  overlay: "rgba(0,0,0,0.4)",
-  divider: "rgba(0,0,0,0.06)",
+  border: "rgba(255,255,255,0.08)",
+  shadow: "rgba(0,0,0,0.3)",
+  overlay: "rgba(0,0,0,0.6)",
+  divider: "rgba(255,255,255,0.08)",
 };
 
 // Consistent shadow for cards — like ChatGPT/Instagram
@@ -60,6 +60,7 @@ export const T = {
     fontWeight: "800",
     color: C.text,
     letterSpacing: -0.5,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   h1: {
@@ -67,12 +68,14 @@ export const T = {
     fontWeight: "700",
     color: C.text,
     letterSpacing: -0.3,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   h2: {
     fontSize: 18,
     fontWeight: "600",
     color: C.text,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   body: {
@@ -80,12 +83,14 @@ export const T = {
     fontWeight: "400",
     color: C.textSecondary,
     lineHeight: 22,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   bodyBold: {
     fontSize: 15,
     fontWeight: "600",
     color: C.text,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   caption: {
@@ -93,6 +98,7 @@ export const T = {
     fontWeight: "500",
     color: C.textTertiary,
     letterSpacing: 0.2,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   label: {
@@ -108,6 +114,7 @@ export const T = {
     fontWeight: "800",
     color: C.text,
     letterSpacing: -0.5,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   fee: {
@@ -115,12 +122,14 @@ export const T = {
     fontWeight: "900",
     color: C.pink,
     letterSpacing: -1,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
   button: {
     fontSize: 16,
     fontWeight: "700",
     color: C.textOnPink,
+    textTransform: "uppercase",
     fontFamily: FONT,
   },
 };
