@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
-  TextInput,
   Alert,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
@@ -17,10 +16,6 @@ import { C, T, CARD_SHADOW } from "../utils/theme";
 export default function AddAppsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [customFee, setCustomFee] = useState(
-    state.settings.defaultFee.toString()
-  );
-
   const filtered =
     selectedCategory === "All"
       ? POPULAR_APPS
@@ -46,8 +41,7 @@ export default function AddAppsScreen({ navigation }) {
         {
           text: "Lock it.",
           onPress: () => {
-            const fee = parseInt(customFee, 10) || state.settings.defaultFee;
-            dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: fee } });
+            dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: state.settings.defaultFee } });
           },
         },
       ]);
@@ -65,27 +59,6 @@ export default function AddAppsScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.done}>Done</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Fee */}
-      <View style={[styles.feeCard, CARD_SHADOW]}>
-        <View>
-          <Text style={styles.feeTitle}>Unlock fee</Text>
-          <Text style={styles.feeCaption}>coins per act of obedience</Text>
-        </View>
-        <View style={styles.feeInput}>
-          <View style={styles.feeCoinIcon}>
-            <Text style={styles.feeCoinP}>P</Text>
-          </View>
-          <TextInput
-            style={styles.feeValue}
-            value={customFee}
-            onChangeText={setCustomFee}
-            keyboardType="number-pad"
-            placeholder="5"
-            placeholderTextColor={C.textTertiary}
-          />
-        </View>
       </View>
 
       {/* Categories */}
@@ -154,44 +127,6 @@ const styles = StyleSheet.create({
   back: { ...T.body, color: C.textSecondary, fontWeight: "500" },
   headerTitle: { ...T.h2 },
   done: { ...T.body, color: C.pink, fontWeight: "600" },
-
-  // Fee
-  feeCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: C.white,
-    marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  feeTitle: { ...T.bodyBold },
-  feeCaption: { ...T.caption, marginTop: 2 },
-  feeInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: C.pinkPale,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  feeCoinIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: C.pink,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 6,
-  },
-  feeCoinP: { color: "#FFF", fontSize: 10, fontWeight: "900" },
-  feeValue: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: C.pink,
-    minWidth: 50,
-  },
 
   // Categories
   cats: { paddingHorizontal: 20, marginBottom: 18, paddingVertical: 4 },
