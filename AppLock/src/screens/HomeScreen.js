@@ -23,8 +23,9 @@ const SNAP_INTERVAL = CARD_W + CARD_SPACING;
 
 function getTributeClock(lastTributeTime) {
   if (!lastTributeTime) return { text: "Never", minutes: Infinity };
-  const mins = Math.floor((Date.now() - lastTributeTime) / 60000);
-  if (mins < 1) return { text: "Just now", minutes: mins };
+  const totalSecs = Math.floor((Date.now() - lastTributeTime) / 1000);
+  const mins = Math.floor(totalSecs / 60);
+  if (totalSecs < 60) return { text: `${totalSecs}s ago`, minutes: 0 };
   if (mins < 60) return { text: `${mins}m ago`, minutes: mins };
   const h = Math.floor(mins / 60);
   if (h < 24) return { text: `${h}h ${mins % 60}m ago`, minutes: mins };
@@ -50,10 +51,13 @@ export default function HomeScreen({ navigation }) {
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
 
+  // Tick every second when under 1 min, otherwise every 30s
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30000);
+    const tributeSecs = state.lastTributeTime ? Math.floor((Date.now() - state.lastTributeTime) / 1000) : Infinity;
+    const rate = tributeSecs < 60 ? 1000 : 30000;
+    const interval = setInterval(() => setNow(Date.now()), rate);
     return () => clearInterval(interval);
-  }, []);
+  }, [now, state.lastTributeTime]);
 
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Animated,
-  ScrollView,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
@@ -38,7 +37,6 @@ export default function UnlockScreen({ route, navigation }) {
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(20)).current;
-  const btnFade = useRef(new Animated.Value(0)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
   const fee = lockInfo?.unlockFee || 0;
@@ -59,7 +57,6 @@ export default function UnlockScreen({ route, navigation }) {
     Animated.parallel([
       Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.spring(slide, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }),
-      Animated.timing(btnFade, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]).start();
   }, []);
 
@@ -103,124 +100,122 @@ export default function UnlockScreen({ route, navigation }) {
         <Text style={styles.closeX}>X</Text>
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.iconWrap, CARD_SHADOW_LG]}>
-          <AppIcon app={appInfo} size={72} />
+      <View style={styles.content}>
+        {/* App icon + name — always at top */}
+        <View style={styles.topRow}>
+          <AppIcon app={appInfo} size={52} />
+          <Text style={styles.appName}>{appInfo.name}</Text>
         </View>
-        <Text style={styles.appName}>{appInfo.name}</Text>
 
-        {/* ROAST — master addresses the pig */}
+        {/* ROAST phase */}
         {phase === "roast" && (
-          <View style={styles.section}>
+          <View style={styles.middle}>
             <Animated.Text
               style={[styles.roast, { opacity: fade, transform: [{ translateY: slide }] }]}
+              numberOfLines={3}
             >
               {roast}
             </Animated.Text>
 
-            <Animated.View style={[styles.section, { opacity: btnFade }]}>
-              <Text style={styles.taunt}>{preTaunt}</Text>
+            <Animated.View style={[styles.feeCard, CARD_SHADOW_LG, { transform: [{ translateX: shake }] }]}>
+              <Text style={styles.feeLabel}>TRIBUTE DEMANDED</Text>
+              <View style={styles.feeCoinRow}>
+                <View style={styles.feeCoinIcon}><Text style={styles.feeCoinP}>P</Text></View>
+                <Text style={styles.feeAmount}>{fee}</Text>
+              </View>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>YOUR COINS:</Text>
+                <CoinBadge amount={state.piggyCoins} size="small" />
+              </View>
+            </Animated.View>
 
-              <Animated.View style={[styles.feeCard, CARD_SHADOW_LG, { transform: [{ translateX: shake }] }]}>
-                <Text style={styles.feeLabel}>TRIBUTE DEMANDED</Text>
-                <View style={styles.feeCoinRow}>
-                  <View style={styles.feeCoinIcon}><Text style={styles.feeCoinP}>P</Text></View>
-                  <Text style={styles.feeAmount}>{fee}</Text>
-                </View>
-                <Text style={styles.feeSub}>Your master set the price. You will pay it.</Text>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>Your coins:</Text>
-                  <CoinBadge amount={state.piggyCoins} size="small" />
-                </View>
-              </Animated.View>
+            <Text style={styles.taunt} numberOfLines={2}>{preTaunt}</Text>
+          </View>
+        )}
 
+        {/* BROKE phase */}
+        {phase === "broke" && (
+          <View style={styles.middle}>
+            <PigMascot size={70} mood="feral" />
+            <Text style={styles.brokeTitle}>BROKE PIG</Text>
+            <Text style={styles.brokeBody} numberOfLines={3}>{brokeMsg}</Text>
+          </View>
+        )}
+
+        {/* CONFIRM phase */}
+        {phase === "confirm" && (
+          <View style={styles.middle}>
+            <PigMascot size={56} mood="restless" />
+            <Text style={styles.confirmTitle}>{confirmMsg}</Text>
+            <Text style={styles.confirmBody}>
+              <Text style={{ color: C.pink, fontWeight: "900" }}>{fee} coins</Text>
+              {" "}from the pig's trough.
+            </Text>
+          </View>
+        )}
+
+        {/* UNLOCKED phase */}
+        {phase === "unlocked" && (
+          <View style={styles.middle}>
+            <PigMascot size={64} mood="happy" />
+            <Text style={styles.unlockOink}>OINK OINK</Text>
+            <Text style={styles.shade} numberOfLines={3}>{postShade}</Text>
+            <View style={styles.receiptRow}>
+              <Text style={styles.receiptLabel}>Coins spent</Text>
+              <Text style={styles.receiptVal}>{state.totalCoinsSpent}</Text>
+            </View>
+            <View style={styles.receiptRow}>
+              <Text style={styles.receiptLabel}>Times obeyed</Text>
+              <Text style={styles.receiptVal}>{state.totalUnlocks}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Buttons — always at bottom */}
+        <View style={styles.buttons}>
+          {phase === "roast" && (
+            <>
               <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handlePay}>
                 <Text style={styles.pinkBtnText}>Pay Tribute, Piggy</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
                 <Text style={styles.ghostBtnText}>Try to Resist</Text>
               </TouchableOpacity>
-            </Animated.View>
-          </View>
-        )}
-
-        {/* BROKE */}
-        {phase === "broke" && (
-          <View style={styles.section}>
-            <PigMascot size={90} mood="feral" />
-            <Text style={styles.brokeTitle}>BROKE PIG</Text>
-            <Text style={styles.brokeBody}>
-              {brokeMsg}
-            </Text>
-
-            <TouchableOpacity
-              style={styles.pinkBtn}
-              activeOpacity={0.85}
-              onPress={() => { navigation.goBack(); navigation.navigate("CoinShop"); }}
-            >
-              <Text style={styles.pinkBtnText}>Fill the Trough</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.ghostBtnText}>Starve</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* CONFIRM */}
-        {phase === "confirm" && (
-          <View style={styles.section}>
-            <View style={[styles.confirmCard, CARD_SHADOW]}>
-              <PigMascot size={60} mood="restless" />
-              <Text style={styles.confirmTitle}>{confirmMsg}</Text>
-              <Text style={styles.confirmBody}>
-                <Text style={{ color: C.pink, fontWeight: "800" }}>{fee} coins</Text>
-                {" "}from the pig's trough. Your master is waiting.
-              </Text>
-            </View>
-
-            <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handleConfirm}>
-              <Text style={styles.pinkBtnText}>Yes Master, I'll Pay</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.ghostBtnText}>Disobey</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* UNLOCKED — pig is fed, happy, but degraded */}
-        {phase === "unlocked" && (
-          <View style={styles.section}>
-            <PigMascot size={80} mood="happy" />
-            <Text style={styles.unlockOink}>OINK OINK</Text>
-            <Text style={styles.shade}>{postShade}</Text>
-
-            <View style={[styles.receipt, CARD_SHADOW]}>
-              <Text style={styles.receiptTitle}>PIG'S RECEIPT</Text>
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Total coins fed to master</Text>
-                <Text style={styles.receiptVal}>{state.totalCoinsSpent}</Text>
-              </View>
-              <View style={styles.receiptDivider} />
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Times the pig obeyed</Text>
-                <Text style={styles.receiptVal}>{state.totalUnlocks}</Text>
-              </View>
-              <View style={styles.receiptDivider} />
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Today</Text>
-                <Text style={styles.receiptVal}>{lockInfo.unlockCountToday || 0}x</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handleRelock}>
-              <Text style={styles.pinkBtnText}>Lock Me Up Again, Master</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.ghostBtnText}>Dismissed, Pig</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
+            </>
+          )}
+          {phase === "broke" && (
+            <>
+              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85}
+                onPress={() => { navigation.goBack(); navigation.navigate("CoinShop"); }}>
+                <Text style={styles.pinkBtnText}>Fill the Trough</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
+                <Text style={styles.ghostBtnText}>Starve</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          {phase === "confirm" && (
+            <>
+              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handleConfirm}>
+                <Text style={styles.pinkBtnText}>Yes Master, I'll Pay</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
+                <Text style={styles.ghostBtnText}>Disobey</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          {phase === "unlocked" && (
+            <>
+              <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85} onPress={handleRelock}>
+                <Text style={styles.pinkBtnText}>Lock Me Up Again</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
+                <Text style={styles.ghostBtnText}>Dismissed</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -233,44 +228,59 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", ...CARD_SHADOW,
   },
   closeX: { color: C.textSecondary, fontSize: 15, fontWeight: "600" },
-  content: { alignItems: "center", paddingTop: 80, paddingHorizontal: 28, paddingBottom: 50 },
-  iconWrap: { marginBottom: 16 },
-  appName: { ...T.h1, marginBottom: 24 },
-  section: { alignItems: "center", width: "100%" },
+
+  content: { flex: 1, paddingTop: 60, paddingHorizontal: 24, paddingBottom: 20 },
+
+  // Top — icon + name
+  topRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  appName: { ...T.h1, marginLeft: 14 },
+
+  // Middle — flex grows to fill space
+  middle: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   roast: {
-    fontSize: 22, fontWeight: "800", color: C.pink, fontStyle: "italic",
-    textAlign: "center", lineHeight: 32, minHeight: 70, marginBottom: 24,
+    fontSize: 20, fontWeight: "900", color: C.pink, fontStyle: "italic",
+    textAlign: "center", lineHeight: 28, letterSpacing: -0.5, marginBottom: 16,
   },
-  taunt: { ...T.body, textAlign: "center", fontStyle: "italic", marginBottom: 20 },
-  feeCard: { backgroundColor: C.white, borderRadius: 24, padding: 28, alignItems: "center", width: "100%", marginBottom: 24 },
-  feeLabel: { ...T.label, marginBottom: 8 },
+  taunt: { ...T.caption, textAlign: "center", fontStyle: "italic", marginTop: 12 },
+
+  feeCard: {
+    backgroundColor: C.white, borderRadius: 20, padding: 20,
+    alignItems: "center", width: "100%",
+  },
+  feeLabel: { ...T.label, marginBottom: 6 },
   feeCoinRow: { flexDirection: "row", alignItems: "center" },
-  feeCoinIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: C.pink, alignItems: "center", justifyContent: "center", marginRight: 10 },
-  feeCoinP: { color: "#FFF", fontSize: 16, fontWeight: "900" },
-  feeAmount: { fontSize: 48, fontWeight: "900", color: C.pink, letterSpacing: -2 },
-  feeSub: { ...T.caption, textAlign: "center", marginTop: 10, fontStyle: "italic" },
-  balanceRow: { flexDirection: "row", alignItems: "center", marginTop: 14, gap: 8 },
+  feeCoinIcon: {
+    width: 28, height: 28, borderRadius: 14, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center", marginRight: 8,
+  },
+  feeCoinP: { color: "#FFF", fontSize: 14, fontWeight: "900" },
+  feeAmount: { fontSize: 40, fontWeight: "900", color: C.pink, letterSpacing: -2 },
+  balanceRow: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 8 },
   balanceLabel: { ...T.caption, fontWeight: "600" },
 
-  pinkBtn: { backgroundColor: C.pink, borderRadius: 14, paddingVertical: 17, width: "100%", alignItems: "center", marginBottom: 12 },
+  // Buttons — pinned at bottom
+  buttons: { paddingTop: 12 },
+  pinkBtn: {
+    backgroundColor: C.pink, borderRadius: 14,
+    paddingVertical: 16, width: "100%", alignItems: "center", marginBottom: 10,
+  },
   pinkBtnText: { ...T.button },
-  ghostBtn: { paddingVertical: 14 },
+  ghostBtn: { paddingVertical: 10, alignItems: "center" },
   ghostBtnText: { ...T.body, color: C.green, fontWeight: "600" },
 
-  confirmCard: { backgroundColor: C.white, borderRadius: 20, padding: 24, alignItems: "center", width: "100%", marginBottom: 24 },
-  confirmTitle: { ...T.h2, color: C.pink, marginBottom: 10, marginTop: 12, textAlign: "center", fontStyle: "italic" },
-  confirmBody: { ...T.body, textAlign: "center", lineHeight: 24 },
+  // Confirm
+  confirmTitle: { ...T.h2, color: C.pink, marginTop: 10, marginBottom: 8, textAlign: "center", fontStyle: "italic" },
+  confirmBody: { ...T.body, textAlign: "center", lineHeight: 22 },
 
-  brokeTitle: { ...T.label, color: C.pink, fontSize: 16, letterSpacing: 4, marginTop: 16, marginBottom: 12 },
-  brokeBody: { ...T.body, textAlign: "center", lineHeight: 24, marginBottom: 24 },
+  // Broke
+  brokeTitle: { ...T.label, color: C.pink, fontSize: 14, letterSpacing: 3, marginTop: 12, marginBottom: 8 },
+  brokeBody: { ...T.body, textAlign: "center", lineHeight: 22 },
 
-  unlockOink: { ...T.label, color: C.pink, fontSize: 16, letterSpacing: 4, marginTop: 12, marginBottom: 16 },
-  shade: { fontSize: 17, fontWeight: "700", color: C.pink, fontStyle: "italic", textAlign: "center", lineHeight: 26, marginBottom: 24 },
-  receipt: { backgroundColor: C.white, borderRadius: 20, padding: 22, width: "100%", marginBottom: 24 },
-  receiptTitle: { ...T.label, marginBottom: 16 },
-  receiptRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 },
-  receiptLabel: { ...T.body, fontSize: 14 },
-  receiptVal: { ...T.bodyBold, fontSize: 15 },
-  receiptDivider: { height: 1, backgroundColor: C.divider, marginVertical: 10 },
+  // Unlocked
+  unlockOink: { ...T.label, color: C.pink, fontSize: 14, letterSpacing: 3, marginTop: 8, marginBottom: 10 },
+  shade: { fontSize: 16, fontWeight: "700", color: C.pink, fontStyle: "italic", textAlign: "center", lineHeight: 24, marginBottom: 16 },
+  receiptRow: { flexDirection: "row", justifyContent: "space-between", width: "100%", paddingVertical: 4 },
+  receiptLabel: { ...T.caption },
+  receiptVal: { ...T.bodyBold, fontSize: 14 },
 });
