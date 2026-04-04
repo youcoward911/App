@@ -55,7 +55,7 @@ export const TIME_BASED_ROASTS = [
       "{minutes} minutes. Did you think you were strong, piggy? You're not.",
       "You held out {minutes} minutes. Your master is not impressed.",
       "{minutes} minutes of pretending you don't need your slop. Cute.",
-      "Aw, {minutes} whole minutes. Did my piggy think it was making progress? That's sweet.",
+      "Aw, {minutes} whole minutes. My piggy thought it was making progress.",
       "{minutes} minutes without your phone and you're already shaking. Poor little pig.",
     ],
   },
