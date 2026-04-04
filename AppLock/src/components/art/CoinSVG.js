@@ -1,50 +1,62 @@
 import React from "react";
-import Svg, { Circle, Text as SvgText, Defs, LinearGradient, Stop, Ellipse } from "react-native-svg";
+import { View, Text, StyleSheet } from "react-native";
 
-// Piggy Coin — gold/pink coin with "P" embossed
+// Piggy Coin — gold/pink gradient with P emblem
 export default function CoinSVG({ size = 32 }) {
+  const s = size / 32;
   return (
-    <Svg width={size} height={size} viewBox="0 0 32 32">
-      <Defs>
-        <LinearGradient id="coinGrad" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#FFD700" />
-          <Stop offset="0.3" stopColor="#FFC000" />
-          <Stop offset="0.6" stopColor="#FF69B4" />
-          <Stop offset="1" stopColor="#FF45A0" />
-        </LinearGradient>
-        <LinearGradient id="coinShine" x1="0" y1="0" x2="0.5" y2="1">
-          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.5" />
-          <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-        </LinearGradient>
-      </Defs>
-
+    <View style={[styles.wrap, { width: size, height: size }]}>
       {/* Shadow */}
-      <Ellipse cx="16" cy="28" rx="12" ry="3" fill="#000" opacity="0.1" />
+      <View style={[styles.shadow, {
+        width: size * 0.75, height: 6 * s, borderRadius: 3 * s,
+        bottom: -2 * s, left: size * 0.125,
+      }]} />
 
-      {/* Coin edge (3D effect) */}
-      <Circle cx="16" cy="17" r="14" fill="#CC8800" />
+      {/* Coin edge (3D) */}
+      <View style={[styles.edge, {
+        width: size, height: size, borderRadius: size / 2,
+        top: 1 * s,
+      }]} />
 
       {/* Coin face */}
-      <Circle cx="16" cy="16" r="14" fill="url(#coinGrad)" />
+      <View style={[styles.face, {
+        width: size, height: size, borderRadius: size / 2,
+      }]}>
+        {/* Inner ring */}
+        <View style={[styles.ring, {
+          width: size * 0.8, height: size * 0.8, borderRadius: size * 0.4,
+        }]} />
 
-      {/* Inner ring */}
-      <Circle cx="16" cy="16" r="11" fill="none" stroke="#FFE44D" strokeWidth="1" opacity="0.6" />
+        {/* P emblem */}
+        <Text style={[styles.p, { fontSize: 16 * s }]}>P</Text>
 
-      {/* P emblem */}
-      <SvgText
-        x="16"
-        y="22"
-        textAnchor="middle"
-        fontSize="18"
-        fontWeight="900"
-        fill="#FFFFFF"
-        opacity="0.95"
-      >
-        P
-      </SvgText>
-
-      {/* Shine highlight */}
-      <Ellipse cx="11" cy="11" rx="6" ry="5" fill="url(#coinShine)" />
-    </Svg>
+        {/* Shine */}
+        <View style={[styles.shine, {
+          width: 12 * s, height: 10 * s, borderRadius: 6 * s,
+          top: 4 * s, left: 4 * s,
+        }]} />
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { position: "relative", alignItems: "center" },
+  shadow: { position: "absolute", backgroundColor: "#000", opacity: 0.1 },
+  edge: { position: "absolute", backgroundColor: "#CC8800" },
+  face: {
+    position: "absolute",
+    backgroundColor: "#FF69B4",
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "#FFD700",
+  },
+  ring: {
+    position: "absolute",
+    borderWidth: 1, borderColor: "#FFE44D", opacity: 0.5,
+  },
+  p: { color: "#FFF", fontWeight: "900", zIndex: 2 },
+  shine: {
+    position: "absolute", backgroundColor: "#FFF", opacity: 0.25,
+    transform: [{ rotate: "-20deg" }],
+  },
+});

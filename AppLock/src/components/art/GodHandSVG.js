@@ -1,106 +1,114 @@
 import React from "react";
-import Svg, { Path, Defs, LinearGradient, Stop, Ellipse, G, Rect } from "react-native-svg";
+import { View, StyleSheet } from "react-native";
 
-// Massive godlike hand descending from above — holding/pouring slop
+// Massive godlike hand descending — pure RN Views
 export default function GodHandSVG({ size = 120 }) {
+  const s = size / 120;
   return (
-    <Svg width={size} height={size * 1.2} viewBox="0 0 120 144">
-      <Defs>
-        <LinearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FFE0C8" />
-          <Stop offset="0.5" stopColor="#F5C8A8" />
-          <Stop offset="1" stopColor="#E8B090" />
-        </LinearGradient>
-        <LinearGradient id="sleevGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#2C2C2C" />
-          <Stop offset="1" stopColor="#1A1A1A" />
-        </LinearGradient>
-        <LinearGradient id="nailGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FFE8E8" />
-          <Stop offset="1" stopColor="#F0C8C8" />
-        </LinearGradient>
-        <LinearGradient id="slopDrip" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#8CA040" />
-          <Stop offset="1" stopColor="#6B8830" />
-        </LinearGradient>
-      </Defs>
+    <View style={[styles.wrap, { width: 120 * s, height: 150 * s }]}>
+      {/* Dark sleeve */}
+      <View style={[styles.sleeve, {
+        width: 60 * s, height: 50 * s,
+        borderBottomLeftRadius: 8 * s, borderBottomRightRadius: 8 * s,
+        top: 0, left: 30 * s,
+      }]} />
 
-      {/* Dark sleeve / arm coming from above */}
-      <Path
-        d="M30,0 L90,0 L88,40 Q88,48 82,50 L38,50 Q32,48 32,40 Z"
-        fill="url(#sleevGrad)"
-      />
-      {/* Sleeve cuff */}
-      <Rect x="28" y="44" width="64" height="10" rx="5" fill="#3A3A3A" />
-      <Path d="M32,49 L88,49" stroke="#555" strokeWidth="0.8" />
+      {/* Cuff */}
+      <View style={[styles.cuff, {
+        width: 68 * s, height: 10 * s, borderRadius: 5 * s,
+        top: 44 * s, left: 26 * s,
+      }]} />
 
       {/* Palm */}
-      <Path
-        d="M26,54 Q24,50 30,48 L90,48 Q96,50 94,54 L92,90 Q90,100 80,104 L40,104 Q30,100 28,90 Z"
-        fill="url(#skinGrad)"
-      />
+      <View style={[styles.palm, {
+        width: 70 * s, height: 56 * s,
+        borderRadius: 14 * s,
+        top: 50 * s, left: 25 * s,
+      }]}>
+        {/* Knuckle lines */}
+        <View style={[styles.knuckle, { top: 10 * s, left: 10 * s, width: 16 * s }]} />
+        <View style={[styles.knuckle, { top: 9 * s, left: 28 * s, width: 16 * s }]} />
+        <View style={[styles.knuckle, { top: 10 * s, left: 46 * s, width: 14 * s }]} />
+      </View>
 
-      {/* Knuckle wrinkles */}
-      <Path d="M38,60 Q44,58 50,60" stroke="#D8A888" strokeWidth="0.8" fill="none" />
-      <Path d="M55,59 Q62,57 68,59" stroke="#D8A888" strokeWidth="0.8" fill="none" />
-      <Path d="M72,60 Q78,58 84,60" stroke="#D8A888" strokeWidth="0.8" fill="none" />
+      {/* Thumb */}
+      <View style={[styles.finger, {
+        width: 18 * s, height: 36 * s, borderRadius: 9 * s,
+        top: 56 * s, left: 10 * s,
+        transform: [{ rotate: "15deg" }],
+      }]}>
+        <View style={[styles.nail, { width: 12 * s, height: 8 * s, borderRadius: 4 * s, bottom: 2 * s }]} />
+      </View>
 
-      {/* Fingers — curled inward, cupping */}
-      {/* Index */}
-      <Path
-        d="M32,92 Q28,100 30,112 Q32,120 38,122 Q44,120 44,112 L44,94"
-        fill="url(#skinGrad)"
-        stroke="#D8A888"
-        strokeWidth="0.5"
-      />
-      <Ellipse cx="35" cy="122" rx="5" ry="4" fill="url(#nailGrad)" />
+      {/* Index finger */}
+      <View style={[styles.finger, {
+        width: 16 * s, height: 42 * s, borderRadius: 8 * s,
+        top: 98 * s, left: 26 * s,
+      }]}>
+        <View style={[styles.nail, { width: 11 * s, height: 7 * s, borderRadius: 4 * s, bottom: 2 * s }]} />
+      </View>
 
-      {/* Middle */}
-      <Path
-        d="M46,94 Q42,104 44,118 Q46,128 52,130 Q58,128 58,118 L58,94"
-        fill="url(#skinGrad)"
-        stroke="#D8A888"
-        strokeWidth="0.5"
-      />
-      <Ellipse cx="51" cy="130" rx="5" ry="4" fill="url(#nailGrad)" />
+      {/* Middle finger */}
+      <View style={[styles.finger, {
+        width: 16 * s, height: 46 * s, borderRadius: 8 * s,
+        top: 100 * s, left: 42 * s,
+      }]}>
+        <View style={[styles.nail, { width: 11 * s, height: 7 * s, borderRadius: 4 * s, bottom: 2 * s }]} />
+      </View>
 
-      {/* Ring */}
-      <Path
-        d="M62,94 Q58,104 60,118 Q62,128 68,130 Q74,128 74,118 L74,94"
-        fill="url(#skinGrad)"
-        stroke="#D8A888"
-        strokeWidth="0.5"
-      />
-      <Ellipse cx="67" cy="130" rx="5" ry="4" fill="url(#nailGrad)" />
+      {/* Ring finger */}
+      <View style={[styles.finger, {
+        width: 16 * s, height: 44 * s, borderRadius: 8 * s,
+        top: 98 * s, left: 58 * s,
+      }]}>
+        <View style={[styles.nail, { width: 11 * s, height: 7 * s, borderRadius: 4 * s, bottom: 2 * s }]} />
+      </View>
 
       {/* Pinky */}
-      <Path
-        d="M78,92 Q76,100 78,110 Q80,118 84,118 Q88,116 88,110 L86,92"
-        fill="url(#skinGrad)"
-        stroke="#D8A888"
-        strokeWidth="0.5"
-      />
-      <Ellipse cx="83" cy="118" rx="4" ry="3.5" fill="url(#nailGrad)" />
-
-      {/* Thumb — to the side */}
-      <Path
-        d="M24,58 Q18,62 16,72 Q14,82 18,88 Q24,92 28,88 L30,68"
-        fill="url(#skinGrad)"
-        stroke="#D8A888"
-        strokeWidth="0.5"
-      />
-      <Ellipse cx="20" cy="88" rx="5" ry="4" fill="url(#nailGrad)" />
+      <View style={[styles.finger, {
+        width: 14 * s, height: 36 * s, borderRadius: 7 * s,
+        top: 94 * s, left: 74 * s,
+      }]}>
+        <View style={[styles.nail, { width: 10 * s, height: 6 * s, borderRadius: 3 * s, bottom: 2 * s }]} />
+      </View>
 
       {/* Slop dripping from fingers */}
-      <G opacity="0.8">
-        <Path d="M36,122 Q35,130 36,138" stroke="url(#slopDrip)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <Ellipse cx="36" cy="140" rx="3" ry="2" fill="#8CA040" />
-
-        <Path d="M52,130 Q51,136 52,142" stroke="url(#slopDrip)" strokeWidth="2" strokeLinecap="round" fill="none" />
-        <Ellipse cx="52" cy="144" rx="2.5" ry="1.5" fill="#7A9835" />
-
-        <Path d="M68,130 Q67,135 68,140" stroke="url(#slopDrip)" strokeWidth="2" strokeLinecap="round" fill="none" />
-      </G>
-    </Svg>
+      <View style={[styles.drip, {
+        width: 4 * s, height: 14 * s, borderRadius: 2 * s,
+        top: 138 * s, left: 32 * s,
+      }]} />
+      <View style={[styles.drip, {
+        width: 3 * s, height: 10 * s, borderRadius: 1.5 * s,
+        top: 142 * s, left: 49 * s,
+      }]} />
+      <View style={[styles.drip, {
+        width: 4 * s, height: 12 * s, borderRadius: 2 * s,
+        top: 140 * s, left: 65 * s,
+      }]} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { position: "relative" },
+  sleeve: { position: "absolute", backgroundColor: "#1A1A1A" },
+  cuff: { position: "absolute", backgroundColor: "#3A3A3A" },
+  palm: {
+    position: "absolute", backgroundColor: "#F5C8A8",
+    borderWidth: 1, borderColor: "#E8B090",
+  },
+  knuckle: {
+    position: "absolute", height: 1,
+    backgroundColor: "#D8A888",
+  },
+  finger: {
+    position: "absolute", backgroundColor: "#F5C8A8",
+    borderWidth: 0.5, borderColor: "#E0B098",
+    alignItems: "center",
+  },
+  nail: {
+    position: "absolute", backgroundColor: "#FFE8E8",
+    borderWidth: 0.5, borderColor: "#F0C8C8",
+  },
+  drip: { position: "absolute", backgroundColor: "#8CA040", opacity: 0.8 },
+});

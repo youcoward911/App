@@ -1,45 +1,69 @@
 import React from "react";
-import Svg, { Path, Ellipse, Defs, LinearGradient, Stop, G } from "react-native-svg";
+import { View, StyleSheet } from "react-native";
 
-// Slop splash — particles bursting outward when slop hits trough
+// Slop splash burst — pure RN Views
 export default function SlopSplashSVG({ size = 100 }) {
+  const s = size / 100;
   return (
-    <Svg width={size} height={size * 0.6} viewBox="0 0 100 60">
-      <Defs>
-        <LinearGradient id="splashGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#B8D060" />
-          <Stop offset="1" stopColor="#6B8830" />
-        </LinearGradient>
-      </Defs>
+    <View style={[styles.wrap, { width: 100 * s, height: 60 * s }]}>
+      {/* Center impact */}
+      <View style={[styles.impact, {
+        width: 40 * s, height: 14 * s, borderRadius: 7 * s,
+        bottom: 8 * s, left: 30 * s,
+      }]} />
 
-      {/* Center splash impact */}
-      <Ellipse cx="50" cy="40" rx="20" ry="8" fill="#8CA040" opacity="0.5" />
-
-      {/* Splash droplets flying outward */}
       {/* Left splashes */}
-      <Path d="M30,35 Q22,20 18,28" stroke="#8CA040" strokeWidth="3" strokeLinecap="round" fill="none" />
-      <Ellipse cx="16" cy="30" rx="4" ry="3" fill="#8CA040" opacity="0.8" />
-
-      <Path d="M35,30 Q28,12 20,18" stroke="#A0B848" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-      <Ellipse cx="18" cy="18" rx="3" ry="2.5" fill="#A0B848" opacity="0.7" />
-
-      <Path d="M25,38 Q14,30 10,36" stroke="#7A9835" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <Ellipse cx="8" cy="38" rx="3" ry="2" fill="#7A9835" opacity="0.6" />
+      <View style={[styles.dropL, {
+        width: 10 * s, height: 8 * s, borderRadius: 5 * s,
+        top: 20 * s, left: 8 * s,
+      }]} />
+      <View style={[styles.dropL2, {
+        width: 8 * s, height: 7 * s, borderRadius: 4 * s,
+        top: 10 * s, left: 18 * s,
+      }]} />
+      <View style={[styles.dropL, {
+        width: 7 * s, height: 5 * s, borderRadius: 3 * s,
+        top: 30 * s, left: 4 * s,
+      }]} />
 
       {/* Right splashes */}
-      <Path d="M70,35 Q78,20 82,28" stroke="#8CA040" strokeWidth="3" strokeLinecap="round" fill="none" />
-      <Ellipse cx="84" cy="30" rx="4" ry="3" fill="#8CA040" opacity="0.8" />
-
-      <Path d="M65,30 Q72,12 80,18" stroke="#A0B848" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-      <Ellipse cx="82" cy="18" rx="3" ry="2.5" fill="#A0B848" opacity="0.7" />
-
-      <Path d="M75,38 Q86,30 90,36" stroke="#7A9835" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <Ellipse cx="92" cy="38" rx="3" ry="2" fill="#7A9835" opacity="0.6" />
+      <View style={[styles.dropR, {
+        width: 10 * s, height: 8 * s, borderRadius: 5 * s,
+        top: 20 * s, right: 8 * s,
+      }]} />
+      <View style={[styles.dropR2, {
+        width: 8 * s, height: 7 * s, borderRadius: 4 * s,
+        top: 10 * s, right: 18 * s,
+      }]} />
+      <View style={[styles.dropR, {
+        width: 7 * s, height: 5 * s, borderRadius: 3 * s,
+        top: 30 * s, right: 4 * s,
+      }]} />
 
       {/* Top splashes */}
-      <Ellipse cx="42" cy="8" rx="3" ry="3" fill="#B8D060" opacity="0.6" />
-      <Ellipse cx="58" cy="5" rx="2.5" ry="2.5" fill="#A0B848" opacity="0.5" />
-      <Ellipse cx="50" cy="12" rx="2" ry="2" fill="#8CA040" opacity="0.7" />
-    </Svg>
+      <View style={[styles.dropTop, {
+        width: 7 * s, height: 7 * s, borderRadius: 3.5 * s,
+        top: 2 * s, left: 40 * s,
+      }]} />
+      <View style={[styles.dropTop2, {
+        width: 6 * s, height: 6 * s, borderRadius: 3 * s,
+        top: 0, left: 56 * s,
+      }]} />
+      <View style={[styles.dropTop, {
+        width: 5 * s, height: 5 * s, borderRadius: 2.5 * s,
+        top: 6 * s, left: 48 * s,
+      }]} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { position: "relative" },
+  impact: { position: "absolute", backgroundColor: "#8CA040", opacity: 0.5 },
+  dropL: { position: "absolute", backgroundColor: "#8CA040", opacity: 0.8 },
+  dropL2: { position: "absolute", backgroundColor: "#A0B848", opacity: 0.7 },
+  dropR: { position: "absolute", backgroundColor: "#8CA040", opacity: 0.8 },
+  dropR2: { position: "absolute", backgroundColor: "#A0B848", opacity: 0.7 },
+  dropTop: { position: "absolute", backgroundColor: "#B8D060", opacity: 0.6 },
+  dropTop2: { position: "absolute", backgroundColor: "#A0B848", opacity: 0.5 },
+});

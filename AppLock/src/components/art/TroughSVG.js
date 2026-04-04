@@ -1,94 +1,114 @@
 import React from "react";
-import Svg, { Path, Rect, Defs, LinearGradient, Stop, Ellipse, G } from "react-native-svg";
+import { View, StyleSheet } from "react-native";
 
-// Wooden feeding trough — rustic with slop option
-export default function TroughSVG({ size = 160, showSlop = false, slopLevel = 0 }) {
+// Wooden feeding trough — pure RN Views
+export default function TroughSVG({ size = 160, showSlop = false }) {
+  const s = size / 160;
   return (
-    <Svg width={size} height={size * 0.55} viewBox="0 0 160 88">
-      <Defs>
-        <LinearGradient id="woodGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#C8904E" />
-          <Stop offset="0.4" stopColor="#A06830" />
-          <Stop offset="1" stopColor="#7A4820" />
-        </LinearGradient>
-        <LinearGradient id="woodSide" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#8B5E3C" />
-          <Stop offset="1" stopColor="#6B3F1F" />
-        </LinearGradient>
-        <LinearGradient id="slopGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#A8B860" />
-          <Stop offset="0.3" stopColor="#8CA040" />
-          <Stop offset="0.7" stopColor="#6B8830" />
-          <Stop offset="1" stopColor="#556B28" />
-        </LinearGradient>
-        <LinearGradient id="slopShine" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#C8D870" stopOpacity="0.6" />
-          <Stop offset="1" stopColor="#8CA040" stopOpacity="0" />
-        </LinearGradient>
-      </Defs>
-
+    <View style={[styles.wrap, { width: 160 * s, height: 88 * s }]}>
       {/* Shadow */}
-      <Ellipse cx="80" cy="84" rx="65" ry="4" fill="#000" opacity="0.12" />
-
-      {/* Trough body — trapezoidal */}
-      <Path
-        d="M18,30 L10,78 Q10,82 16,82 L144,82 Q150,82 150,78 L142,30 Z"
-        fill="url(#woodGrad)"
-      />
-
-      {/* Wood grain lines */}
-      <Path d="M30,35 L24,75" stroke="#8B5E3C" strokeWidth="0.8" opacity="0.4" />
-      <Path d="M55,35 L50,75" stroke="#8B5E3C" strokeWidth="0.8" opacity="0.3" />
-      <Path d="M80,35 L78,75" stroke="#8B5E3C" strokeWidth="0.8" opacity="0.4" />
-      <Path d="M105,35 L108,75" stroke="#8B5E3C" strokeWidth="0.8" opacity="0.3" />
-      <Path d="M130,35 L136,75" stroke="#8B5E3C" strokeWidth="0.8" opacity="0.4" />
-
-      {/* Rim — thick top edge */}
-      <Path
-        d="M14,26 Q14,22 20,22 L140,22 Q146,22 146,26 L142,34 L18,34 Z"
-        fill="#B8804A"
-      />
-      <Path
-        d="M16,24 Q16,20 22,20 L138,20 Q144,20 144,24 L140,30 L20,30 Z"
-        fill="url(#woodGrad)"
-        stroke="#9B6E3C"
-        strokeWidth="0.5"
-      />
-
-      {/* Metal bands */}
-      <Path d="M20,45 L140,45" stroke="#888" strokeWidth="2.5" opacity="0.5" />
-      <Path d="M16,65 L144,65" stroke="#888" strokeWidth="2.5" opacity="0.5" />
-
-      {/* Rivets */}
-      <Ellipse cx="28" cy="45" rx="2.5" ry="2.5" fill="#999" opacity="0.6" />
-      <Ellipse cx="132" cy="45" rx="2.5" ry="2.5" fill="#999" opacity="0.6" />
-      <Ellipse cx="24" cy="65" rx="2.5" ry="2.5" fill="#999" opacity="0.6" />
-      <Ellipse cx="136" cy="65" rx="2.5" ry="2.5" fill="#999" opacity="0.6" />
+      <View style={[styles.shadow, {
+        width: 130 * s, height: 8 * s, borderRadius: 4 * s,
+        bottom: 0, left: 15 * s,
+      }]} />
 
       {/* Legs */}
-      <Rect x="22" y="78" width="8" height="8" rx="2" fill="#6B3F1F" />
-      <Rect x="130" y="78" width="8" height="8" rx="2" fill="#6B3F1F" />
+      <View style={[styles.leg, { left: 22 * s, bottom: 2 * s, width: 10 * s, height: 10 * s, borderRadius: 2 * s }]} />
+      <View style={[styles.leg, { right: 22 * s, bottom: 2 * s, width: 10 * s, height: 10 * s, borderRadius: 2 * s }]} />
 
-      {/* Slop inside trough */}
-      {showSlop && (
-        <G opacity={Math.min(1, slopLevel)}>
-          {/* Main slop body */}
-          <Path
-            d="M24,38 Q40,32 80,34 Q120,32 136,38 L134,72 Q120,76 80,74 Q40,76 26,72 Z"
-            fill="url(#slopGrad)"
-          />
-          {/* Slop surface shine */}
-          <Ellipse cx="80" cy="40" rx="50" ry="8" fill="url(#slopShine)" />
-          {/* Chunky bits */}
-          <Ellipse cx="50" cy="50" rx="6" ry="4" fill="#7A9835" opacity="0.7" />
-          <Ellipse cx="95" cy="48" rx="5" ry="3" fill="#6B8830" opacity="0.6" />
-          <Ellipse cx="70" cy="58" rx="7" ry="4" fill="#8CA040" opacity="0.5" />
-          <Ellipse cx="110" cy="55" rx="4" ry="3" fill="#7A9835" opacity="0.6" />
-          {/* Bubble */}
-          <Ellipse cx="65" cy="42" rx="3" ry="2.5" fill="#B8D060" opacity="0.5" />
-          <Ellipse cx="100" cy="44" rx="2" ry="1.5" fill="#C8E070" opacity="0.4" />
-        </G>
-      )}
-    </Svg>
+      {/* Trough body — wider at top */}
+      <View style={[styles.body, {
+        width: 140 * s, height: 54 * s, borderRadius: 6 * s,
+        top: 22 * s, left: 10 * s,
+      }]}>
+        {/* Wood grain lines */}
+        <View style={[styles.grain, { left: 20 * s, top: 5 * s, height: 40 * s }]} />
+        <View style={[styles.grain, { left: 45 * s, top: 5 * s, height: 40 * s }]} />
+        <View style={[styles.grain, { left: 70 * s, top: 5 * s, height: 40 * s }]} />
+        <View style={[styles.grain, { left: 95 * s, top: 5 * s, height: 40 * s }]} />
+        <View style={[styles.grain, { left: 120 * s, top: 5 * s, height: 40 * s }]} />
+
+        {/* Metal bands */}
+        <View style={[styles.band, { top: 14 * s }]} />
+        <View style={[styles.band, { top: 34 * s }]} />
+
+        {/* Rivets */}
+        <View style={[styles.rivet, { top: 12 * s, left: 10 * s }]} />
+        <View style={[styles.rivet, { top: 12 * s, right: 10 * s }]} />
+        <View style={[styles.rivet, { top: 32 * s, left: 8 * s }]} />
+        <View style={[styles.rivet, { top: 32 * s, right: 8 * s }]} />
+
+        {/* Slop inside */}
+        {showSlop && (
+          <View style={[styles.slopContainer, {
+            top: 6 * s, left: 8 * s, right: 8 * s, bottom: 6 * s,
+            borderRadius: 4 * s,
+          }]}>
+            {/* Slop surface */}
+            <View style={[styles.slopSurface, { height: 10 * s, borderRadius: 4 * s }]} />
+            {/* Chunky bits */}
+            <View style={[styles.chunk, { top: 14 * s, left: 12 * s, width: 12 * s, height: 8 * s }]} />
+            <View style={[styles.chunk2, { top: 10 * s, left: 50 * s, width: 10 * s, height: 6 * s }]} />
+            <View style={[styles.chunk, { top: 20 * s, left: 30 * s, width: 14 * s, height: 8 * s }]} />
+            <View style={[styles.chunk2, { top: 16 * s, left: 75 * s, width: 8 * s, height: 6 * s }]} />
+            {/* Bubbles */}
+            <View style={[styles.bubble, { top: 6 * s, left: 25 * s, width: 6 * s, height: 5 * s }]} />
+            <View style={[styles.bubble, { top: 8 * s, left: 60 * s, width: 4 * s, height: 3 * s }]} />
+          </View>
+        )}
+      </View>
+
+      {/* Rim — thick top edge */}
+      <View style={[styles.rim, {
+        width: 148 * s, height: 14 * s,
+        borderTopLeftRadius: 8 * s, borderTopRightRadius: 8 * s,
+        borderBottomLeftRadius: 4 * s, borderBottomRightRadius: 4 * s,
+        top: 12 * s, left: 6 * s,
+      }]} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { position: "relative" },
+  shadow: { position: "absolute", backgroundColor: "#000", opacity: 0.1 },
+  leg: { position: "absolute", backgroundColor: "#6B3F1F" },
+  body: {
+    position: "absolute", backgroundColor: "#A06830",
+    overflow: "hidden",
+    borderWidth: 1, borderColor: "#8B5E3C",
+  },
+  grain: {
+    position: "absolute", width: 1, backgroundColor: "#8B5E3C", opacity: 0.3,
+  },
+  band: {
+    position: "absolute", left: 0, right: 0, height: 3,
+    backgroundColor: "#999", opacity: 0.4,
+  },
+  rivet: {
+    position: "absolute", width: 6, height: 6, borderRadius: 3,
+    backgroundColor: "#AAA", opacity: 0.5,
+  },
+  rim: {
+    position: "absolute", backgroundColor: "#C8904E",
+    borderWidth: 1, borderColor: "#9B6E3C",
+  },
+  slopContainer: {
+    position: "absolute", backgroundColor: "#6B8830", overflow: "hidden",
+  },
+  slopSurface: {
+    backgroundColor: "#A8B860", opacity: 0.7,
+  },
+  chunk: {
+    position: "absolute", borderRadius: 4,
+    backgroundColor: "#7A9835", opacity: 0.7,
+  },
+  chunk2: {
+    position: "absolute", borderRadius: 3,
+    backgroundColor: "#8CA040", opacity: 0.6,
+  },
+  bubble: {
+    position: "absolute", borderRadius: 10,
+    backgroundColor: "#B8D060", opacity: 0.5,
+  },
+});

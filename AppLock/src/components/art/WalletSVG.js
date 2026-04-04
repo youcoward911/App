@@ -1,72 +1,82 @@
 import React from "react";
-import Svg, { Path, Rect, Circle, Defs, LinearGradient, Stop, G } from "react-native-svg";
+import { View, StyleSheet } from "react-native";
 
-// Open wallet tipping coins — leather brown with gold clasp
+// Leather wallet with gold clasp — pure RN Views
 export default function WalletSVG({ size = 80 }) {
   const s = size / 80;
   return (
-    <Svg width={size} height={size * 0.9} viewBox="0 0 80 72">
-      {/* Wallet body */}
-      <Defs>
-        <LinearGradient id="walletGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#8B5E3C" />
-          <Stop offset="0.5" stopColor="#6B3F1F" />
-          <Stop offset="1" stopColor="#4A2510" />
-        </LinearGradient>
-        <LinearGradient id="walletInner" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#D4A574" />
-          <Stop offset="1" stopColor="#B8864E" />
-        </LinearGradient>
-        <LinearGradient id="flapGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#9B6E4C" />
-          <Stop offset="1" stopColor="#7B4E2C" />
-        </LinearGradient>
-      </Defs>
-
-      {/* Inner lining visible at top */}
-      <Rect x="12" y="8" width="56" height="30" rx="6" fill="url(#walletInner)" />
+    <View style={[styles.wrap, { width: 80 * s, height: 72 * s }]}>
+      {/* Inner lining */}
+      <View style={[styles.lining, {
+        width: 56 * s, height: 24 * s, borderRadius: 6 * s,
+        top: 6 * s, left: 12 * s,
+      }]} />
 
       {/* Main body */}
-      <Path
-        d="M8,28 Q8,18 18,18 L62,18 Q72,18 72,28 L72,60 Q72,68 62,68 L18,68 Q8,68 8,60 Z"
-        fill="url(#walletGrad)"
-      />
+      <View style={[styles.body, {
+        width: 64 * s, height: 44 * s, borderRadius: 10 * s,
+        top: 20 * s, left: 8 * s,
+      }]}>
+        {/* Stitching */}
+        <View style={[styles.stitch, { top: 6 * s, left: 6 * s, right: 6 * s }]} />
+        <View style={[styles.stitch, { bottom: 6 * s, left: 6 * s, right: 6 * s }]} />
 
-      {/* Stitching detail */}
-      <Path
-        d="M14,24 L66,24"
-        stroke="#A0774C"
-        strokeWidth="1"
-        strokeDasharray="3,2"
-        fill="none"
-      />
-      <Path
-        d="M14,62 L66,62"
-        stroke="#5A3318"
-        strokeWidth="1"
-        strokeDasharray="3,2"
-        fill="none"
-      />
-
-      {/* Card pocket visible */}
-      <Rect x="16" y="30" width="24" height="16" rx="3" fill="#5A3318" opacity="0.4" />
+        {/* Card pocket */}
+        <View style={[styles.pocket, {
+          width: 22 * s, height: 14 * s, borderRadius: 3 * s,
+          top: 12 * s, left: 6 * s,
+        }]} />
+      </View>
 
       {/* Flap (open) */}
-      <Path
-        d="M14,20 Q14,8 26,6 L54,6 Q66,8 66,20"
-        fill="url(#flapGrad)"
-        stroke="#6B3F1F"
-        strokeWidth="1"
-      />
+      <View style={[styles.flap, {
+        width: 52 * s, height: 16 * s,
+        borderTopLeftRadius: 12 * s, borderTopRightRadius: 12 * s,
+        top: 6 * s, left: 14 * s,
+      }]} />
 
       {/* Gold clasp */}
-      <Circle cx="40" cy="18" r="5" fill="#FFD700" />
-      <Circle cx="40" cy="18" r="3" fill="#FFC000" />
-      <Circle cx="40" cy="18" r="1.5" fill="#FFE44D" />
+      <View style={[styles.clasp, {
+        width: 12 * s, height: 12 * s, borderRadius: 6 * s,
+        top: 14 * s, left: 34 * s,
+      }]}>
+        <View style={[styles.claspInner, {
+          width: 7 * s, height: 7 * s, borderRadius: 3.5 * s,
+        }]} />
+      </View>
 
       {/* Bills peeking out */}
-      <Rect x="20" y="10" width="18" height="10" rx="2" fill="#85BB65" opacity="0.7" />
-      <Rect x="42" y="12" width="16" height="8" rx="2" fill="#6BA352" opacity="0.6" />
-    </Svg>
+      <View style={[styles.bill, {
+        width: 18 * s, height: 8 * s, borderRadius: 2 * s,
+        top: 10 * s, left: 18 * s,
+      }]} />
+      <View style={[styles.bill2, {
+        width: 14 * s, height: 6 * s, borderRadius: 2 * s,
+        top: 12 * s, left: 44 * s,
+      }]} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { position: "relative" },
+  lining: { position: "absolute", backgroundColor: "#D4A574" },
+  body: {
+    position: "absolute", backgroundColor: "#7B4E2C",
+    borderWidth: 1, borderColor: "#6B3F1F",
+  },
+  stitch: {
+    position: "absolute", height: 1,
+    borderTopWidth: 1, borderColor: "#A0774C", borderStyle: "dashed",
+  },
+  pocket: { position: "absolute", backgroundColor: "#5A3318", opacity: 0.5 },
+  flap: { position: "absolute", backgroundColor: "#9B6E4C" },
+  clasp: {
+    position: "absolute", backgroundColor: "#FFD700",
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "#CC8800",
+  },
+  claspInner: { backgroundColor: "#FFE44D" },
+  bill: { position: "absolute", backgroundColor: "#85BB65", opacity: 0.7 },
+  bill2: { position: "absolute", backgroundColor: "#6BA352", opacity: 0.6 },
+});
