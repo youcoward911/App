@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
 
   // Categories
-  cats: { paddingHorizontal: 20, marginBottom: 12, paddingVertical: 4 },
+  cats: { paddingHorizontal: 20, marginBottom: 18, paddingVertical: 4 },
   catChip: {
     paddingHorizontal: 12,
     paddingVertical: 10,
