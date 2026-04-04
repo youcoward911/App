@@ -52,13 +52,14 @@ export default function HomeScreen({ navigation }) {
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
 
-  // Tick every second when under 1 min, otherwise every 30s
+  // Tick every second when countdowns active or under 1 min, otherwise every 30s
+  const hasCountdowns = Object.values(state.lockedApps).some((a) => !a.lockedAt && a.unlockExpiresAt);
   useEffect(() => {
     const tributeSecs = state.lastTributeTime ? Math.floor((Date.now() - state.lastTributeTime) / 1000) : Infinity;
-    const rate = tributeSecs < 60 ? 1000 : 30000;
+    const rate = hasCountdowns || tributeSecs < 60 ? 1000 : 30000;
     const interval = setInterval(() => setNow(Date.now()), rate);
     return () => clearInterval(interval);
-  }, [now, state.lastTributeTime]);
+  }, [now, state.lastTributeTime, hasCountdowns]);
 
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);
@@ -84,6 +85,18 @@ export default function HomeScreen({ navigation }) {
 
   const isLocked = (appId) => !!state.lockedApps[appId]?.lockedAt;
 
+  const getCountdown = (appId) => {
+    const app = state.lockedApps[appId];
+    if (!app?.unlockExpiresAt || app.lockedAt) return null;
+    const remaining = Math.max(0, Math.floor((app.unlockExpiresAt - Date.now()) / 1000));
+    if (remaining <= 0) return null;
+    const h = Math.floor(remaining / 3600);
+    const m = Math.floor((remaining % 3600) / 60);
+    const s = remaining % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
   const onScroll = (e) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
     setActiveIndex(idx);
@@ -92,6 +105,7 @@ export default function HomeScreen({ navigation }) {
   const renderCarouselCard = ({ item }) => {
     const locked = isLocked(item.id);
     const info = state.lockedApps[item.id];
+    const countdown = getCountdown(item.id);
     return (
       <TouchableOpacity
         style={[styles.carouselCard, CARD_SHADOW_LG]}
@@ -103,12 +117,20 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.cardStatus}>
           {locked ? `Locked ${getTimeSince(item.id)}` : "Unlocked"}
         </Text>
-        <View style={styles.cardFeeRow}>
-          <View style={styles.cardFeeCoin}>
-            <Text style={styles.cardFeeCoinP}>P</Text>
+        {countdown && (
+          <View style={styles.countdownRow}>
+            <Text style={styles.countdownIcon}>⏱</Text>
+            <Text style={styles.countdownText}>{countdown}</Text>
           </View>
-          <Text style={styles.cardFeeAmount}>{info?.unlockFee}</Text>
-        </View>
+        )}
+        {locked && (
+          <View style={styles.cardFeeRow}>
+            <View style={styles.cardFeeCoin}>
+              <Text style={styles.cardFeeCoinP}>P</Text>
+            </View>
+            <Text style={styles.cardFeeAmount}>{info?.unlockFee}</Text>
+          </View>
+        )}
         <GlowButton
           title={locked ? "Pay Tribute" : "Lock Me Back Up"}
           onPress={() => navigation.navigate("Unlock", { appId: item.id })}
@@ -244,6 +266,9 @@ const styles = StyleSheet.create({
   },
   cardAppName: { ...T.h1, marginTop: 14, textAlign: "center" },
   cardStatus: { ...T.caption, marginTop: 4 },
+  countdownRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
+  countdownIcon: { fontSize: 14, marginRight: 6 },
+  countdownText: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: 1, fontVariant: ["tabular-nums"] },
   cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
   cardFeeCoin: {
     width: 22, height: 22, borderRadius: 11, backgroundColor: C.pink,
