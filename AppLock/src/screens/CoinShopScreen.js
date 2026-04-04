@@ -131,9 +131,6 @@ export default function CoinShopScreen({ navigation }) {
               </View>
               <View style={styles.pkgRight}>
                 <Text style={styles.pkgPrice}>${pkg.price.toFixed(2)}</Text>
-                <Text style={styles.pkgPer}>
-                  ${(pkg.price / pkg.coins).toFixed(3)}/coin
-                </Text>
               </View>
             </TouchableOpacity>
           );
