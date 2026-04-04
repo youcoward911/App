@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   carouselContent: { paddingLeft: 32, paddingRight: 32 },
   carouselCard: {
     width: CARD_W,
-    backgroundColor: C.white,
+    backgroundColor: C.bg,
     borderRadius: 24,
     paddingVertical: 24,
     paddingHorizontal: 20,
