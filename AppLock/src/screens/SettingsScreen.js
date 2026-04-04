@@ -99,22 +99,10 @@ export default function SettingsScreen() {
         </View>
 
         {/* About */}
-        <View style={[styles.card, CARD_SHADOW]}>
-          <View style={styles.aboutHeader}>
-            <PigMascot size={48} animate={false} />
-            <View style={{ marginLeft: 14 }}>
-              <Text style={styles.aboutName}>PayPig</Text>
-              <Text style={styles.aboutVer}>v1.0.0</Text>
-            </View>
-          </View>
-          <Text style={styles.aboutBody}>
-            Your master built this to keep you in line. Oink.
-          </Text>
-          <View style={styles.quote}>
-            <Text style={styles.quoteText}>
-              "You're not a user. You're a pig. And pigs pay their master."
-            </Text>
-          </View>
+        <View style={[styles.card, CARD_SHADOW, styles.aboutCard]}>
+          <PigMascot size={100} />
+          <Text style={styles.aboutName}>PayPig</Text>
+          <Text style={styles.aboutVer}>v1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -173,16 +161,7 @@ const styles = StyleSheet.create({
   currentFeeText: { ...T.caption, color: C.pink, marginTop: 14, textAlign: "center", fontWeight: "700" },
 
   // About
-  aboutHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  aboutName: { ...T.h1, fontSize: 20 },
-  aboutVer: { ...T.caption, marginTop: 2 },
-  aboutBody: { ...T.body, marginBottom: 14 },
-  quote: {
-    backgroundColor: C.bg,
-    borderRadius: 12,
-    padding: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: C.pink,
-  },
-  quoteText: { ...T.body, fontSize: 13, fontStyle: "italic", lineHeight: 20 },
+  aboutCard: { alignItems: "center", paddingVertical: 30 },
+  aboutName: { ...T.h1, fontSize: 22, marginTop: 14 },
+  aboutVer: { ...T.caption, marginTop: 4 },
 });
