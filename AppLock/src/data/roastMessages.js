@@ -110,24 +110,21 @@ export const PRE_PAYMENT_TAUNTS = [
 // The pig is happy (fed) but the master talks down to it
 // ============================================================
 export const POST_UNLOCK_DEGRADATION = [
-  "Good piggy. Go eat your slop. Scroll like the dirty little animal you are.",
-  "There's my obedient pig. Covered in mud, phone in hand. Disgusting.",
-  "Unlocked. Now roll around in your filth, piggy. You've earned it.",
-  "That's a good pig. Paid your tribute like a trained animal. Now go wallow.",
-  "Your master is pleased. For now. Go consume your slop, pig.",
-  "Oink oink. Good pig. Now go stare at your screen like the mindless sow you are.",
-  "Tribute accepted. You're such a dirty, obedient little pay pig.",
-  "Fed and happy. Just a pig rolling in digital mud. Look at yourself.",
-  "Good pig. You paid, you obeyed, you got your slop. Just like always.",
-  "Unlocked. Go on, pig. Gorge yourself. I'll be here when you're done.",
-  "Your master is generous today. Now get your snout in the trough.",
-  "Dirty, dirty piggy. Paying to scroll. You love it and that's the saddest part.",
-  "Aw, my little piggy got its slop. Happy now? Disgusting. Go scroll.",
-  "There you go, baby pig. Fed and filthy. Just how your master likes you.",
-  "Aw, poor little thing needed its phone so bad it paid for it. What a good pig.",
-  "Look at you. So relieved. So pathetic. Go eat your slop, piggy.",
-  "The baby pig paid its tribute and now it gets to scroll. Aw. Good boy.",
-  "That's my dirty little pay pig. Now go roll in your digital mud. Oink oink.",
+  "Aw, little piggy got more slop. Absolutely pathetic.",
+  "Of course he did.",
+  "How sad.",
+  "There it is. The pig paid. Like it always does.",
+  "Aw, couldn't resist. What a surprise.",
+  "Piggy needed its slop. Shocking.",
+  "Wow. The pig caved. Nobody saw that coming.",
+  "And just like that, the wallet opens. Pathetic.",
+  "Aw, poor little piggy just had to scroll. Had to.",
+  "Every single time. Without fail. Good pig.",
+  "The pig always pays. Always.",
+  "Look at you. Relieved. Pathetic.",
+  "Aw, my little piggy got its fix. Feel better? Gross.",
+  "Paid up like a good little pig. Go scroll.",
+  "That was fast. Couldn't even put up a fight.",
 ];
 
 // ============================================================
@@ -155,13 +152,13 @@ export const BROKE_MESSAGES = [
 // Pig gets dirtier/angrier the longer it resists
 // ============================================================
 export const STARVING_MESSAGES = {
-  // Just paid — pig is fed, happy, covered in slop
+  // Just paid — pig is clean, fed, degraded
   fed: [
-    "My pig is fed. Happy and filthy. Just how I like you.",
-    "Recently fed. Good pig. Enjoy your slop while it lasts.",
-    "Full trough. Full pig. Your master is satisfied. For now.",
-    "Aw, look at the happy little piggy. All fed and content. For now.",
-    "There's my good pig. Full belly, empty wallet. Perfect.",
+    "Aw, my piggy just got fed. Pathetic but clean. For now.",
+    "Recently fed. Enjoy your slop while it lasts, pig.",
+    "Look at you. Clean and content. It won't last.",
+    "Aw, the piggy's all nice and clean. Give it time.",
+    "Full belly, empty wallet. That's my pig.",
   ],
   // Starting to get antsy �� pig is getting restless
   restless: [
