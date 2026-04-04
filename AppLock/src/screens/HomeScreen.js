@@ -21,18 +21,8 @@ const CARD_W = SCREEN_W - 64;
 const CARD_SPACING = 12;
 const SNAP_INTERVAL = CARD_W + CARD_SPACING;
 
-const NO_TRIBUTE_LINES = [
-  "Oink oink, piggy needs to scroll",
-  "It's scroll time, isn't it?",
-  "My piggy hasn't paid yet. Aw.",
-  "The trough is empty, pig.",
-];
-
 function getTributeClock(lastTributeTime) {
-  if (!lastTributeTime) {
-    const line = NO_TRIBUTE_LINES[Math.floor(Math.random() * NO_TRIBUTE_LINES.length)];
-    return { text: line, minutes: Infinity };
-  }
+  if (!lastTributeTime) return { text: "Never", minutes: Infinity };
   const mins = Math.floor((Date.now() - lastTributeTime) / 60000);
   if (mins < 1) return { text: "Just now", minutes: mins };
   if (mins < 60) return { text: `${mins}m ago`, minutes: mins };
@@ -56,6 +46,10 @@ export default function HomeScreen({ navigation }) {
   const [now, setNow] = useState(Date.now());
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // Pick one phrase per app session — useRef so it doesn't change on re-render
+  const moodKey = useRef(null);
+  const moodMessageRef = useRef(null);
+
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(interval);
@@ -63,7 +57,14 @@ export default function HomeScreen({ navigation }) {
 
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);
-  const moodMessage = getStarvingMessage(pigMood === "happy" ? "fed" : pigMood === "restless" ? "restless" : pigMood === "dirty" ? "dirty" : "feral");
+
+  // Only pick a new message if mood category changed or first render
+  const currentMoodKey = pigMood === "happy" ? "fed" : pigMood === "restless" ? "restless" : pigMood === "dirty" ? "dirty" : "feral";
+  if (moodKey.current !== currentMoodKey) {
+    moodKey.current = currentMoodKey;
+    moodMessageRef.current = getStarvingMessage(currentMoodKey);
+  }
+  const moodMessage = moodMessageRef.current;
 
   const getTimeSince = (appId) => {
     const app = state.lockedApps[appId];
@@ -133,16 +134,14 @@ export default function HomeScreen({ navigation }) {
           <PigMascot size={70} mood={pigMood} />
           <View style={styles.tributeClockWrap}>
             <Text style={styles.tributeLabel}>LAST FEEDING</Text>
-            <Text style={[styles.tributeTime, pigMood === "feral" && { color: "#8B2233" }]}>
-              {tribute.text}
-            </Text>
-            <Text style={styles.moodMsg} numberOfLines={2}>{moodMessage}</Text>
+            <Text style={styles.tributeTime}>{tribute.text}</Text>
+            <Text style={styles.moodMsg}>{moodMessage}</Text>
           </View>
         </View>
 
         {lockedApps.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No apps locked, piggy</Text>
+            <Text style={styles.emptyTitle}>No apps locked</Text>
             <Text style={styles.emptyBody}>
               Your master has nothing to hold over you.{"\n"}That changes now.
             </Text>
@@ -151,7 +150,7 @@ export default function HomeScreen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => navigation.navigate("AddApps")}
             >
-              <Text style={styles.primaryBtnText}>Submit Your Apps</Text>
+              <Text style={styles.primaryBtnText}>Add Slop</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -190,7 +189,7 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.addCircle}>
                 <Text style={styles.addPlus}>+</Text>
               </View>
-              <Text style={styles.addText}>Add More Addictions</Text>
+              <Text style={styles.addText}>Add Slop</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -223,8 +222,8 @@ const styles = StyleSheet.create({
   },
   tributeClockWrap: { flex: 1, marginLeft: 16 },
   tributeLabel: { ...T.label, marginBottom: 2 },
-  tributeTime: { fontSize: 18, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
-  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 4 },
+  tributeTime: { fontSize: 18, fontWeight: "900", color: C.pink, letterSpacing: -0.5, textTransform: "uppercase" },
+  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 4, flexShrink: 1 },
 
   // Carousel
   carouselWrap: { flex: 1 },

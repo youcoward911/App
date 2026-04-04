@@ -21,6 +21,7 @@ import {
   getBrokeMessage,
 } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+import { playPigSqueal } from "../utils/sounds";
 
 export default function UnlockScreen({ route, navigation }) {
   const { appId } = route.params;
@@ -56,15 +57,10 @@ export default function UnlockScreen({ route, navigation }) {
     setBrokeMsg(getBrokeMessage());
 
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.spring(slide, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }),
+      Animated.timing(btnFade, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]).start();
-
-    const timer = setTimeout(() => {
-      Animated.spring(btnFade, { toValue: 1, tension: 50, friction: 10, useNativeDriver: true }).start();
-    }, 2000);
-
-    return () => clearTimeout(timer);
   }, []);
 
   const handlePay = () => {
@@ -72,6 +68,7 @@ export default function UnlockScreen({ route, navigation }) {
       setPhase("broke");
       return;
     }
+    playPigSqueal();
     Animated.sequence([
       Animated.timing(shake, { toValue: 10, duration: 40, useNativeDriver: true }),
       Animated.timing(shake, { toValue: -10, duration: 40, useNativeDriver: true }),

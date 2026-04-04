@@ -43,7 +43,7 @@ export default function AddAppsScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.back}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Your Addictions</Text>
+        <Text style={styles.headerTitle}>Add Slop</Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.done}>Done</Text>
         </TouchableOpacity>
@@ -178,14 +178,14 @@ const styles = StyleSheet.create({
   // Categories
   cats: { paddingHorizontal: 20, marginBottom: 12 },
   catChip: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: C.white,
-    marginRight: 8,
+    marginRight: 6,
   },
   catChipActive: { backgroundColor: C.pink },
-  catText: { ...T.caption, color: C.textSecondary, fontWeight: "600" },
+  catText: { fontSize: 11, fontWeight: "600", color: C.textSecondary, letterSpacing: 0.3, textTransform: "uppercase" },
   catTextActive: { color: C.textOnPink },
 
   // List
