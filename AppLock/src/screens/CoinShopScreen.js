@@ -162,7 +162,7 @@ export default function CoinShopScreen({ navigation }) {
 
         {/* Footer taunt */}
         <Text style={styles.footer}>
-          Non-refundable. Don't even ask, loser.
+          Non-refundable. Don't even ask.
         </Text>
       </ScrollView>
     </SafeAreaView>
