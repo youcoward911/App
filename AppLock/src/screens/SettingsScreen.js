@@ -22,8 +22,7 @@ export default function SettingsScreen() {
   const presets = [1, 5, 10];
 
   const selectFee = (val) => {
-    setCustomFee("");
-    dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
+    setCustomFee(val.toString());
   };
 
   const FEE_TAUNTS = [
@@ -68,10 +67,10 @@ export default function SettingsScreen() {
             {presets.map((amt) => (
               <TouchableOpacity
                 key={amt}
-                style={[styles.preset, currentFee === amt && !customFee && styles.presetActive]}
+                style={[styles.preset, customFee === amt.toString() && styles.presetActive]}
                 onPress={() => selectFee(amt)}
               >
-                <Text style={[styles.presetText, currentFee === amt && !customFee && styles.presetTextActive]}>
+                <Text style={[styles.presetText, customFee === amt.toString() && styles.presetTextActive]}>
                   {amt}
                 </Text>
               </TouchableOpacity>
