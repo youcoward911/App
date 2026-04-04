@@ -17,6 +17,8 @@ import PigMascot from "../components/PigMascot";
 import GlowButton from "../components/GlowButton";
 import { C, T, CARD_SHADOW } from "../utils/theme";
 
+const ITEM_H = 44;
+
 export default function SettingsScreen() {
   const { state, dispatch } = useAppLock();
   const [customFee, setCustomFee] = useState("");
@@ -29,7 +31,6 @@ export default function SettingsScreen() {
 
   const HOURS = Array.from({ length: 13 }, (_, i) => i); // 0-12
   const MINS = Array.from({ length: 60 }, (_, i) => i);  // 0-59
-  const ITEM_H = 44;
 
   const hourScrollRef = useRef(null);
   const minScrollRef = useRef(null);
