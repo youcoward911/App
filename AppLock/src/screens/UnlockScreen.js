@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Animated,
+  Dimensions,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
@@ -35,10 +36,30 @@ export default function UnlockScreen({ route, navigation }) {
   const [postShade, setPostShade] = useState("");
   const [confirmMsg, setConfirmMsg] = useState("");
   const [brokeMsg, setBrokeMsg] = useState("");
+  const [feastTitle, setFeastTitle] = useState("");
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(20)).current;
   const shake = useRef(new Animated.Value(0)).current;
+
+  // Feeding animation values
+  const walletShake = useRef(new Animated.Value(0)).current;
+  const walletTilt = useRef(new Animated.Value(0)).current;
+  const coinAnims = useRef([...Array(8)].map(() => ({
+    y: new Animated.Value(0),
+    x: new Animated.Value(0),
+    opacity: new Animated.Value(0),
+    scale: new Animated.Value(1),
+  }))).current;
+  const handY = useRef(new Animated.Value(-120)).current;
+  const handOpacity = useRef(new Animated.Value(0)).current;
+  const slopOpacity = useRef(new Animated.Value(0)).current;
+  const slopScale = useRef(new Animated.Value(0.3)).current;
+  const troughOpacity = useRef(new Animated.Value(0)).current;
+  const pigScale = useRef(new Animated.Value(0)).current;
+  const pigBob = useRef(new Animated.Value(0)).current;
+  const shadeOpacity = useRef(new Animated.Value(0)).current;
+  const sceneOpacity = useRef(new Animated.Value(0)).current;
 
   const fee = lockInfo?.unlockFee || 0;
   const canAfford = state.piggyCoins >= fee;
@@ -76,10 +97,114 @@ export default function UnlockScreen({ route, navigation }) {
     setPhase("confirm");
   };
 
+  const startFeedingAnimation = () => {
+    // Reset all
+    sceneOpacity.setValue(1);
+    walletShake.setValue(0);
+    walletTilt.setValue(0);
+    coinAnims.forEach((c) => { c.y.setValue(0); c.x.setValue(0); c.opacity.setValue(0); c.scale.setValue(1); });
+    handY.setValue(-120);
+    handOpacity.setValue(0);
+    slopOpacity.setValue(0);
+    slopScale.setValue(0.3);
+    troughOpacity.setValue(0);
+    pigScale.setValue(0);
+    pigBob.setValue(0);
+    shadeOpacity.setValue(0);
+
+    // Phase 1: Wallet tips over, coins fly out
+    const walletAnim = Animated.sequence([
+      Animated.timing(walletTilt, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(walletShake, { toValue: 5, duration: 50, useNativeDriver: true }),
+          Animated.timing(walletShake, { toValue: -5, duration: 50, useNativeDriver: true }),
+        ]),
+        { iterations: 4 }
+      ),
+    ]);
+
+    const coinFalls = coinAnims.map((c, i) =>
+      Animated.sequence([
+        Animated.delay(i * 80),
+        Animated.parallel([
+          Animated.timing(c.opacity, { toValue: 1, duration: 100, useNativeDriver: true }),
+          Animated.timing(c.y, { toValue: 180 + Math.random() * 40, duration: 500, useNativeDriver: true }),
+          Animated.timing(c.x, { toValue: (Math.random() - 0.5) * 120, duration: 500, useNativeDriver: true }),
+          Animated.timing(c.scale, { toValue: 0.4, duration: 500, useNativeDriver: true }),
+        ]),
+        Animated.timing(c.opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ])
+    );
+
+    // Phase 2: Trough appears, hand descends with slop
+    const troughAppear = Animated.timing(troughOpacity, { toValue: 1, duration: 300, useNativeDriver: true });
+
+    const handDescend = Animated.parallel([
+      Animated.timing(handOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(handY, { toValue: 0, duration: 600, useNativeDriver: true }),
+    ]);
+
+    const slopDrop = Animated.parallel([
+      Animated.timing(slopOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.spring(slopScale, { toValue: 1, tension: 50, friction: 6, useNativeDriver: true }),
+    ]);
+
+    const handRetract = Animated.parallel([
+      Animated.timing(handY, { toValue: -120, duration: 400, useNativeDriver: true }),
+      Animated.timing(handOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]);
+
+    // Phase 3: Pig appears and feasts (bobs up and down)
+    const pigAppear = Animated.spring(pigScale, { toValue: 1, tension: 60, friction: 5, useNativeDriver: true });
+
+    const pigFeast = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pigBob, { toValue: -8, duration: 200, useNativeDriver: true }),
+        Animated.timing(pigBob, { toValue: 4, duration: 200, useNativeDriver: true }),
+      ]),
+      { iterations: 6 }
+    );
+
+    const showShade = Animated.timing(shadeOpacity, { toValue: 1, duration: 400, useNativeDriver: true });
+
+    Animated.sequence([
+      // Wallet + coins
+      Animated.parallel([walletAnim, ...coinFalls]),
+      Animated.delay(200),
+      // Trough + hand + slop
+      troughAppear,
+      Animated.delay(100),
+      handDescend,
+      slopDrop,
+      Animated.delay(200),
+      handRetract,
+      // Pig feasts
+      Animated.delay(100),
+      pigAppear,
+      pigFeast,
+      showShade,
+    ]).start();
+  };
+
+  const FEAST_TITLES = [
+    "FEAST, PIGGY!",
+    "PATHETIC. ENJOY YOUR PHONE SLOP.",
+    "EAT UP, PIG.",
+    "YOUR MASTER HAS FED YOU.",
+    "THERE'S YOUR SLOP. NOW EAT.",
+    "GOOD PIG. NOW FEAST.",
+    "OINK OINK. DINNER IS SERVED.",
+    "FEEDING TIME.",
+    "DISGUSTING. EAT.",
+  ];
+
   const handleConfirm = () => {
     dispatch({ type: "UNLOCK_APP", payload: { appId } });
     setPostShade(getPostUnlockDegradation());
+    setFeastTitle(FEAST_TITLES[Math.floor(Math.random() * FEAST_TITLES.length)]);
     setPhase("unlocked");
+    setTimeout(startFeedingAnimation, 50);
   };
 
   const handleRelock = () => {
@@ -155,22 +280,80 @@ export default function UnlockScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* UNLOCKED phase */}
+        {/* UNLOCKED phase — feeding animation */}
         {phase === "unlocked" && (
-          <View style={styles.middle}>
-            <PigMascot size={64} mood="happy" />
-            <Text style={styles.unlockOink}>OINK OINK</Text>
-            <Text style={styles.shade} numberOfLines={3}>{postShade}</Text>
-            <Text style={styles.statsTitle}>TODAY'S STATS</Text>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Coins spent</Text>
-              <Text style={styles.receiptVal}>{state.totalCoinsSpent}</Text>
-            </View>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Times obeyed</Text>
-              <Text style={styles.receiptVal}>{state.totalUnlocks}</Text>
-            </View>
-          </View>
+          <Animated.View style={[styles.middle, { opacity: sceneOpacity }]}>
+            {/* Feast title */}
+            <Text style={styles.feastTitleText}>{feastTitle}</Text>
+
+            {/* Wallet tipping and spilling coins */}
+            <Animated.View style={[styles.walletWrap, {
+              transform: [
+                { translateX: walletShake },
+                { rotate: walletTilt.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "135deg"] }) },
+              ],
+            }]}>
+              <View style={styles.wallet}>
+                <Text style={styles.walletEmoji}>👛</Text>
+              </View>
+            </Animated.View>
+
+            {/* Flying coins */}
+            {coinAnims.map((c, i) => (
+              <Animated.View key={i} style={[styles.flyingCoin, {
+                opacity: c.opacity,
+                transform: [
+                  { translateY: c.y },
+                  { translateX: c.x },
+                  { scale: c.scale },
+                ],
+              }]}>
+                <View style={styles.coinCircle}>
+                  <Text style={styles.coinP}>P</Text>
+                </View>
+              </Animated.View>
+            ))}
+
+            {/* Trough */}
+            <Animated.View style={[styles.troughWrap, { opacity: troughOpacity }]}>
+              <View style={styles.trough}>
+                <Text style={styles.troughText}>🪣</Text>
+              </View>
+              <Text style={styles.troughLabel}>THE TROUGH</Text>
+
+              {/* Slop in trough */}
+              <Animated.View style={[styles.slopWrap, {
+                opacity: slopOpacity,
+                transform: [{ scale: slopScale }],
+              }]}>
+                <Text style={styles.slopEmoji}>🍲</Text>
+              </Animated.View>
+            </Animated.View>
+
+            {/* God hand from above */}
+            <Animated.View style={[styles.handWrap, {
+              opacity: handOpacity,
+              transform: [{ translateY: handY }],
+            }]}>
+              <Text style={styles.handEmoji}>🫴</Text>
+            </Animated.View>
+
+            {/* Pig feasting */}
+            <Animated.View style={[styles.pigFeastWrap, {
+              transform: [
+                { scale: pigScale },
+                { translateY: pigBob },
+              ],
+            }]}>
+              <PigMascot size={80} mood="happy" />
+              <Text style={styles.feastText}>*OINK OINK OINK*</Text>
+            </Animated.View>
+
+            {/* Post shade message */}
+            <Animated.Text style={[styles.shade, { opacity: shadeOpacity }]} numberOfLines={3}>
+              {postShade}
+            </Animated.Text>
+          </Animated.View>
         )}
 
         {/* Buttons — always at bottom */}
@@ -195,8 +378,7 @@ export default function UnlockScreen({ route, navigation }) {
           )}
           {phase === "unlocked" && (
             <>
-              <GlowButton title="Lock Me Up Again" onPress={handleRelock} />
-              <GlowButton title="Dismissed" ghost onPress={() => navigation.goBack()} />
+              <GlowButton title="Back to the Pen" onPress={() => navigation.goBack()} />
             </>
           )}
         </View>
@@ -262,11 +444,32 @@ const styles = StyleSheet.create({
   brokeTitle: { ...T.label, color: C.pink, fontSize: 14, letterSpacing: 3, marginTop: 12, marginBottom: 8 },
   brokeBody: { ...T.body, textAlign: "center", lineHeight: 22 },
 
-  // Unlocked
-  unlockOink: { ...T.label, color: C.pink, fontSize: 14, letterSpacing: 3, marginTop: 8, marginBottom: 10 },
-  shade: { fontSize: 16, fontWeight: "700", color: C.pink, fontStyle: "italic", textAlign: "center", lineHeight: 24, marginBottom: 16 },
-  statsTitle: { ...T.label, marginTop: 16, marginBottom: 8 },
-  receiptRow: { flexDirection: "row", justifyContent: "space-between", width: "100%", paddingVertical: 4 },
-  receiptLabel: { ...T.caption },
-  receiptVal: { ...T.bodyBold, fontSize: 14 },
+  // Unlocked / Feeding animation
+  feastTitleText: {
+    ...T.h1, color: C.pink, fontSize: 22, textAlign: "center",
+    letterSpacing: 2, marginBottom: 8,
+  },
+  walletWrap: { position: "absolute", top: 40 },
+  wallet: { alignItems: "center" },
+  walletEmoji: { fontSize: 52 },
+  flyingCoin: { position: "absolute", top: 70, alignItems: "center" },
+  coinCircle: {
+    width: 24, height: 24, borderRadius: 12, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center",
+  },
+  coinP: { color: "#FFF", fontSize: 11, fontWeight: "900" },
+  troughWrap: { position: "absolute", bottom: 100, alignItems: "center" },
+  trough: { alignItems: "center" },
+  troughText: { fontSize: 56 },
+  troughLabel: { ...T.label, color: C.textSecondary, fontSize: 10, letterSpacing: 3, marginTop: 2 },
+  slopWrap: { position: "absolute", top: -8 },
+  slopEmoji: { fontSize: 40 },
+  handWrap: { position: "absolute", top: 20, alignItems: "center" },
+  handEmoji: { fontSize: 72 },
+  pigFeastWrap: { position: "absolute", bottom: 50, alignItems: "center" },
+  feastText: { ...T.label, color: C.pink, fontSize: 10, letterSpacing: 2, marginTop: 4 },
+  shade: {
+    fontSize: 16, fontWeight: "700", color: C.pink, fontStyle: "italic",
+    textAlign: "center", lineHeight: 24, position: "absolute", bottom: 10,
+  },
 });
