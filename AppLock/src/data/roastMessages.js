@@ -45,7 +45,7 @@ export const TIME_BASED_ROASTS = [
       "It took you {minutes} minutes to break. I've trained you well.",
       "{minutes} minutes. That's barely enough time to miss you. Get back in the mud.",
       "My pig lasted {minutes} minutes. A new record in weakness.",
-      "Aw, {minutes} minutes? That's adorable. My little piggy couldn't even last that long.",
+      "Aw, my little piggy couldn't even last {minutesPlusOne}? Sooo pathetic.",
       "{minutes} minutes and the baby pig is already back. Aw. So needy.",
     ],
   },
@@ -254,10 +254,10 @@ export function getSingleRoast(minutesSinceLock) {
     (b) => minutesSinceLock < b.maxMinutes
   );
   if (timeBucket) {
-    return pickRandom(timeBucket.messages).replace(
-      "{minutes}",
-      Math.floor(minutesSinceLock)
-    );
+    const mins = Math.floor(minutesSinceLock);
+    return pickRandom(timeBucket.messages)
+      .replace("{minutes}", mins)
+      .replace("{minutesPlusOne}", mins + 1);
   }
   return pickRandom(UNLOCK_ROASTS);
 }
