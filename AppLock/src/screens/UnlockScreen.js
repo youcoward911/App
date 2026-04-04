@@ -149,7 +149,7 @@ export default function UnlockScreen({ route, navigation }) {
             <PigMascot size={56} mood="restless" />
             <Text style={styles.confirmTitle}>{confirmMsg}</Text>
             <Text style={styles.confirmBody}>
-              <Text style={{ color: C.pink, fontWeight: "900" }}>{fee} coins</Text>
+              <Text style={{ color: C.pink, fontWeight: "900" }}>{fee} {fee === 1 ? "coin" : "coins"}</Text>
               {" "}from your wallet.
             </Text>
           </View>
