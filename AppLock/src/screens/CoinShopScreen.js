@@ -96,7 +96,7 @@ export default function CoinShopScreen({ navigation }) {
         {/* Packages */}
         <Text style={styles.sectionTitle}>Buy Coins</Text>
         <Text style={styles.sectionSub}>
-          Buy your slop, piggy. Your master demands it.
+          Buy coins to pay for your slop.
         </Text>
 
         {COIN_PACKAGES.map((pkg) => {
