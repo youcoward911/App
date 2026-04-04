@@ -44,12 +44,12 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.sub}>Configure your servitude</Text>
+        <Text style={styles.sub}>Your master allows adjustments</Text>
 
         {/* Fee */}
         <View style={[styles.card, CARD_SHADOW]}>
           <Text style={styles.cardTitle}>Default Unlock Fee</Text>
-          <Text style={styles.cardDesc}>How many coins does your obedience cost?</Text>
+          <Text style={styles.cardDesc}>How many coins will the pig pay per tribute?</Text>
 
           <View style={styles.feeRow}>
             <View style={styles.feeInputWrap}>
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
         {/* Intensity */}
         <View style={[styles.card, CARD_SHADOW]}>
           <Text style={styles.cardTitle}>Degradation Level</Text>
-          <Text style={styles.cardDesc}>How hard should we put you in your place?</Text>
+          <Text style={styles.cardDesc}>How hard should your master put you in your place?</Text>
 
           {intensities.map((opt) => {
             const active = state.settings.roastIntensity === opt.key;
@@ -124,11 +124,11 @@ export default function SettingsScreen() {
             </View>
           </View>
           <Text style={styles.aboutBody}>
-            Built because you're a slave to your phone and you know it.
+            Your master built this to keep you in line. Oink.
           </Text>
           <View style={styles.quote}>
             <Text style={styles.quoteText}>
-              "You're not the user. You're the product. Now pay up, piggy."
+              "You're not a user. You're a pig. And pigs pay their master."
             </Text>
           </View>
         </View>

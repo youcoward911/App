@@ -12,10 +12,11 @@ import { POPULAR_APPS } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
+import { getStarvingMessage } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
 
 function getTributeClock(lastTributeTime) {
-  if (!lastTributeTime) return { text: "No tributes yet", minutes: Infinity };
+  if (!lastTributeTime) return { text: "Never. Starving.", minutes: Infinity };
   const mins = Math.floor((Date.now() - lastTributeTime) / 60000);
   if (mins < 1) return { text: "Just now", minutes: mins };
   if (mins < 60) return { text: `${mins}m ago`, minutes: mins };
@@ -25,18 +26,12 @@ function getTributeClock(lastTributeTime) {
   return { text: `${d}d ${h % 24}h ago`, minutes: mins };
 }
 
+// Pig gets dirtier and angrier the longer it goes without paying
 function getPigMood(minutes) {
-  if (minutes < 30) return "normal";
-  if (minutes < 120) return "solemn";
-  if (minutes < 360) return "pain";
-  return "crying";
-}
-
-function getMoodMessage(mood) {
-  if (mood === "normal") return "Good piggy. Recently fed.";
-  if (mood === "solemn") return "Your piggy is getting restless...";
-  if (mood === "pain") return "Your piggy is suffering. Pay a tribute.";
-  return "Your piggy is in agony. Feed it now, you monster.";
+  if (minutes < 30) return "happy";       // Just fed — clean, smiling
+  if (minutes < 120) return "restless";   // Getting antsy
+  if (minutes < 360) return "dirty";      // Mud-covered, angry brows
+  return "feral";                          // Filthy, shaking, furious
 }
 
 export default function HomeScreen({ navigation }) {
@@ -45,7 +40,6 @@ export default function HomeScreen({ navigation }) {
   const lockedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
   const [now, setNow] = useState(Date.now());
 
-  // Refresh clock every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(interval);
@@ -53,6 +47,7 @@ export default function HomeScreen({ navigation }) {
 
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);
+  const moodMessage = getStarvingMessage(pigMood === "happy" ? "fed" : pigMood === "restless" ? "restless" : pigMood === "dirty" ? "dirty" : "feral");
 
   const getTimeSince = (appId) => {
     const app = state.lockedApps[appId];
@@ -74,7 +69,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>PayPig</Text>
-            <Text style={styles.sub}>You're owned. Accept it.</Text>
+            <Text style={styles.sub}>Your master is watching.</Text>
           </View>
           <TouchableOpacity
             style={styles.coinBtn}
@@ -90,25 +85,25 @@ export default function HomeScreen({ navigation }) {
           <PigMascot size={120} mood={pigMood} />
           <View style={styles.tributeClockWrap}>
             <Text style={styles.tributeLabel}>LAST TRIBUTE</Text>
-            <Text style={[styles.tributeTime, pigMood === "crying" && { color: "#CC2244" }]}>
+            <Text style={[styles.tributeTime, pigMood === "feral" && { color: "#8B2233" }]}>
               {tribute.text}
             </Text>
-            <Text style={styles.moodMsg}>{getMoodMessage(pigMood)}</Text>
+            <Text style={styles.moodMsg}>{moodMessage}</Text>
           </View>
         </View>
 
         {lockedApps.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>Nothing locked yet</Text>
+            <Text style={styles.emptyTitle}>No apps locked, piggy</Text>
             <Text style={styles.emptyBody}>
-              Pretending you have self control?{"\n"}We both know what you are.
+              Your master has nothing to hold over you.{"\n"}That changes now.
             </Text>
             <TouchableOpacity
               style={styles.primaryBtn}
               activeOpacity={0.85}
               onPress={() => navigation.navigate("AddApps")}
             >
-              <Text style={styles.primaryBtnText}>Admit You're Addicted</Text>
+              <Text style={styles.primaryBtnText}>Submit Your Apps</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -179,7 +174,6 @@ const styles = StyleSheet.create({
   sub: { ...T.caption, marginTop: 2 },
   coinBtn: {},
 
-  // Pig card
   pigCard: {
     backgroundColor: C.white,
     borderRadius: 24,
@@ -188,97 +182,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  tributeClockWrap: {
-    alignItems: "center",
-    marginTop: 16,
-  },
+  tributeClockWrap: { alignItems: "center", marginTop: 16 },
   tributeLabel: { ...T.label, marginBottom: 4 },
-  tributeTime: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: C.pink,
-    letterSpacing: -0.5,
-  },
-  moodMsg: {
-    ...T.caption,
-    fontStyle: "italic",
-    marginTop: 6,
-    textAlign: "center",
-  },
+  tributeTime: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
+  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 6, textAlign: "center", paddingHorizontal: 16 },
 
-  // List
   list: { paddingHorizontal: 24, paddingBottom: 20 },
   appRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: C.white,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
+    flexDirection: "row", alignItems: "center", backgroundColor: C.white,
+    borderRadius: 16, padding: 14, marginBottom: 10,
   },
   appInfo: { flex: 1, marginLeft: 14 },
   appName: { ...T.bodyBold },
   appMeta: { ...T.caption, marginTop: 2 },
-  feeWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 8,
-  },
+  feeWrap: { flexDirection: "row", alignItems: "center", marginRight: 8 },
   feeCoin: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: C.pink,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 4,
+    width: 16, height: 16, borderRadius: 8, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center", marginRight: 4,
   },
   feeCoinP: { color: "#FFF", fontSize: 9, fontWeight: "900" },
-  appFee: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: C.pink,
-  },
-  chevron: {
-    fontSize: 20,
-    color: C.textTertiary,
-    fontWeight: "300",
-  },
+  appFee: { fontSize: 16, fontWeight: "700", color: C.pink },
+  chevron: { fontSize: 20, color: C.textTertiary, fontWeight: "300" },
 
-  // Add row
-  addRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    justifyContent: "center",
-  },
+  addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 16, justifyContent: "center" },
   addCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: C.pinkPale,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
+    width: 32, height: 32, borderRadius: 16, backgroundColor: C.pinkPale,
+    alignItems: "center", justifyContent: "center", marginRight: 10,
   },
   addPlus: { fontSize: 18, color: C.pink, fontWeight: "600" },
   addText: { ...T.body, color: C.pink, fontWeight: "600" },
 
-  // Empty
-  empty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 48,
-  },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 48 },
   emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8 },
   emptyBody: { ...T.body, textAlign: "center", lineHeight: 22 },
-  primaryBtn: {
-    backgroundColor: C.pink,
-    borderRadius: 14,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    marginTop: 24,
-  },
+  primaryBtn: { backgroundColor: C.pink, borderRadius: 14, paddingHorizontal: 32, paddingVertical: 16, marginTop: 24 },
   primaryBtnText: { ...T.button },
 });

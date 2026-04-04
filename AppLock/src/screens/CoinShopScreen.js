@@ -32,8 +32,8 @@ export default function CoinShopScreen({ navigation }) {
     // For now, simulating a purchase for testing:
     setTimeout(() => {
       Alert.alert(
-        "Good piggy.",
-        `${pkg.coins} coins added to your slop bucket.\n\nYou just handed over $${pkg.price.toFixed(2)} because a cartoon pig told you to. Think about that.`,
+        "Good pig.",
+        `${pkg.coins} coins in the trough.\n\nYour master is pleased. Now go spend them like the obedient little animal you are.`,
         [
           {
             text: "Oink.",
@@ -52,12 +52,12 @@ export default function CoinShopScreen({ navigation }) {
 
   const getLowBalanceMessage = () => {
     if (isEmpty) {
-      return "Your trough is empty. You can't unlock anything until you buy more coins. Did you think freedom was free?";
+      return "Empty trough. Your master doesn't feed pigs for free. Buy coins or go hungry.";
     }
     if (state.piggyCoins < 5) {
-      return "Almost out of coins. You'll be locked out of everything soon. Better stock up before withdrawal hits.";
+      return "Almost dry, piggy. A pig without coins is a pig without slop. Fill the trough.";
     }
-    return "Running low. At the rate you burn through these, you'll be broke by tomorrow.";
+    return "Running low. Your master sees the balance dropping. Don't make me wait, pig.";
   };
 
   return (
@@ -96,7 +96,7 @@ export default function CoinShopScreen({ navigation }) {
         {/* Packages */}
         <Text style={styles.sectionTitle}>Buy Coins</Text>
         <Text style={styles.sectionSub}>
-          Feed the machine. Every coin funds your own captivity.
+          Fill the trough, piggy. Your master demands it.
         </Text>
 
         {COIN_PACKAGES.map((pkg) => {
@@ -162,8 +162,8 @@ export default function CoinShopScreen({ navigation }) {
 
         {/* Footer taunt */}
         <Text style={styles.footer}>
-          Every purchase is non-refundable. Not because of our policy, but
-          because you and I both know you'd spend it again anyway.
+          Non-refundable. Your master doesn't give refunds to pigs.
+          You'll buy more anyway. You always do.
         </Text>
       </ScrollView>
     </SafeAreaView>
