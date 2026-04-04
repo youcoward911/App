@@ -33,7 +33,7 @@ export default function CoinShopScreen({ navigation }) {
     setTimeout(() => {
       Alert.alert(
         "Good pig.",
-        `${pkg.coins} coins in the trough.\n\nYour master is pleased. Now go spend them like the obedient little animal you are.`,
+        `${pkg.coins} coins in your wallet.\n\nYour master is pleased. Now go spend them like the obedient little animal you are.`,
         [
           {
             text: "Oink.",
@@ -52,10 +52,10 @@ export default function CoinShopScreen({ navigation }) {
 
   const getLowBalanceMessage = () => {
     if (isEmpty) {
-      return "Empty trough. Your master doesn't feed pigs for free. Buy coins or go hungry.";
+      return "Empty wallet. Your master doesn't give handouts. Buy coins or go hungry.";
     }
     if (state.piggyCoins < 5) {
-      return "Almost dry, piggy. A pig without coins is a pig without slop. Fill the trough.";
+      return "Almost broke, piggy. A pig without coins is a pig without slop. Fill your wallet.";
     }
     return "Running low. Your master sees the balance dropping. Don't make me wait, pig.";
   };
@@ -96,7 +96,7 @@ export default function CoinShopScreen({ navigation }) {
         {/* Packages */}
         <Text style={styles.sectionTitle}>Buy Coins</Text>
         <Text style={styles.sectionSub}>
-          Fill the trough, piggy. Your master demands it.
+          Buy your slop, piggy. Your master demands it.
         </Text>
 
         {COIN_PACKAGES.map((pkg) => {
@@ -162,8 +162,7 @@ export default function CoinShopScreen({ navigation }) {
 
         {/* Footer taunt */}
         <Text style={styles.footer}>
-          Non-refundable. Your master doesn't give refunds to pigs.
-          You'll buy more anyway. You always do.
+          Non-refundable. Don't even ask, loser.
         </Text>
       </ScrollView>
     </SafeAreaView>

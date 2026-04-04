@@ -96,7 +96,7 @@ export const PRE_PAYMENT_TAUNTS = [
   "Every coin you spend proves I own you. Pay.",
   "Be a good piggy and hand over the coins.",
   "Your master gave you an order. Obey.",
-  "Coins in the trough, pig. That's how this works.",
+  "Open your wallet, pig. That's how this works.",
   "Aw, poor little piggy's gonna open its wallet for me so it can do a little scroll?",
   "Aw, is my baby pig gonna pay its master so it can stare at its phone?",
   "Come on, piggy. Open up that wallet. You know you're going to.",
@@ -147,7 +147,7 @@ export const CONFIRM_MESSAGES = [
 // BROKE — pig can't afford its slop
 // ============================================================
 export const BROKE_MESSAGES = [
-  "You're pathetic AND broke? Christ. Hurry up and buy more coins so I can fill your trough.",
+  "You're pathetic AND broke? Christ. Hurry up and buy more coins, cheapskate.",
 ];
 
 // ============================================================
@@ -217,20 +217,20 @@ export const MASTER_COMMANDS = [
 export const COIN_SHOP_TAUNTS = {
   low: [
     "Running low, piggy. A pig without coins is a pig without purpose.",
-    "Almost empty. Your master doesn't like empty troughs. Fill it.",
+    "Almost empty. Your master doesn't like a broke pig. Fill your wallet.",
     "You'll be locked out of everything soon. Buy more coins, pet.",
     "Aw, my piggy's running out of coins. Better fill up before your master gets mad.",
   ],
   empty: [
-    "EMPTY. Your trough is bone dry, pig. How are you going to feed your habit?",
+    "EMPTY. Your wallet is bone dry, pig. How are you going to feed your habit?",
     "Zero coins. A useless, broke pig. Your master is disappointed.",
     "No coins, no slop, no scrolling. Buy more or sit in the mud and suffer.",
     "Aw, broke piggy. Can't even feed itself. How sad. Buy more coins, pet.",
   ],
   bought: [
-    "Good piggy. Trough is full. Now go spend it all like the animal you are.",
+    "Good piggy. Wallet's full. Now go spend it all like the animal you are.",
     "Coins purchased. Your master is pleased. You may continue to serve.",
-    "That's my obedient pig. Filling the trough without being told twice.",
+    "That's my obedient pig. Filling the wallet without being told twice.",
     "Aw, my piggy bought more coins all by itself. What a good, trained little pet.",
   ],
 };

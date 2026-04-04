@@ -149,7 +149,7 @@ export default function UnlockScreen({ route, navigation }) {
             <Text style={styles.confirmTitle}>{confirmMsg}</Text>
             <Text style={styles.confirmBody}>
               <Text style={{ color: C.pink, fontWeight: "900" }}>{fee} coins</Text>
-              {" "}from the pig's trough.
+              {" "}from your wallet.
             </Text>
           </View>
         )}
@@ -187,7 +187,7 @@ export default function UnlockScreen({ route, navigation }) {
             <>
               <TouchableOpacity style={styles.pinkBtn} activeOpacity={0.85}
                 onPress={() => { navigation.goBack(); navigation.navigate("CoinShop"); }}>
-                <Text style={styles.pinkBtnText}>Fill the Trough</Text>
+                <Text style={styles.pinkBtnText}>Buy More Coins</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.goBack()}>
                 <Text style={styles.ghostBtnText}>Starve</Text>
