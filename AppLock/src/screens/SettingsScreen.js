@@ -15,25 +15,20 @@ import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function SettingsScreen() {
   const { state, dispatch } = useAppLock();
-  const [fee, setFee] = useState(state.settings.defaultFee.toString());
+  const [customFee, setCustomFee] = useState("");
+  const currentFee = state.settings.defaultFee;
 
-  const intensities = [
-    { key: "mild", label: "Mild", desc: "Gentle nudges. For the delicate.", color: C.green },
-    { key: "medium", label: "Medium", desc: "The sweet spot of shame.", color: C.gold },
-    { key: "savage", label: "Savage", desc: "No mercy. You asked for this.", color: C.pink },
-  ];
+  const presets = [1, 5, 10];
 
-  const saveFee = () => {
-    const val = parseInt(fee, 10);
+  const selectFee = (val) => {
+    setCustomFee("");
+    dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
+  };
+
+  const saveCustom = () => {
+    const val = parseInt(customFee, 10);
     if (isNaN(val) || val < 0) {
-      Alert.alert("Nice Try", "Enter a real number.");
-      return;
-    }
-    if (val === 0) {
-      Alert.alert("Really? 0 coins?", "That defeats the purpose.", [
-        { text: "I'll raise it", style: "cancel" },
-        { text: "I want 0", onPress: () => dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: 0 } }) },
-      ]);
+      Alert.alert("Nice Try", "Enter a real number, piggy.");
       return;
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
@@ -48,70 +43,46 @@ export default function SettingsScreen() {
 
         {/* Fee */}
         <View style={[styles.card, CARD_SHADOW]}>
-          <Text style={styles.cardTitle}>Default Unlock Fee</Text>
-          <Text style={styles.cardDesc}>How many coins will the pig pay per tribute?</Text>
+          <Text style={styles.cardTitle}>Unlock Fee</Text>
+          <Text style={styles.cardDesc}>How many coins per tribute?</Text>
 
-          <View style={styles.feeRow}>
+          <View style={styles.presets}>
+            {presets.map((amt) => (
+              <TouchableOpacity
+                key={amt}
+                style={[styles.preset, currentFee === amt && !customFee && styles.presetActive]}
+                onPress={() => selectFee(amt)}
+              >
+                <Text style={[styles.presetText, currentFee === amt && !customFee && styles.presetTextActive]}>
+                  {amt}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.customRow}>
+            <Text style={styles.customLabel}>Custom:</Text>
             <View style={styles.feeInputWrap}>
               <View style={styles.feeCoinIcon}>
                 <Text style={styles.feeCoinP}>P</Text>
               </View>
               <TextInput
                 style={styles.feeInput}
-                value={fee}
-                onChangeText={setFee}
+                value={customFee}
+                onChangeText={setCustomFee}
                 keyboardType="number-pad"
-                placeholder="5"
+                placeholder="Enter amount"
                 placeholderTextColor={C.textTertiary}
               />
             </View>
-            <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85} onPress={saveFee}>
-              <Text style={styles.saveBtnText}>Save</Text>
+            <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85} onPress={saveCustom}>
+              <Text style={styles.saveBtnText}>Set</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.presets}>
-            {[1, 3, 5, 10, 20, 50].map((amt) => (
-              <TouchableOpacity
-                key={amt}
-                style={[styles.preset, parseInt(fee, 10) === amt && styles.presetActive]}
-                onPress={() => setFee(amt.toString())}
-              >
-                <Text style={[styles.presetText, parseInt(fee, 10) === amt && styles.presetTextActive]}>
-                  {amt}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Intensity */}
-        <View style={[styles.card, CARD_SHADOW]}>
-          <Text style={styles.cardTitle}>Degradation Level</Text>
-          <Text style={styles.cardDesc}>How hard should your master put you in your place?</Text>
-
-          {intensities.map((opt) => {
-            const active = state.settings.roastIntensity === opt.key;
-            return (
-              <TouchableOpacity
-                key={opt.key}
-                style={[styles.intensityRow, active && { backgroundColor: C.pinkPale }]}
-                activeOpacity={0.7}
-                onPress={() => dispatch({ type: "UPDATE_SETTINGS", payload: { roastIntensity: opt.key } })}
-              >
-                <View style={[styles.intensityDot, { backgroundColor: opt.color }]} />
-                <View style={styles.intensityInfo}>
-                  <Text style={styles.intensityLabel}>{opt.label}</Text>
-                  <Text style={styles.intensityDesc}>{opt.desc}</Text>
-                </View>
-                {active && (
-                  <View style={[styles.check, { backgroundColor: opt.color }]}>
-                    <Text style={styles.checkMark}>✓</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
+          <Text style={styles.currentFeeText}>
+            Current: {currentFee} coins
+          </Text>
         </View>
 
         {/* About */}
@@ -153,7 +124,19 @@ const styles = StyleSheet.create({
   cardDesc: { ...T.caption, marginBottom: 16 },
 
   // Fee
-  feeRow: { flexDirection: "row", alignItems: "center" },
+  presets: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  preset: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: C.bg,
+    alignItems: "center",
+  },
+  presetActive: { backgroundColor: C.pink },
+  presetText: { fontSize: 18, fontWeight: "800", color: C.textSecondary, textTransform: "uppercase" },
+  presetTextActive: { color: "#FFF" },
+  customRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
+  customLabel: { ...T.bodyBold, marginRight: 10 },
   feeInputWrap: {
     flex: 1,
     flexDirection: "row",
@@ -173,51 +156,15 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   feeCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
-  feeInput: { flex: 1, fontSize: 20, fontWeight: "800", color: C.pink, paddingVertical: 13 },
+  feeInput: { flex: 1, fontSize: 18, fontWeight: "800", color: C.pink, paddingVertical: 12 },
   saveBtn: {
     backgroundColor: C.pink,
     borderRadius: 12,
-    paddingHorizontal: 22,
-    paddingVertical: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 13,
   },
-  saveBtnText: { ...T.button, fontSize: 14 },
-  presets: { flexDirection: "row", flexWrap: "wrap", marginTop: 12, gap: 8 },
-  preset: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#F5F5F5",
-  },
-  presetActive: { backgroundColor: C.pinkPale },
-  presetText: { fontSize: 13, fontWeight: "600", color: C.textSecondary },
-  presetTextActive: { color: C.pink },
-
-  // Intensity
-  intensityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 8,
-    backgroundColor: "#F8F8F8",
-  },
-  intensityDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  intensityInfo: { flex: 1 },
-  intensityLabel: { ...T.bodyBold },
-  intensityDesc: { ...T.caption, marginTop: 2 },
-  check: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkMark: { color: "#FFF", fontSize: 13, fontWeight: "800" },
+  saveBtnText: { ...T.button, fontSize: 13 },
+  currentFeeText: { ...T.caption, color: C.pink, marginTop: 14, textAlign: "center", fontWeight: "700" },
 
   // About
   aboutHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
@@ -225,7 +172,7 @@ const styles = StyleSheet.create({
   aboutVer: { ...T.caption, marginTop: 2 },
   aboutBody: { ...T.body, marginBottom: 14 },
   quote: {
-    backgroundColor: "#F8F8F8",
+    backgroundColor: C.bg,
     borderRadius: 12,
     padding: 14,
     borderLeftWidth: 3,

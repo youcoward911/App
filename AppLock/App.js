@@ -26,37 +26,37 @@ function TabIcon({ type, focused }) {
       {type === "apps" && (
         <View style={[styles.tabBox, focused && styles.tabBoxActive]}>
           <View style={styles.tabBoxInner}>
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
       {type === "shame" && (
         <View style={styles.tabBarIcon}>
           <View style={[styles.barGroup]}>
-            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
-            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
-            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
+            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
       {type === "templates" && (
         <View style={styles.tabBarIcon}>
           <View style={styles.templateIcon}>
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)", width: 8, height: 8 }]} />
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF6B8A" : "rgba(255,255,255,0.3)", width: 8, height: 8 }]} />
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FFB6C1" : "rgba(255,255,255,0.2)", width: 8, height: 8 }]} />
-            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
-            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)", width: 14 }]} />
+            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2", width: 8, height: 8 }]} />
+            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF6B8A" : "#C7C7CC", width: 8, height: 8 }]} />
+            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FFB6C1" : "#D1D1D6", width: 8, height: 8 }]} />
+            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
+            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2", width: 14 }]} />
           </View>
         </View>
       )}
       {type === "settings" && (
         <View style={[styles.gearWrap]}>
-          <View style={[styles.gearOuter, { borderColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]}>
-            <View style={[styles.gearInner, { backgroundColor: focused ? "#FF2D55" : "rgba(255,255,255,0.4)" }]} />
+          <View style={[styles.gearOuter, { borderColor: focused ? "#FF2D55" : "#AEAEB2" }]}>
+            <View style={[styles.gearInner, { backgroundColor: focused ? "#FF2D55" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
@@ -71,18 +71,18 @@ function HomeTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#2A0A14",
+          backgroundColor: "#FFFFFF",
           borderTopWidth: 0,
           height: 80,
           paddingTop: 8,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.2,
+          shadowOpacity: 0.04,
           shadowRadius: 12,
           elevation: 5,
         },
         tabBarActiveTintColor: "#FF2D55",
-        tabBarInactiveTintColor: "rgba(255,255,255,0.4)",
+        tabBarInactiveTintColor: "#AEAEB2",
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "600",
@@ -170,7 +170,7 @@ export default function App() {
   return (
     <AppLockProvider>
       <NavigationContainer>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Main" component={HomeTabs} />
           <Stack.Screen

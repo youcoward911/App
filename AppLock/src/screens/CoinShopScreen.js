@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     borderLeftColor: C.pink,
   },
   warningTitle: { ...T.label, color: C.pink, marginBottom: 6 },
-  warningBody: { ...T.body, fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 22 },
+  warningBody: { ...T.body, fontSize: 14, color: "#8B4A4A", lineHeight: 22 },
 
   // Section
   sectionTitle: { ...T.h1, paddingHorizontal: 24, marginBottom: 4 },

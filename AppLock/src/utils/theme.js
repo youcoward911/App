@@ -2,22 +2,22 @@ import { Platform } from "react-native";
 
 // Soft pink-based palette inspired by modern iOS apps
 export const C = {
-  // Backgrounds — dark pink theme
-  bg: "#2A0A14",
-  bgSoft: "#3A1020",
-  white: "#3D1525",
-  card: "#3D1525",
+  // Backgrounds — pink theme
+  bg: "#FFE8EE",
+  bgSoft: "#FFE4EC",
+  white: "#FFFFFF",
+  card: "#FFFFFF",
 
   // Brand
   pink: "#FF2D55",
   pinkLight: "#FF6B8A",
-  pinkPale: "rgba(255,45,85,0.25)",
-  pinkBg: "#2A0A14",
+  pinkPale: "#FFE0E8",
+  pinkBg: "#FFF5F7",
 
-  // Text — all white
-  text: "#FFFFFF",
-  textSecondary: "rgba(255,255,255,0.75)",
-  textTertiary: "rgba(255,255,255,0.55)",
+  // Text
+  text: "#1C1C1E",
+  textSecondary: "#8E8E93",
+  textTertiary: "#AEAEB2",
   textOnPink: "#FFFFFF",
 
   // Accent
@@ -28,10 +28,10 @@ export const C = {
   purple: "#AF52DE",
 
   // Utility
-  border: "rgba(255,255,255,0.08)",
-  shadow: "rgba(0,0,0,0.3)",
-  overlay: "rgba(0,0,0,0.6)",
-  divider: "rgba(255,255,255,0.08)",
+  border: "rgba(0,0,0,0.04)",
+  shadow: "rgba(0,0,0,0.08)",
+  overlay: "rgba(0,0,0,0.4)",
+  divider: "rgba(0,0,0,0.06)",
 };
 
 // Consistent shadow for cards — like ChatGPT/Instagram
