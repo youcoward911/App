@@ -110,7 +110,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.cardFeeAmount}>{info?.unlockFee}</Text>
         </View>
         <GlowButton
-          title="Pay Tribute"
+          title={locked ? "Pay Tribute" : "Lock Me Back Up"}
           onPress={() => navigation.navigate("Unlock", { appId: item.id })}
           style={{ marginTop: 16 }}
         />
@@ -153,7 +153,7 @@ export default function HomeScreen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => navigation.navigate("AddApps")}
             >
-              <Text style={styles.primaryBtnText}>Add Slop</Text>
+              <Text style={styles.primaryBtnText}>Lock More Slop</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -192,7 +192,7 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.addCircle}>
                 <Text style={styles.addPlus}>+</Text>
               </View>
-              <Text style={styles.addText}>Add Slop</Text>
+              <Text style={styles.addText}>Lock More Slop</Text>
             </TouchableOpacity>
           </View>
         )}

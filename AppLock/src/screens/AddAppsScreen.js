@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   TextInput,
+  Alert,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS, CATEGORIES } from "../data/defaultApps";
@@ -27,12 +28,29 @@ export default function AddAppsScreen({ navigation }) {
 
   const isLocked = (id) => id in state.lockedApps;
 
+  const LOCK_WARNINGS = [
+    "Are you sure you can handle it?",
+    "You sure about this?",
+    "You sure? There's no going back now.",
+    "Another app for your master to control. Ready?",
+    "More slop to pay for. You sure, piggy?",
+  ];
+
   const toggle = (id) => {
     if (isLocked(id)) {
       dispatch({ type: "REMOVE_APP", payload: { appId: id } });
     } else {
-      const fee = parseInt(customFee, 10) || state.settings.defaultFee;
-      dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: fee } });
+      const warning = LOCK_WARNINGS[Math.floor(Math.random() * LOCK_WARNINGS.length)];
+      Alert.alert("Lock this app?", warning, [
+        { text: "Nevermind", style: "cancel" },
+        {
+          text: "Lock it.",
+          onPress: () => {
+            const fee = parseInt(customFee, 10) || state.settings.defaultFee;
+            dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: fee } });
+          },
+        },
+      ]);
     }
   };
 
@@ -43,7 +61,7 @@ export default function AddAppsScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.back}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Slop</Text>
+        <Text style={styles.headerTitle}>Lock More Slop</Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.done}>Done</Text>
         </TouchableOpacity>
