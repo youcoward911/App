@@ -60,7 +60,7 @@ export default function AddAppsScreen({ navigation }) {
         style: "cancel",
         onPress: () => dispatch({ type: "REMOVE_APP", payload: { appId: id } }),
       },
-      { text: "Oink." },
+      { text: "Oink (yes)" },
     ]);
   };
 
