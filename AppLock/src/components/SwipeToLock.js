@@ -45,21 +45,21 @@ export default function SlideToLock({ onLock, locked }) {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => !locked && !triggered.current,
-      onMoveShouldSetPanResponder: (_, g) => !locked && !triggered.current && g.dx > 3,
+      onMoveShouldSetPanResponder: (_, g) => !locked && !triggered.current && g.dx > 2,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_, g) => {
         if (triggered.current || locked) return;
         const x = Math.max(0, Math.min(g.dx, MAX_SLIDE));
         lastDx.current = x;
         pan.setValue(x);
 
-        // Auto-magnet: if past halfway, snap to lock immediately
-        if (x >= MAX_SLIDE * 0.5) {
+        // Auto-magnet: if past 40%, snap to lock immediately
+        if (x >= MAX_SLIDE * 0.4) {
           snapToLock();
         }
       },
       onPanResponderRelease: () => {
         if (triggered.current || locked) return;
-        // Anything less than 50% snaps back
         snapBack();
       },
     })
@@ -81,13 +81,12 @@ export default function SlideToLock({ onLock, locked }) {
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.track}>
+      <View style={styles.track} {...panResponder.panHandlers}>
         <Animated.Text style={[styles.trackLabel, { opacity: shimmer }]}>
           ›››
         </Animated.Text>
         <Animated.View
           style={[styles.thumb, { transform: [{ translateX: pan }] }]}
-          {...panResponder.panHandlers}
         />
       </View>
       <Text style={styles.hint}>swipe to lock</Text>
