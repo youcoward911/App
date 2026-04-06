@@ -57,6 +57,7 @@ export default function HomeScreen({ navigation }) {
   });
   const [now, setNow] = useState(Date.now());
   const [activeIndex, setActiveIndex] = useState(0);
+  const carouselRef = useRef(null);
 
   // Pick one phrase per app session — useRef so it doesn't change on re-render
   const moodKey = useRef(null);
@@ -200,6 +201,7 @@ export default function HomeScreen({ navigation }) {
         ) : (
           <View style={styles.carouselWrap}>
             <FlatList
+              ref={carouselRef}
               data={lockedApps}
               keyExtractor={(i) => i.id}
               horizontal
@@ -212,15 +214,27 @@ export default function HomeScreen({ navigation }) {
               onScroll={onScroll}
               scrollEventThrottle={16}
               renderItem={renderCarouselCard}
+              getItemLayout={(_, index) => ({
+                length: SNAP_INTERVAL,
+                offset: SNAP_INTERVAL * index,
+                index,
+              })}
             />
-            {/* Dots */}
+            {/* Dots — tappable like iPhone pages */}
             {lockedApps.length > 1 && (
               <View style={styles.dots}>
                 {lockedApps.map((_, i) => (
-                  <View
+                  <TouchableOpacity
                     key={i}
-                    style={[styles.dot, i === activeIndex && styles.dotActive]}
-                  />
+                    style={styles.dotHitArea}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      carouselRef.current?.scrollToIndex({ index: i, animated: true });
+                      setActiveIndex(i);
+                    }}
+                  >
+                    <View style={[styles.dot, i === activeIndex && styles.dotActive]} />
+                  </TouchableOpacity>
                 ))}
               </View>
             )}
@@ -306,9 +320,12 @@ const styles = StyleSheet.create({
 
   // Dots
   dots: { flexDirection: "row", justifyContent: "center", marginTop: 16 },
+  dotHitArea: {
+    padding: 6,
+  },
   dot: {
     width: 8, height: 8, borderRadius: 4,
-    backgroundColor: C.pinkPale, marginHorizontal: 4,
+    backgroundColor: C.pinkPale,
   },
   dotActive: { backgroundColor: C.pink, width: 20 },
 
