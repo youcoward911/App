@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
@@ -140,7 +141,19 @@ export default function HomeScreen({ navigation }) {
         )}
         <GlowButton
           title={locked ? "Pay Tribute" : "Lock Me Back Up"}
-          onPress={() => navigation.navigate("Unlock", { appId: item.id })}
+          onPress={() => {
+            if (locked) {
+              navigation.navigate("Unlock", { appId: item.id });
+            } else {
+              Alert.alert("Lock it back up?", "Back in the pen, piggy.", [
+                { text: "Nevermind", style: "cancel" },
+                {
+                  text: "Lock it.",
+                  onPress: () => dispatch({ type: "RELOCK_APP", payload: { appId: item.id } }),
+                },
+              ]);
+            }
+          }}
           style={{ marginTop: 16 }}
         />
       </TouchableOpacity>
