@@ -6,9 +6,9 @@ const AppLockContext = createContext();
 const STORAGE_KEY = "@paypig_state_v2";
 
 export const COIN_PACKAGES = [
-  { id: "small", productId: "scrollpiggy.coins.100", coins: 100, price: 9.99, label: "100 Coins", bonus: null },
-  { id: "medium", productId: "scrollpiggy.coins.220", coins: 220, price: 19.99, label: "220 Coins", bonus: "+20 bonus" },
-  { id: "large", productId: "scrollpiggy.coins.625", coins: 625, price: 49.99, label: "625 Coins", bonus: "+125 bonus" },
+  { id: "small", productId: "scrollpiggy.coins.50", coins: 50, price: 4.99, label: "50 Coins", bonus: null },
+  { id: "medium", productId: "scrollpiggy.coins.120", coins: 120, price: 9.99, label: "120 Coins", bonus: "+20 bonus" },
+  { id: "large", productId: "scrollpiggy.coins.250", coins: 250, price: 19.99, label: "250 Coins", bonus: "+50 bonus" },
 ];
 
 const initialState = {

@@ -12,23 +12,23 @@ try {
 
 // StoreKit product IDs — must match App Store Connect
 export const PRODUCT_IDS = [
-  "scrollpiggy.coins.100",
-  "scrollpiggy.coins.220",
-  "scrollpiggy.coins.625",
+  "scrollpiggy.coins.50",
+  "scrollpiggy.coins.120",
+  "scrollpiggy.coins.250",
 ];
 
 // Map product IDs to coin amounts
 export const PRODUCT_COINS = {
-  "scrollpiggy.coins.100": 100,
-  "scrollpiggy.coins.220": 220,
-  "scrollpiggy.coins.625": 625,
+  "scrollpiggy.coins.50": 50,
+  "scrollpiggy.coins.120": 120,
+  "scrollpiggy.coins.250": 250,
 };
 
 // Map product IDs to prices (fallback if StoreKit unavailable)
 export const PRODUCT_PRICES = {
-  "scrollpiggy.coins.100": 9.99,
-  "scrollpiggy.coins.220": 19.99,
-  "scrollpiggy.coins.625": 49.99,
+  "scrollpiggy.coins.50": 4.99,
+  "scrollpiggy.coins.120": 9.99,
+  "scrollpiggy.coins.250": 19.99,
 };
 
 let connection = null;
