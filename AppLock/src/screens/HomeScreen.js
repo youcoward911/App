@@ -75,15 +75,22 @@ export default function HomeScreen({ navigation }) {
   };
 
   const dotSwipeStart = useRef(0);
+  const dotTapX = useRef(0);
+  const dotsMoved = useRef(false);
+  const dotsLayoutRef = useRef({ x: 0, width: 0 });
+
   const dotPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 8,
-      onPanResponderGrant: () => {
+      onPanResponderGrant: (e) => {
         dotSwipeStart.current = activeIndexRef.current;
+        dotTapX.current = e.nativeEvent.locationX;
+        dotsMoved.current = false;
       },
       onPanResponderMove: (_, g) => {
-        // Scrub through pages as finger moves — each 40px = one page
+        if (Math.abs(g.dx) < 8) return;
+        dotsMoved.current = true;
         const pageDelta = Math.round(g.dx / -40);
         const target = dotSwipeStart.current + pageDelta;
         const clamped = Math.max(0, Math.min(target, lockedCountRef.current - 1));
@@ -95,7 +102,16 @@ export default function HomeScreen({ navigation }) {
           setActiveIndex(clamped);
         }
       },
-      onPanResponderRelease: () => {},
+      onPanResponderRelease: () => {
+        if (!dotsMoved.current && lockedCountRef.current > 0) {
+          // It was a tap — figure out which dot based on tap position
+          const totalDotsWidth = lockedCountRef.current * 16; // 8px dot + 8px margin
+          const startX = (dotsLayoutRef.current.width - totalDotsWidth) / 2;
+          const tapIdx = Math.floor((dotTapX.current - startX) / 16);
+          const clamped = Math.max(0, Math.min(tapIdx, lockedCountRef.current - 1));
+          scrollToPage(clamped);
+        }
+      },
     })
   ).current;
 
@@ -263,7 +279,11 @@ export default function HomeScreen({ navigation }) {
             />
             {/* Dots — swipeable like iPhone home screen */}
             {lockedApps.length > 1 && (
-              <View style={styles.dots} {...dotPanResponder.panHandlers}>
+              <View
+                style={styles.dots}
+                {...dotPanResponder.panHandlers}
+                onLayout={(e) => { dotsLayoutRef.current = e.nativeEvent.layout; }}
+              >
                 {lockedApps.map((_, i) => (
                   <View
                     key={i}
