@@ -52,15 +52,15 @@ export default function AddAppsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.back}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Lock More Slop</Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.done}>Done</Text>
         </TouchableOpacity>
       </View>
+      <Text style={styles.headerTitle}>Lock More Slop</Text>
 
       {/* Categories */}
       <FlatList
@@ -118,15 +118,16 @@ export default function AddAppsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  header: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingTop: 14,
+    paddingBottom: 4,
   },
   back: { ...T.body, color: C.textSecondary, fontWeight: "500" },
-  headerTitle: { ...T.h2 },
+  headerTitle: { ...T.h2, textAlign: "center", marginBottom: 10 },
   done: { ...T.body, color: C.pink, fontWeight: "600" },
 
   // Categories
