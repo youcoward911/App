@@ -74,17 +74,28 @@ export default function HomeScreen({ navigation }) {
     activeIndexRef.current = clamped;
   };
 
+  const dotSwipeStart = useRef(0);
   const dotPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10,
-      onPanResponderRelease: (_, g) => {
-        if (g.dx < -30) {
-          scrollToPage(activeIndexRef.current + 1);
-        } else if (g.dx > 30) {
-          scrollToPage(activeIndexRef.current - 1);
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 8,
+      onPanResponderGrant: () => {
+        dotSwipeStart.current = activeIndexRef.current;
+      },
+      onPanResponderMove: (_, g) => {
+        // Scrub through pages as finger moves — each 40px = one page
+        const pageDelta = Math.round(g.dx / -40);
+        const target = dotSwipeStart.current + pageDelta;
+        const clamped = Math.max(0, Math.min(target, lockedCountRef.current - 1));
+        if (clamped !== activeIndexRef.current) {
+          try {
+            carouselRef.current?.scrollToIndex({ index: clamped, animated: true });
+          } catch (e) {}
+          activeIndexRef.current = clamped;
+          setActiveIndex(clamped);
         }
       },
+      onPanResponderRelease: () => {},
     })
   ).current;
 
@@ -135,7 +146,7 @@ export default function HomeScreen({ navigation }) {
     return `${m}:${String(s).padStart(2, "0")}`;
   };
 
-  const onScroll = (e) => {
+  const onScrollEnd = (e) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
     setActiveIndex(idx);
     activeIndexRef.current = idx;
@@ -241,8 +252,8 @@ export default function HomeScreen({ navigation }) {
               decelerationRate="fast"
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.carouselContent}
-              onScroll={onScroll}
-              scrollEventThrottle={16}
+              onMomentumScrollEnd={onScrollEnd}
+              onScrollEndDrag={onScrollEnd}
               renderItem={renderCarouselCard}
               getItemLayout={(_, index) => ({
                 length: SNAP_INTERVAL,
@@ -250,18 +261,14 @@ export default function HomeScreen({ navigation }) {
                 index,
               })}
             />
-            {/* Dots — swipeable + tappable like iPhone pages */}
+            {/* Dots — swipeable like iPhone home screen */}
             {lockedApps.length > 1 && (
               <View style={styles.dots} {...dotPanResponder.panHandlers}>
                 {lockedApps.map((_, i) => (
-                  <TouchableOpacity
+                  <View
                     key={i}
-                    style={styles.dotHitArea}
-                    activeOpacity={0.7}
-                    onPress={() => scrollToPage(i)}
-                  >
-                    <View style={[styles.dot, i === activeIndex && styles.dotActive]} />
-                  </TouchableOpacity>
+                    style={[styles.dot, i === activeIndex && styles.dotActive]}
+                  />
                 ))}
               </View>
             )}
@@ -346,13 +353,10 @@ const styles = StyleSheet.create({
   unlockBtnText: { ...T.button },
 
   // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: 16 },
-  dotHitArea: {
-    padding: 6,
-  },
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: 16, paddingVertical: 10, paddingHorizontal: 20 },
   dot: {
     width: 8, height: 8, borderRadius: 4,
-    backgroundColor: C.pinkPale,
+    backgroundColor: C.pinkPale, marginHorizontal: 4,
   },
   dotActive: { backgroundColor: C.pink, width: 20 },
 
