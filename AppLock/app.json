@@ -16,6 +16,7 @@
       "bundleIdentifier": "com.paypig.app",
       "infoPlist": {
         "NSUserTrackingUsageDescription": "Scroll Pig uses this to track your app usage and lock apps you choose.",
+        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your location to show you the local leaderboard for your city.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

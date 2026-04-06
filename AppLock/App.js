@@ -11,6 +11,7 @@ import StatsScreen from "./src/screens/StatsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import CoinShopScreen from "./src/screens/CoinShopScreen";
 import TemplatesScreen from "./src/screens/TemplatesScreen";
+import LeaderboardScreen from "./src/screens/LeaderboardScreen";
 import { View, StyleSheet, Text, Animated, Dimensions } from "react-native";
 import { PigIcon } from "./src/components/PigMascot";
 import { getMasterCommand } from "./src/data/roastMessages";
@@ -50,6 +51,15 @@ function TabIcon({ type, focused }) {
             <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FFB6C1" : "#D1D1D6", width: 8, height: 8 }]} />
             <View style={[styles.templateLine, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
             <View style={[styles.templateLine, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2", width: 14 }]} />
+          </View>
+        </View>
+      )}
+      {type === "leaderboard" && (
+        <View style={styles.tabBarIcon}>
+          <View style={styles.trophyWrap}>
+            <View style={[styles.trophyCup, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.trophyStem, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
+            <View style={[styles.trophyBase, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
           </View>
         </View>
       )}
@@ -109,6 +119,16 @@ function HomeTabs() {
             <TabIcon type="shame" focused={focused} />
           ),
           tabBarLabel: "Shame",
+        }}
+      />
+      <Tab.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon type="leaderboard" focused={focused} />
+          ),
+          tabBarLabel: "Board",
         }}
       />
       <Tab.Screen
@@ -299,6 +319,28 @@ const styles = StyleSheet.create({
   },
   templateLine: {
     width: 20,
+    height: 2.5,
+    borderRadius: 1,
+  },
+  // Trophy icon
+  trophyWrap: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+    height: 22,
+  },
+  trophyCup: {
+    width: 14,
+    height: 10,
+    borderRadius: 3,
+    borderBottomLeftRadius: 7,
+    borderBottomRightRadius: 7,
+  },
+  trophyStem: {
+    width: 4,
+    height: 4,
+  },
+  trophyBase: {
+    width: 12,
     height: 2.5,
     borderRadius: 1,
   },

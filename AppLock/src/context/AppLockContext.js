@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { requestPermissions, refreshNotifications, onTributePaid } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
+import { updateLeaderboard } from "../utils/leaderboard";
 
 const AppLockContext = createContext();
 
@@ -174,10 +175,11 @@ export function AppLockProvider({ children }) {
     return () => clearInterval(interval);
   }, [state.lockedApps]);
 
-  // Reschedule push notifications when a tribute is paid
+  // Reschedule push notifications + update leaderboard when a tribute is paid
   useEffect(() => {
     if (state.lastTributeTime) {
       onTributePaid().catch(() => {});
+      updateLeaderboard(state.totalCoinsSpent, state.totalUnlocks).catch(() => {});
     }
   }, [state.lastTributeTime]);
 
