@@ -14,37 +14,49 @@ const MAX_SLIDE = TRACK_W - THUMB_SIZE - 8;
 
 export default function SlideToLock({ onLock, locked }) {
   const pan = useRef(new Animated.Value(0)).current;
+  const currentX = useRef(0);
   const triggered = useRef(false);
+
+  // Track the current value for release logic
+  pan.addListener(({ value }) => { currentX.current = value; });
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => !locked,
       onMoveShouldSetPanResponder: (_, g) => !locked && Math.abs(g.dx) > 5,
+      onPanResponderGrant: () => {
+        pan.setOffset(currentX.current);
+        pan.setValue(0);
+      },
       onPanResponderMove: (_, g) => {
         if (triggered.current || locked) return;
-        pan.setValue(Math.max(0, Math.min(g.dx, MAX_SLIDE)));
+        const newVal = Math.max(-currentX.current, Math.min(g.dx, MAX_SLIDE - currentX.current));
+        pan.setValue(newVal);
       },
-      onPanResponderRelease: (_, g) => {
+      onPanResponderRelease: () => {
+        pan.flattenOffset();
         if (triggered.current || locked) return;
-        if (g.dx >= MAX_SLIDE * 0.8) {
+
+        if (currentX.current >= MAX_SLIDE * 0.7) {
+          // Past 70% — snap to end and lock
           triggered.current = true;
-          Animated.spring(pan, {
+          Animated.timing(pan, {
             toValue: MAX_SLIDE,
-            tension: 80,
-            friction: 8,
+            duration: 150,
             useNativeDriver: true,
           }).start(() => {
             if (onLock) onLock();
             setTimeout(() => {
               triggered.current = false;
+              currentX.current = 0;
               pan.setValue(0);
             }, 500);
           });
         } else {
-          Animated.spring(pan, {
+          // Snap back smoothly
+          Animated.timing(pan, {
             toValue: 0,
-            tension: 100,
-            friction: 10,
+            duration: 200,
             useNativeDriver: true,
           }).start();
         }
