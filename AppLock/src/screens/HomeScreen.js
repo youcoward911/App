@@ -17,6 +17,8 @@ import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
+import { getFullUsage } from "../utils/usageTracker";
+import { getRandomShame } from "../data/shameMessages";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 64;
@@ -61,6 +63,15 @@ export default function HomeScreen({ navigation }) {
   // Pick one phrase per app session — useRef so it doesn't change on re-render
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
+  const [shameMsg, setShameMsg] = useState(null);
+
+  // Load personalized shame on mount and when tributes change
+  useEffect(() => {
+    getFullUsage().then((usage) => {
+      const msg = getRandomShame(usage);
+      if (msg) setShameMsg(msg);
+    });
+  }, [state.totalUnlocks]);
 
   // Tick every second when countdowns active or under 1 min, otherwise every 30s
   const hasCountdowns = Object.values(state.lockedApps).some((a) => !a.lockedAt && a.unlockExpiresAt);
@@ -184,6 +195,11 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.moodMsg}>{moodMessage}</Text>
           </View>
         </View>
+        {shameMsg && (
+          <View style={styles.shameCard}>
+            <Text style={styles.shameText}>{shameMsg}</Text>
+          </View>
+        )}
 
         {lockedApps.length === 0 ? (
           <View style={styles.empty}>
@@ -265,6 +281,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+  },
+  shameCard: {
+    marginHorizontal: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  shameText: {
+    ...T.caption,
+    fontStyle: "italic",
+    color: C.pink,
+    textAlign: "center",
+    lineHeight: 18,
   },
   tributeClockWrap: { flex: 1, marginLeft: 16 },
   tributeLabel: { ...T.label, marginBottom: 2 },

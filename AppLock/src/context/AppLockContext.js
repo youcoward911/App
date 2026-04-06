@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { requestPermissions, refreshNotifications, onTributePaid } from "../utils/notifications";
+import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 
 const AppLockContext = createContext();
 
@@ -152,6 +153,8 @@ export function AppLockProvider({ children }) {
         } else {
           await requestPermissions();
         }
+        // Track app open
+        await trackAppOpen();
       } catch (e) {
         console.warn("Failed to load state:", e);
       }

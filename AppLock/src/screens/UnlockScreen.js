@@ -13,6 +13,7 @@ import { POPULAR_APPS } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
+import { trackUnlock } from "../utils/usageTracker";
 import {
   getSingleRoast,
   getPrePaymentTaunt,
@@ -283,6 +284,7 @@ export default function UnlockScreen({ route, navigation }) {
 
   const handleConfirm = () => {
     dispatch({ type: "UNLOCK_APP", payload: { appId } });
+    trackUnlock(appId, fee, lockInfo?.lockedAt).catch(() => {});
     setPostShade(getPostUnlockDegradation());
     setFeastTitle(FEAST_TITLES[Math.floor(Math.random() * FEAST_TITLES.length)]);
     setPhase("unlocked");
