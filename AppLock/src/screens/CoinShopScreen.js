@@ -94,7 +94,7 @@ export default function CoinShopScreen({ navigation }) {
         {isLow && (
           <View style={[styles.warningCard, CARD_SHADOW]}>
             <Text style={styles.warningTitle}>
-              {isEmpty ? "EMPTY TROUGH" : "LOW BALANCE"}
+              {isEmpty ? "EMPTY WALLET" : "LOW BALANCE"}
             </Text>
             <Text style={styles.warningBody}>{getLowBalanceMessage()}</Text>
           </View>
