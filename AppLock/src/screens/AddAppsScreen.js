@@ -11,7 +11,7 @@ import {
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS, CATEGORIES } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
-import SwipeToLock from "../components/SwipeToLock";
+import SlideToLock from "../components/SwipeToLock";
 import { C, T, NEU_RAISED } from "../utils/theme";
 
 export default function AddAppsScreen({ navigation }) {
@@ -32,11 +32,11 @@ export default function AddAppsScreen({ navigation }) {
     "Another app for your master to control. Ready?",
     "More slop to pay for. You sure, piggy?",
     "Locking yourself up again? Classic pig behavior.",
-    "One more chain for the piggy. Confirm?",
+    "One more chain for the piggy.",
     "You're really doing this to yourself, huh?",
     "Adding more to your tab. Bold move, pig.",
-    "Your master approves. Lock it?",
-    "Brave little piggy. Or just stupid. Lock it?",
+    "Your master approves.",
+    "Brave little piggy. Or just stupid.",
     "That's another one you'll be paying for.",
     "Oink oink. More slop on your plate.",
     "You love being controlled, don't you?",
@@ -51,16 +51,14 @@ export default function AddAppsScreen({ navigation }) {
     return LOCK_WARNINGS[idx];
   };
 
-  const handleSwipeLock = (id) => {
+  const handleLock = (id) => {
     const warning = getWarning();
     dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: state.settings.defaultFee } });
     Alert.alert("Locked.", warning, [{ text: "Oink." }]);
   };
 
-  const handleTap = (id) => {
-    if (isLocked(id)) {
-      dispatch({ type: "REMOVE_APP", payload: { appId: id } });
-    }
+  const handleUnlock = (id) => {
+    dispatch({ type: "REMOVE_APP", payload: { appId: id } });
   };
 
   return (
@@ -75,7 +73,6 @@ export default function AddAppsScreen({ navigation }) {
         </TouchableOpacity>
       </View>
       <Text style={styles.headerTitle}>Lock More Slop</Text>
-      <Text style={styles.hint}>Swipe right to lock</Text>
 
       {/* Categories */}
       <FlatList
@@ -108,27 +105,20 @@ export default function AddAppsScreen({ navigation }) {
         renderItem={({ item }) => {
           const locked = isLocked(item.id);
           return (
-            <SwipeToLock
-              locked={locked}
-              onLock={() => handleSwipeLock(item.id)}
-            >
-              <TouchableOpacity
-                style={[styles.row, NEU_RAISED]}
-                activeOpacity={locked ? 0.8 : 1}
-                onPress={() => handleTap(item.id)}
-              >
-                <AppIcon app={item} size={40} />
-                <View style={styles.rowInfo}>
-                  <Text style={styles.rowName}>{item.name}</Text>
-                  <Text style={styles.rowCat}>{item.category}</Text>
-                </View>
-                <View style={[styles.badge, locked && styles.badgeActive]}>
-                  <Text style={[styles.badgeText, locked && styles.badgeTextActive]}>
-                    {locked ? "Locked" : "Lock"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </SwipeToLock>
+            <View style={[styles.row, NEU_RAISED]}>
+              <AppIcon app={item} size={40} />
+              <View style={styles.rowInfo}>
+                <Text style={styles.rowName}>{item.name}</Text>
+                <Text style={styles.rowCat}>{item.category}</Text>
+              </View>
+              {locked ? (
+                <TouchableOpacity onPress={() => handleUnlock(item.id)}>
+                  <SlideToLock locked={true} />
+                </TouchableOpacity>
+              ) : (
+                <SlideToLock onLock={() => handleLock(item.id)} locked={false} />
+              )}
+            </View>
           );
         }}
       />
@@ -147,8 +137,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   back: { ...T.body, color: C.textSecondary, fontWeight: "500" },
-  headerTitle: { ...T.h2, textAlign: "center", marginBottom: 2 },
-  hint: { ...T.caption, textAlign: "center", marginBottom: 10, color: C.textTertiary },
+  headerTitle: { ...T.h2, textAlign: "center", marginBottom: 10 },
   done: { ...T.body, color: C.pink, fontWeight: "600" },
 
   // Categories
@@ -175,17 +164,9 @@ const styles = StyleSheet.create({
     backgroundColor: C.white,
     borderRadius: 14,
     padding: 12,
+    marginBottom: 8,
   },
   rowInfo: { flex: 1, marginLeft: 12 },
   rowName: { ...T.bodyBold, fontSize: 15 },
   rowCat: { ...T.caption, marginTop: 2 },
-  badge: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: C.pinkPale,
-  },
-  badgeActive: { backgroundColor: C.pink },
-  badgeText: { fontSize: 13, fontWeight: "600", color: C.pink },
-  badgeTextActive: { color: C.textOnPink },
 });
