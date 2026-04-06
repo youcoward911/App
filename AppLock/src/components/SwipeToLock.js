@@ -8,9 +8,9 @@ import {
 } from "react-native";
 import { C } from "../utils/theme";
 
-const TRACK_W = 130;
-const THUMB_SIZE = 32;
-const MAX_SLIDE = TRACK_W - THUMB_SIZE - 6;
+const TRACK_W = 140;
+const THUMB_SIZE = 40;
+const MAX_SLIDE = TRACK_W - THUMB_SIZE - 8;
 
 export default function SlideToLock({ onLock, locked }) {
   const pan = useRef(new Animated.Value(0)).current;
@@ -75,9 +75,7 @@ export default function SlideToLock({ onLock, locked }) {
         <Animated.View
           style={[styles.thumb, { transform: [{ translateX: pan }] }]}
           {...panResponder.panHandlers}
-        >
-          <Text style={styles.thumbArrow}>→</Text>
-        </Animated.View>
+        />
       </View>
       <Text style={styles.hint}>swipe to lock</Text>
     </View>
@@ -90,11 +88,11 @@ const styles = StyleSheet.create({
   },
   track: {
     width: TRACK_W,
-    height: THUMB_SIZE + 6,
-    borderRadius: (THUMB_SIZE + 6) / 2,
+    height: THUMB_SIZE + 8,
+    borderRadius: (THUMB_SIZE + 8) / 2,
     backgroundColor: "#FFE0EE",
     justifyContent: "center",
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
   },
   trackLabel: {
     position: "absolute",
@@ -117,11 +115,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  thumbArrow: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "900",
-  },
   hint: {
     fontSize: 9,
     fontWeight: "500",
@@ -132,8 +125,8 @@ const styles = StyleSheet.create({
   },
   lockedWrap: {
     width: TRACK_W,
-    height: THUMB_SIZE + 6,
-    borderRadius: (THUMB_SIZE + 6) / 2,
+    height: THUMB_SIZE + 8,
+    borderRadius: (THUMB_SIZE + 8) / 2,
     backgroundColor: C.pink,
     alignItems: "center",
     justifyContent: "center",
