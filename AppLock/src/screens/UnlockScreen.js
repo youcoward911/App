@@ -97,7 +97,7 @@ export default function UnlockScreen({ route, navigation }) {
     `${fee} ${coinWord}. Your master thanks you for the donation.`,
     `${fee} ${coinWord} to feed your addiction. Pathetic.`,
     `${fee} whole ${coinWord}. And you'll do it again tomorrow.`,
-    `Bye bye, ${fee} ${coinWord}. You never stood a chance.`,
+    `Bye bye, ${fee} ${coinWord}.`,
   ];
 
   const pickCostLine = () => COST_LINES[Math.floor(Math.random() * COST_LINES.length)];
