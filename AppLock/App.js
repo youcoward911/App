@@ -137,32 +137,34 @@ function HomeTabs() {
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const splashOpacity = useRef(new Animated.Value(0)).current;
-  const splashScale = useRef(new Animated.Value(0.7)).current;
+  const splashBgOpacity = useRef(new Animated.Value(1)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+  const textTranslateY = useRef(new Animated.Value(30)).current;
   const command = useRef(getMasterCommand()).current;
 
   useEffect(() => {
+    // Fade up and in
     Animated.parallel([
-      Animated.timing(splashOpacity, {
+      Animated.timing(textOpacity, {
         toValue: 1,
-        duration: 400,
+        duration: 500,
         useNativeDriver: true,
       }),
-      Animated.spring(splashScale, {
-        toValue: 1,
-        tension: 50,
-        friction: 8,
+      Animated.timing(textTranslateY, {
+        toValue: 0,
+        duration: 500,
         useNativeDriver: true,
       }),
     ]).start();
 
+    // After 3 seconds, fade everything out
     const timer = setTimeout(() => {
-      Animated.timing(splashOpacity, {
+      Animated.timing(splashBgOpacity, {
         toValue: 0,
         duration: 400,
         useNativeDriver: true,
       }).start(() => setShowSplash(false));
-    }, 2500);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -193,10 +195,17 @@ export default function App() {
           <Animated.View
             style={[
               styles.splash,
-              { opacity: splashOpacity, transform: [{ scale: splashScale }] },
+              { opacity: splashBgOpacity },
             ]}
           >
-            <Text style={styles.splashText}>{command}</Text>
+            <Animated.Text
+              style={[
+                styles.splashText,
+                { opacity: textOpacity, transform: [{ translateY: textTranslateY }] },
+              ]}
+            >
+              {command}
+            </Animated.Text>
           </Animated.View>
         )}
       </NavigationContainer>
