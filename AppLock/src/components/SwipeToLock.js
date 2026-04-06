@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { C } from "../utils/theme";
 
-const TRACK_W = 140;
-const THUMB_SIZE = 40;
+const TRACK_W = 150;
+const THUMB_SIZE = 46;
 const MAX_SLIDE = TRACK_W - THUMB_SIZE - 8;
 
 export default function SlideToLock({ onLock, locked }) {
