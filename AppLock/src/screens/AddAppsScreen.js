@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -30,13 +30,31 @@ export default function AddAppsScreen({ navigation }) {
     "You sure? There's no going back now.",
     "Another app for your master to control. Ready?",
     "More slop to pay for. You sure, piggy?",
+    "Locking yourself up again? Classic pig behavior.",
+    "One more chain for the piggy. Confirm?",
+    "You're really doing this to yourself, huh?",
+    "Adding more to your tab. Bold move, pig.",
+    "Your master approves. Lock it?",
+    "Brave little piggy. Or just stupid. Lock it?",
+    "That's another one you'll be paying for.",
+    "Oink oink. More slop on your plate.",
+    "You love being controlled, don't you?",
+    "Go ahead. Hand over more control, pet.",
   ];
+
+  const lastWarningIdx = useRef(-1);
+  const getWarning = () => {
+    let idx;
+    do { idx = Math.floor(Math.random() * LOCK_WARNINGS.length); } while (idx === lastWarningIdx.current);
+    lastWarningIdx.current = idx;
+    return LOCK_WARNINGS[idx];
+  };
 
   const toggle = (id) => {
     if (isLocked(id)) {
       dispatch({ type: "REMOVE_APP", payload: { appId: id } });
     } else {
-      const warning = LOCK_WARNINGS[Math.floor(Math.random() * LOCK_WARNINGS.length)];
+      const warning = getWarning();
       Alert.alert("Lock this app?", warning, [
         { text: "Nevermind", style: "cancel" },
         {
