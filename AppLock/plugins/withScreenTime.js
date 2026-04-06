@@ -5,11 +5,13 @@ const { withXcodeProject, withEntitlementsPlist } = require("@expo/config-plugin
 // To enable: uncomment the entitlement line below after approval.
 
 function withScreenTime(config) {
-  // 1. FamilyControls entitlement — enabled
-  config = withEntitlementsPlist(config, (mod) => {
-    mod.modResults["com.apple.developer.family-controls.application"] = true;
-    return mod;
-  });
+  // 1. FamilyControls entitlement — COMMENTED OUT until Apple approves
+  // The provisioning profile doesn't include this entitlement yet.
+  // Uncomment once Apple grants Family Controls to your account.
+  // config = withEntitlementsPlist(config, (mod) => {
+  //   mod.modResults["com.apple.developer.family-controls.application"] = true;
+  //   return mod;
+  // });
 
   // 2. Set minimum iOS deployment target to 16.0 (Screen Time API requirement)
   config = withXcodeProject(config, (mod) => {
