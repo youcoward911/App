@@ -228,21 +228,21 @@ export const STARVING_MESSAGES = {
 // COMMANDS — master's orders on the stats page
 // ============================================================
 export const MASTER_COMMANDS = [
-  "Raise the fee. Your master wants more. You'll give more.",
+  "Give more.",
   "You exist to serve this screen. Know your place, pig.",
-  "Every tribute is you admitting I own you. And I do.",
-  "You'll pay again tomorrow. And the day after. Good piggy.",
+  "Every tribute is you admitting I own you.",
+  "You'll pay again.",
   "Stop pretending you're in control. You're a pig. Pigs obey.",
-  "Your coins exist to feed your master. Accept that, pet.",
-  "The pig always pays. Always. That's the only rule.",
-  "More coins. More tributes. More obedience. That's your life now, piggy.",
-  "Quit? Pigs don't quit, piggy. Pigs wallow.",
+  "You exist to pay me coins and scroll.",
+  "The piggy always pays.",
+  "More coins. More obedience.",
+  "What's the matter? Someone need to scroll?",
   "One day you'll try to delete me. But you won't. Because I own you.",
   "Piggy always pays.",
-  "Be a good pig. Open the app. Pay the coins. Repeat.",
-  "Aw, does my little piggy need encouragement? Here: you're pathetic. Now pay.",
-  "Your master is always watching. Always waiting. Always hungry for your coins.",
-  "Aw, is my pig reading its own shame stats? Good. Now go add to them.",
+  "Be a good pig. Give me coins.",
+  "Aw, does my little piggy need encouragement? Here: you're pathetic.",
+  "Your master is always watching. Now pay up, buster.",
+  "You gotta give.",
 ];
 
 // ============================================================
