@@ -83,7 +83,7 @@ export default function CoinShopScreen({ navigation }) {
         {/* Pig + Balance */}
         <View style={styles.hero}>
           <PigMascot size={100} />
-          <Text style={styles.shopTitle}>Piggy Coins</Text>
+          <Text style={styles.shopTitle}>Slop Coins</Text>
           <View style={styles.balanceWrap}>
             <CoinBadge amount={state.piggyCoins} />
           </View>
