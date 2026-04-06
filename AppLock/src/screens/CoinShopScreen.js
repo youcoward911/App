@@ -107,7 +107,7 @@ export default function CoinShopScreen({ navigation }) {
         </Text>
 
         {COIN_PACKAGES.map((pkg) => {
-          const isPopular = pkg.id === "medium";
+          const isPopular = pkg.id === "large";
           return (
             <TouchableOpacity
               key={pkg.id}
