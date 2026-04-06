@@ -1,7 +1,13 @@
-import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LOCATION_KEY = "@scrollpig_location";
+
+let Location = null;
+try {
+  Location = require("expo-location");
+} catch (e) {
+  console.warn("[location] expo-location not available — leaderboard will show as Unknown city");
+}
 
 export async function getUserCity() {
   // Check cache first
@@ -15,6 +21,8 @@ export async function getUserCity() {
       }
     }
   } catch (e) {}
+
+  if (!Location) return null;
 
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
