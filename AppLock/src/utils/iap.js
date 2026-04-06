@@ -1,12 +1,18 @@
-import { Platform } from "react-native";
+import { Platform, NativeModules } from "react-native";
 
 let RNIap = null;
 let iapAvailable = false;
 
 try {
   RNIap = require("react-native-iap");
-  // Verify the native module is actually linked, not just the JS package
-  if (RNIap && typeof RNIap.initConnection === "function") {
+  // Check that the NATIVE module is actually linked, not just the JS package.
+  // The JS package can exist in node_modules without the native binary compiled in.
+  const hasNative = !!(
+    NativeModules.RNIapModule ||
+    NativeModules.RNIapIos ||
+    NativeModules.RNIap
+  );
+  if (RNIap && hasNative) {
     iapAvailable = true;
   } else {
     RNIap = null;
@@ -64,7 +70,7 @@ export async function getProducts() {
 }
 
 export async function buyCoins(productId) {
-  if (!iapAvailable) {
+  if (!iapAvailable || !RNIap) {
     // Mock purchase for development
     return {
       success: true,
@@ -90,6 +96,18 @@ export async function buyCoins(productId) {
   } catch (e) {
     if (e.code === "E_USER_CANCELLED") {
       return { success: false, cancelled: true };
+    }
+    // If native module is missing, fall back to mock
+    if (e.message && e.message.toLowerCase().includes("null")) {
+      console.warn("IAP native module missing, falling back to mock purchase");
+      iapAvailable = false;
+      RNIap = null;
+      return {
+        success: true,
+        coins: PRODUCT_COINS[productId] || 0,
+        price: PRODUCT_PRICES[productId] || 0,
+        mock: true,
+      };
     }
     console.warn("Purchase failed:", e);
     return { success: false, error: e.message };
