@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ScrollPiggy",
+    "name": "Scroll Pig",
     "slug": "PayPig",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.paypig.app",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "PayPig uses this to track your app usage and lock apps you choose."
+        "NSUserTrackingUsageDescription": "Scroll Pig uses this to track your app usage and lock apps you choose."
       }
     },
     "android": {
