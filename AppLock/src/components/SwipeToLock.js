@@ -14,49 +14,41 @@ const MAX_SLIDE = TRACK_W - THUMB_SIZE - 8;
 
 export default function SlideToLock({ onLock, locked }) {
   const pan = useRef(new Animated.Value(0)).current;
-  const currentX = useRef(0);
   const triggered = useRef(false);
-
-  // Track the current value for release logic
-  pan.addListener(({ value }) => { currentX.current = value; });
+  const lastDx = useRef(0);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !locked,
-      onMoveShouldSetPanResponder: (_, g) => !locked && Math.abs(g.dx) > 5,
-      onPanResponderGrant: () => {
-        pan.setOffset(currentX.current);
-        pan.setValue(0);
-      },
+      onStartShouldSetPanResponder: () => !locked && !triggered.current,
+      onMoveShouldSetPanResponder: (_, g) => !locked && !triggered.current && Math.abs(g.dx) > 5,
       onPanResponderMove: (_, g) => {
         if (triggered.current || locked) return;
-        const newVal = Math.max(-currentX.current, Math.min(g.dx, MAX_SLIDE - currentX.current));
-        pan.setValue(newVal);
+        const x = Math.max(0, Math.min(g.dx, MAX_SLIDE));
+        lastDx.current = x;
+        pan.setValue(x);
       },
       onPanResponderRelease: () => {
-        pan.flattenOffset();
         if (triggered.current || locked) return;
 
-        if (currentX.current >= MAX_SLIDE * 0.7) {
-          // Past 70% — snap to end and lock
+        if (lastDx.current >= MAX_SLIDE * 0.65) {
           triggered.current = true;
           Animated.timing(pan, {
             toValue: MAX_SLIDE,
-            duration: 150,
+            duration: 120,
             useNativeDriver: true,
           }).start(() => {
             if (onLock) onLock();
             setTimeout(() => {
               triggered.current = false;
-              currentX.current = 0;
+              lastDx.current = 0;
               pan.setValue(0);
             }, 500);
           });
         } else {
-          // Snap back smoothly
+          lastDx.current = 0;
           Animated.timing(pan, {
             toValue: 0,
-            duration: 200,
+            duration: 180,
             useNativeDriver: true,
           }).start();
         }
