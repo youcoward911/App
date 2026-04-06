@@ -36,51 +36,53 @@ export const UNLOCK_ROASTS = [
 ];
 
 // Time-based — how long the pig resisted before crawling back
+// Uses {time} placeholder which auto-fills with "X seconds" or "X minutes"
 export const TIME_BASED_ROASTS = [
   {
     maxMinutes: 5,
     messages: [
-      "{minutes} minutes. You didn't even try, piggy.",
-      "{minutes} minutes of freedom and you're already back at the trough. Pathetic pig.",
-      "It took you {minutes} minutes to break. I've trained you well.",
-      "{minutes} minutes. That's absolutely pathetic.",
-      "My pig lasted {minutes} minutes. A new record in weakness.",
-      "Aw, my little piggy couldn't even last {minutesPlusOne} minutes? Sooo pathetic.",
-      "{minutes} minutes and my baby pig is already back. Aw. So needy.",
+      "It's literally been {time}. You didn't even try, piggy.",
+      "It's been {time} and you're already back at the trough. Pathetic pig.",
+      "It literally took you {time} to break. I've trained you well.",
+      "It's literally been {time}. Absolutely pathetic.",
+      "My pig lasted {time}. A new record in weakness.",
+      "Aw, my little piggy couldn't even last {time}? Sooo pathetic.",
+      "It's been {time} and my baby pig is already back. Aw. So needy.",
+      "{time}. Seriously? {time}. Wow.",
     ],
   },
   {
     maxMinutes: 15,
     messages: [
-      "{minutes} minutes. Did you think you were strong, piggy? You're not.",
-      "You held out {minutes} minutes. Your master is not impressed.",
-      "{minutes} minutes of pretending you don't need your slop. Cute.",
-      "Aw, {minutes} whole minutes. My piggy thought it was making progress.",
-      "{minutes} minutes without your phone and you're already shaking. Poor little pig.",
+      "It's been {time}. Did you think you were strong, piggy?",
+      "You held out {time}. Your master is not impressed.",
+      "{time} of pretending you don't need your slop. Cute.",
+      "Aw, {time}. My piggy thought it was making progress.",
+      "It's literally only been {time} and you're already shaking. Poor little pig.",
     ],
   },
   {
     maxMinutes: 30,
     messages: [
-      "{minutes} minutes. Getting bold, pig? Get back in line.",
-      "My pig tried to resist for {minutes} minutes. The trough always wins.",
-      "Aw, {minutes} minutes of my piggy pretending it has willpower. That was fun to watch.",
+      "It's been {time}. Getting bold, pig? Get back in line.",
+      "My pig tried to resist for {time}. The trough always wins.",
+      "Aw, {time} of my piggy pretending it has willpower. That was fun to watch.",
     ],
   },
   {
     maxMinutes: 60,
     messages: [
-      "{minutes} minutes away from your master. Were you scared, piggy?",
-      "An entire {minutes} minutes. Your master almost forgot about you. Almost.",
-      "Aw, my pig was gone {minutes} minutes. Did you think you were free? Come here, pet.",
+      "It's been {time} away from your master. Were you scared, piggy?",
+      "An entire {time}. Your master almost forgot about you. Almost.",
+      "Aw, my pig was gone {time}. Did you think you were free? Come here, pet.",
     ],
   },
   {
     maxMinutes: Infinity,
     messages: [
-      "{minutes} minutes of silence. Did you think you escaped, pig? Nobody escapes.",
-      "You were gone {minutes} minutes. Your master was starting to get angry. Don't do that again.",
-      "Aw, {minutes} minutes. The little piggy ran away and came back. They always come back.",
+      "It's been {time} of silence. Did you think you escaped, pig? Nobody escapes.",
+      "You were gone {time}. Your master was starting to get angry.",
+      "Aw, {time}. The little piggy ran away and came back. They always come back.",
     ],
   },
 ];
@@ -280,12 +282,17 @@ export function getSingleRoast(minutesSinceLock) {
     (b) => minutesSinceLock < b.maxMinutes
   );
   if (timeBucket) {
+    const totalSecs = Math.floor(minutesSinceLock * 60);
     const mins = Math.floor(minutesSinceLock);
-    const minWord = mins === 1 ? "minute" : "minutes";
+    // Use seconds for < 2 min, minutes otherwise
+    let timeStr;
+    if (mins < 2) {
+      timeStr = totalSecs === 1 ? "1 second" : `${totalSecs} seconds`;
+    } else {
+      timeStr = mins === 1 ? "1 minute" : `${mins} minutes`;
+    }
     return pickRandom(timeBucket.messages)
-      .replace("{minutes}", mins)
-      .replace("{minutesPlusOne}", mins + 1)
-      .replace("minutes", minWord);
+      .replace(/\{time\}/g, timeStr);
   }
   return pickRandom(UNLOCK_ROASTS);
 }
