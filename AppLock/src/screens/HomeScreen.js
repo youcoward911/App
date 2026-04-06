@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Dimensions,
   Alert,
+  PanResponder,
+  Animated,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
@@ -58,6 +60,33 @@ export default function HomeScreen({ navigation }) {
   const [now, setNow] = useState(Date.now());
   const [activeIndex, setActiveIndex] = useState(0);
   const carouselRef = useRef(null);
+  const activeIndexRef = useRef(0);
+
+  const lockedCountRef = useRef(0);
+  lockedCountRef.current = lockedApps.length;
+
+  const scrollToPage = (index) => {
+    const clamped = Math.max(0, Math.min(index, lockedCountRef.current - 1));
+    try {
+      carouselRef.current?.scrollToIndex({ index: clamped, animated: true });
+    } catch (e) {}
+    setActiveIndex(clamped);
+    activeIndexRef.current = clamped;
+  };
+
+  const dotPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx < -30) {
+          scrollToPage(activeIndexRef.current + 1);
+        } else if (g.dx > 30) {
+          scrollToPage(activeIndexRef.current - 1);
+        }
+      },
+    })
+  ).current;
 
   // Pick one phrase per app session — useRef so it doesn't change on re-render
   const moodKey = useRef(null);
@@ -109,6 +138,7 @@ export default function HomeScreen({ navigation }) {
   const onScroll = (e) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
     setActiveIndex(idx);
+    activeIndexRef.current = idx;
   };
 
   const renderCarouselCard = ({ item }) => {
@@ -220,18 +250,15 @@ export default function HomeScreen({ navigation }) {
                 index,
               })}
             />
-            {/* Dots — tappable like iPhone pages */}
+            {/* Dots — swipeable + tappable like iPhone pages */}
             {lockedApps.length > 1 && (
-              <View style={styles.dots}>
+              <View style={styles.dots} {...dotPanResponder.panHandlers}>
                 {lockedApps.map((_, i) => (
                   <TouchableOpacity
                     key={i}
                     style={styles.dotHitArea}
                     activeOpacity={0.7}
-                    onPress={() => {
-                      carouselRef.current?.scrollToIndex({ index: i, animated: true });
-                      setActiveIndex(i);
-                    }}
+                    onPress={() => scrollToPage(i)}
                   >
                     <View style={[styles.dot, i === activeIndex && styles.dotActive]} />
                   </TouchableOpacity>
