@@ -15,7 +15,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.paypig.app",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "Scroll Pig uses this to track your app usage and lock apps you choose."
+        "NSUserTrackingUsageDescription": "Scroll Pig uses this to track your app usage and lock apps you choose.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
