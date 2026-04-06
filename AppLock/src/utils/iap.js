@@ -5,7 +5,12 @@ let iapAvailable = false;
 
 try {
   RNIap = require("react-native-iap");
-  iapAvailable = true;
+  // Verify the native module is actually linked, not just the JS package
+  if (RNIap && typeof RNIap.initConnection === "function") {
+    iapAvailable = true;
+  } else {
+    RNIap = null;
+  }
 } catch (e) {
   console.warn("react-native-iap not available, using mock purchases");
 }
