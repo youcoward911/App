@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,48 +7,54 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
+import { initIAP, buyCoins, endIAP, iapAvailable } from "../utils/iap";
 
 export default function CoinShopScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [buying, setBuying] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [iapReady, setIapReady] = useState(false);
+
+  useEffect(() => {
+    initIAP().then((ok) => setIapReady(ok));
+    return () => { endIAP(); };
+  }, []);
 
   const isLow = state.piggyCoins < 10;
   const isEmpty = state.piggyCoins === 0;
 
-  const handleBuy = (pkg) => {
+  const handleBuy = async (pkg) => {
     setBuying(pkg.id);
 
-    // TODO: Replace with real Stripe checkout
-    // In production, this would:
-    // 1. Call your backend to create a Stripe PaymentIntent
-    // 2. Open Stripe's payment sheet
-    // 3. On success, backend confirms and you add coins
-    //
-    // For now, simulating a purchase for testing:
-    setTimeout(() => {
-      Alert.alert(
-        "Good pig.",
-        `${pkg.coins} coins in your wallet.\n\nYour master is pleased. Now go spend them like the obedient little animal you are.`,
-        [
-          {
-            text: "Oink.",
-            onPress: () => {
-              dispatch({
-                type: "BUY_COINS",
-                payload: { coins: pkg.coins, price: pkg.price },
-              });
-            },
-          },
-        ]
-      );
-      setBuying(null);
-    }, 800);
+    try {
+      const result = await buyCoins(pkg.productId);
+
+      if (result.success) {
+        dispatch({
+          type: "BUY_COINS",
+          payload: { coins: result.coins, price: result.price },
+        });
+        Alert.alert(
+          "Good pig.",
+          `${result.coins} coins in your wallet.${result.mock ? "\n\n(Test purchase)" : ""}\n\nYour master is pleased. Now go spend them.`,
+          [{ text: "Oink." }]
+        );
+      } else if (result.cancelled) {
+        // User cancelled — no alert needed
+      } else {
+        Alert.alert("Purchase Failed", result.error || "Something went wrong. Try again, pig.");
+      }
+    } catch (e) {
+      Alert.alert("Error", "Purchase failed. Your master is displeased.");
+    }
+
+    setBuying(null);
   };
 
   const getLowBalanceMessage = () => {
@@ -131,7 +137,11 @@ export default function CoinShopScreen({ navigation }) {
                 )}
               </View>
               <View style={styles.pkgRight}>
-                <Text style={styles.pkgPrice}>${pkg.price.toFixed(2)}</Text>
+                {buying === pkg.id ? (
+                  <ActivityIndicator color={C.pink} />
+                ) : (
+                  <Text style={styles.pkgPrice}>${pkg.price.toFixed(2)}</Text>
+                )}
               </View>
             </TouchableOpacity>
           );
