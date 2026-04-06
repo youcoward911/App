@@ -44,6 +44,7 @@ export default function UnlockScreen({ route, navigation }) {
   const [postShade, setPostShade] = useState("");
   const [confirmMsg, setConfirmMsg] = useState("");
   const [brokeMsg, setBrokeMsg] = useState("");
+  const [costLine, setCostLine] = useState("");
   const [feastTitle, setFeastTitle] = useState("");
   const [showSlop, setShowSlop] = useState(false);
 
@@ -82,6 +83,24 @@ export default function UnlockScreen({ route, navigation }) {
 
   const fee = lockInfo?.unlockFee || 0;
   const canAfford = state.piggyCoins >= fee;
+  const coinWord = fee === 1 ? "coin" : "coins";
+
+  const COST_LINES = [
+    `Paying ${fee} ${coinWord} just to scroll. Loser.`,
+    `${fee} ${coinWord} right out of your wallet. Pretty pathetic.`,
+    `I'll take ${fee} ${coinWord}. Thanks, idiot.`,
+    `${fee} ${coinWord} for a little screen time. Wow.`,
+    `${fee} ${coinWord} gone. Just like your self-control.`,
+    `That'll be ${fee} ${coinWord}, piggy. Cough 'em up.`,
+    `${fee} ${coinWord} down the drain so you can stare at a screen. Sad.`,
+    `Handing over ${fee} ${coinWord} like a trained animal. Good pig.`,
+    `${fee} ${coinWord}. Your master thanks you for the donation.`,
+    `${fee} ${coinWord} to feed your addiction. Pathetic.`,
+    `${fee} whole ${coinWord}. And you'll do it again tomorrow.`,
+    `Bye bye, ${fee} ${coinWord}. You never stood a chance.`,
+  ];
+
+  const pickCostLine = () => COST_LINES[Math.floor(Math.random() * COST_LINES.length)];
 
   useEffect(() => {
     if (!lockInfo?.lockedAt) {
@@ -107,6 +126,7 @@ export default function UnlockScreen({ route, navigation }) {
       return;
     }
     playPigSqueal();
+    setCostLine(pickCostLine());
     Animated.sequence([
       Animated.timing(shake, { toValue: 10, duration: 40, useNativeDriver: true }),
       Animated.timing(shake, { toValue: -10, duration: 40, useNativeDriver: true }),
@@ -358,10 +378,8 @@ export default function UnlockScreen({ route, navigation }) {
             <View style={styles.middle}>
               <PigMascot size={56} mood="restless" />
               <Text style={styles.confirmTitle}>{confirmMsg}</Text>
-              <Text style={styles.confirmBody}>
-                <Text style={{ color: C.pink, fontWeight: "900" }}>{fee} {fee === 1 ? "coin" : "coins"}</Text>
-                {" "}from your wallet.
-              </Text>
+              <View style={{ height: 24 }} />
+              <Text style={styles.confirmBody}>{costLine}</Text>
             </View>
           )}
 
