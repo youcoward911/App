@@ -136,7 +136,7 @@ export const CONFIRM_MESSAGES = [
   "Say it, pig. Tell your master you'll pay.",
   "One more chance to resist. But we both know you won't, piggy.",
   "Your hoof is on the button. You're going to press it. You always do.",
-  "Last chance to walk away, piggy. (You won't.)",
+  "Last chance to walk away, piggy. (you won't)",
   "Aw, my piggy's hesitating. How cute. Press the button, pet.",
   "Go on. Tell your master yes. You were always going to.",
   "Aw, is my little piggy nervous about paying? Don't worry. It gets easier every time.",
