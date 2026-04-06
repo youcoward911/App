@@ -110,7 +110,7 @@ export default function SettingsScreen() {
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
     const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
-    Alert.alert(`${val} coins per unlock`, taunt);
+    Alert.alert(`${val} ${val === 1 ? "coin" : "coins"} per unlock`, taunt);
   };
 
   return (
@@ -162,7 +162,7 @@ export default function SettingsScreen() {
           />
 
           <Text style={styles.currentFeeText}>
-            Current: {currentFee} coins
+            Current: {currentFee} {currentFee === 1 ? "coin" : "coins"}
           </Text>
         </View>
 
@@ -202,11 +202,12 @@ export default function SettingsScreen() {
                 if (val === 0) {
                   Alert.alert("Time Lock Off", "No leash. Enjoy your freedom while it lasts.");
                 } else {
+                  const m = val === 1 ? "minute" : "minutes";
                   const taunts = [
-                    `${val} minutes? That's all you trust yourself with. Smart pig.`,
-                    `${val} minutes of slop, then back in the pen. Deal.`,
-                    `Tick tock, piggy. ${val} minutes and you're done.`,
-                    `Your master will drag you back in ${val} minutes. Count on it.`,
+                    `${val} ${m}? That's all you trust yourself with. Smart pig.`,
+                    `${val} ${m} of slop, then back in the pen. Deal.`,
+                    `Tick tock, piggy. ${val} ${m} and you're done.`,
+                    `Your master will drag you back in ${val} ${m}. Count on it.`,
                   ];
                   Alert.alert("Time Lock Set", taunts[Math.floor(Math.random() * taunts.length)]);
                 }

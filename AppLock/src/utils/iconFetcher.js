@@ -41,22 +41,34 @@ export async function fetchAppIcon(appName, bundleId) {
   if (iconCache[cacheKey]) return iconCache[cacheKey];
 
   try {
-    // Try bundle ID first, then app name
-    const query = bundleId
-      ? `https://itunes.apple.com/lookup?bundleId=${encodeURIComponent(bundleId)}&country=us`
-      : `https://itunes.apple.com/search?term=${encodeURIComponent(appName)}&country=us&entity=software&limit=1`;
+    let iconUrl = null;
 
-    const response = await fetch(query);
-    const data = await response.json();
-
-    if (data.results && data.results.length > 0) {
-      // Get the 512px icon URL
-      const iconUrl = data.results[0].artworkUrl512 || data.results[0].artworkUrl100;
-      if (iconUrl) {
-        iconCache[cacheKey] = iconUrl;
-        saveCache();
-        return iconUrl;
+    // Try bundle ID lookup first
+    if (bundleId) {
+      const res = await fetch(
+        `https://itunes.apple.com/lookup?bundleId=${encodeURIComponent(bundleId)}&country=us`
+      );
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        iconUrl = data.results[0].artworkUrl512 || data.results[0].artworkUrl100;
       }
+    }
+
+    // Fall back to name search if bundleId returned nothing
+    if (!iconUrl) {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(appName)}&country=us&entity=software&limit=1`
+      );
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        iconUrl = data.results[0].artworkUrl512 || data.results[0].artworkUrl100;
+      }
+    }
+
+    if (iconUrl) {
+      iconCache[cacheKey] = iconUrl;
+      saveCache();
+      return iconUrl;
     }
   } catch (e) {
     // Network error — return null, fallback to letter icon

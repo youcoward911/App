@@ -74,7 +74,7 @@ export const POPULAR_APPS = [
   { id: "espn", name: "ESPN", letter: "E", colors: ["#D00000", "#AA0000"], category: "Entertainment", bundleId: "com.espn.ScoreCenter" },
   { id: "youtubetv", name: "YouTube TV", letter: "Y", colors: ["#FF0000", "#CC0000"], category: "Entertainment", bundleId: "com.google.ios.youtubeunplugged" },
   { id: "tubi", name: "Tubi", letter: "T", colors: ["#FA382F", "#D93028"], category: "Entertainment", bundleId: "com.foxcorporation.tubi" },
-  { id: "peacock", name: "Peacock", letter: "P", colors: ["#000000", "#1A1A1A"], category: "Entertainment", bundleId: "com.peacocktv.peacockandroid" },
+  { id: "peacock", name: "Peacock", letter: "P", colors: ["#000000", "#1A1A1A"], category: "Entertainment", bundleId: "com.peacocktv.peacock" },
   { id: "paramount", name: "Paramount+", letter: "P", colors: ["#0064FF", "#004DCC"], category: "Entertainment", bundleId: "com.cbs.app" },
   { id: "pandora", name: "Pandora", letter: "P", colors: ["#3668FF", "#224DCC"], category: "Entertainment", bundleId: "com.pandora" },
   { id: "genshin", name: "Genshin Impact", letter: "G", colors: ["#4F7CAC", "#3A6090"], category: "Gaming", bundleId: "com.miHoYo.GenshinImpact" },
