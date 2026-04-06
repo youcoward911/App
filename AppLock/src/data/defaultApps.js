@@ -72,6 +72,7 @@ export const POPULAR_APPS = [
   { id: "soundcloud", name: "SoundCloud", letter: "S", colors: ["#FF5500", "#E64D00"], category: "Entertainment", bundleId: "com.soundcloud.TouchApp" },
   { id: "crunchyroll", name: "Crunchyroll", letter: "C", colors: ["#F47521", "#E56517"], category: "Entertainment", bundleId: "com.crunchyroll.iphone" },
   { id: "espn", name: "ESPN", letter: "E", colors: ["#D00000", "#AA0000"], category: "Entertainment", bundleId: "com.espn.ScoreCenter" },
+  { id: "youtubetv", name: "YouTube TV", letter: "Y", colors: ["#FF0000", "#CC0000"], category: "Entertainment", bundleId: "com.google.ios.youtubeunplugged" },
   { id: "tubi", name: "Tubi", letter: "T", colors: ["#FA382F", "#D93028"], category: "Entertainment", bundleId: "com.foxcorporation.tubi" },
   { id: "peacock", name: "Peacock", letter: "P", colors: ["#000000", "#1A1A1A"], category: "Entertainment", bundleId: "com.peacocktv.peacockandroid" },
   { id: "paramount", name: "Paramount+", letter: "P", colors: ["#0064FF", "#004DCC"], category: "Entertainment", bundleId: "com.cbs.app" },
