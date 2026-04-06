@@ -19,7 +19,8 @@ export default function AddAppsScreen({ navigation }) {
   const filtered =
     selectedCategory === "All"
       ? POPULAR_APPS
-      : POPULAR_APPS.filter((a) => a.category === selectedCategory);
+      : POPULAR_APPS.filter((a) => a.category === selectedCategory)
+          .sort((a, b) => a.name.localeCompare(b.name));
 
   const isLocked = (id) => id in state.lockedApps;
 
