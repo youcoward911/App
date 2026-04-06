@@ -91,7 +91,7 @@ export default function UnlockScreen({ route, navigation }) {
     `I'll take ${fee} ${coinWord}. Thanks, idiot.`,
     `${fee} ${coinWord} for a little screen time. Wow.`,
     `${fee} ${coinWord} gone. Just like your self-control.`,
-    `That'll be ${fee} ${coinWord}, piggy. Cough 'em up.`,
+    `${fee} ${coinWord}, piggy. Cough 'em up.`,
     `${fee} ${coinWord} down the drain so you can stare at a screen. Sad.`,
     `Handing over ${fee} ${coinWord} like a trained animal. Good pig.`,
     `${fee} ${coinWord}. Your master thanks you for the donation.`,
