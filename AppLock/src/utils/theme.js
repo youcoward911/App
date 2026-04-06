@@ -36,19 +36,43 @@ export const C = {
 
 // Consistent shadow for cards
 export const CARD_SHADOW = {
-  shadowColor: C.pink,
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.15,
-  shadowRadius: 12,
+  shadowColor: "#C9A0B0",
+  shadowOffset: { width: 4, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 8,
   elevation: 3,
 };
 
 export const CARD_SHADOW_LG = {
-  shadowColor: C.pink,
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 20,
+  shadowColor: "#C9A0B0",
+  shadowOffset: { width: 6, height: 6 },
+  shadowOpacity: 0.35,
+  shadowRadius: 14,
   elevation: 5,
+};
+
+// Soft extruded neumorphic style — raised look
+export const NEU_RAISED = {
+  shadowColor: "#C9A0B0",
+  shadowOffset: { width: 5, height: 5 },
+  shadowOpacity: 0.3,
+  shadowRadius: 10,
+  elevation: 4,
+  // Apply inner highlight via border
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.7)",
+};
+
+// Soft extruded neumorphic style — pressed/inset look
+export const NEU_INSET = {
+  shadowColor: "#C9A0B0",
+  shadowOffset: { width: -2, height: -2 },
+  shadowOpacity: 0.15,
+  shadowRadius: 6,
+  elevation: 0,
+  borderWidth: 1,
+  borderColor: "rgba(0,0,0,0.04)",
+  backgroundColor: "#FFE8F0",
 };
 
 // Neon glow for accent elements

@@ -11,7 +11,7 @@ import PigMascot from "../components/PigMascot";
 import { POPULAR_APPS } from "../data/defaultApps";
 import { getFullUsage, formatCaveTime } from "../utils/usageTracker";
 import { getRandomShame } from "../data/shameMessages";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED } from "../utils/theme";
 
 function appName(appId) {
   const app = POPULAR_APPS.find((a) => a.id === appId);
@@ -85,13 +85,13 @@ export default function StatsScreen() {
 
         {/* Shame message */}
         {shame && (
-          <View style={[styles.shameCard, CARD_SHADOW]}>
+          <View style={[styles.shameCard, NEU_RAISED]}>
             <Text style={styles.shameText}>{shame}</Text>
           </View>
         )}
 
         {/* Pig Rank */}
-        <View style={[styles.heroCard, CARD_SHADOW_LG]}>
+        <View style={[styles.heroCard, NEU_RAISED]}>
           <PigMascot size={70} mood={state.totalUnlocks > 15 ? "happy" : "restless"} />
           <Text style={styles.heroLabel}>PIG RANK</Text>
           <Text style={[styles.heroValue, { color: rank.color }]}>
@@ -106,11 +106,11 @@ export default function StatsScreen() {
 
         {/* Tributes row */}
         <View style={styles.statRow}>
-          <View style={[styles.statCard, CARD_SHADOW]}>
+          <View style={[styles.statCard, NEU_RAISED]}>
             <Text style={styles.statVal}>{tribToday}</Text>
             <Text style={styles.statLabel}>Today</Text>
           </View>
-          <View style={[styles.statCard, CARD_SHADOW]}>
+          <View style={[styles.statCard, NEU_RAISED]}>
             <Text style={[styles.statVal, { color: C.pink }]}>{state.totalUnlocks}</Text>
             <Text style={styles.statLabel}>Total Tributes</Text>
           </View>
@@ -118,11 +118,11 @@ export default function StatsScreen() {
 
         {/* Coins spent */}
         <View style={styles.statRow}>
-          <View style={[styles.statCard, CARD_SHADOW]}>
+          <View style={[styles.statCard, NEU_RAISED]}>
             <Text style={styles.statVal}>{usage?.totalCoinsSpent || 0}</Text>
             <Text style={styles.statLabel}>Coins Spent</Text>
           </View>
-          <View style={[styles.statCard, CARD_SHADOW]}>
+          <View style={[styles.statCard, NEU_RAISED]}>
             <Text style={styles.statVal}>{usage?.totalOpens || 0}</Text>
             <Text style={styles.statLabel}>App Opens</Text>
           </View>
@@ -130,7 +130,7 @@ export default function StatsScreen() {
 
         {/* Weakness section */}
         {(weakestApp || peakHourDisplay || weakestDay) && (
-          <View style={[styles.sectionCard, CARD_SHADOW_LG]}>
+          <View style={[styles.sectionCard, NEU_RAISED]}>
             <Text style={styles.sectionTitle}>YOUR WEAKNESSES</Text>
 
             {weakestApp && (
@@ -162,7 +162,7 @@ export default function StatsScreen() {
 
         {/* Cave times */}
         {usage && (usage.fastestCave !== Infinity || usage.averageCaveTime > 0) && (
-          <View style={[styles.sectionCard, CARD_SHADOW_LG]}>
+          <View style={[styles.sectionCard, NEU_RAISED]}>
             <Text style={styles.sectionTitle}>CAVE TIMES</Text>
             <Text style={styles.sectionSub}>How fast you break</Text>
 
@@ -187,11 +187,11 @@ export default function StatsScreen() {
         {/* Streak */}
         {usage && (usage.streakDays > 0 || usage.longestStreak > 0) && (
           <View style={styles.statRow}>
-            <View style={[styles.statCard, CARD_SHADOW]}>
+            <View style={[styles.statCard, NEU_RAISED]}>
               <Text style={[styles.statVal, { color: "#FF6B35" }]}>{usage.streakDays}</Text>
               <Text style={styles.statLabel}>Day Streak</Text>
             </View>
-            <View style={[styles.statCard, CARD_SHADOW]}>
+            <View style={[styles.statCard, NEU_RAISED]}>
               <Text style={styles.statVal}>{usage.longestStreak}</Text>
               <Text style={styles.statLabel}>Longest Streak</Text>
             </View>
@@ -200,7 +200,7 @@ export default function StatsScreen() {
 
         {/* Top apps leaderboard */}
         {topApps.length > 1 && (
-          <View style={[styles.sectionCard, CARD_SHADOW_LG]}>
+          <View style={[styles.sectionCard, NEU_RAISED]}>
             <Text style={styles.sectionTitle}>MOST UNLOCKED</Text>
             {topApps.map(([id, count], i) => (
               <View key={id}>

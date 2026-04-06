@@ -15,7 +15,7 @@ import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 
 const { width: SCREEN_W } = Dimensions.get("window");
@@ -116,7 +116,7 @@ export default function HomeScreen({ navigation }) {
     const countdown = getCountdown(item.id);
     return (
       <TouchableOpacity
-        style={[styles.carouselCard, CARD_SHADOW_LG]}
+        style={[styles.carouselCard, NEU_RAISED]}
         activeOpacity={0.9}
         onPress={() => navigation.navigate("Unlock", { appId: item.id })}
       >
@@ -175,7 +175,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Pig mascot + tribute clock — compact horizontal */}
-        <View style={[styles.pigCard, CARD_SHADOW_LG]}>
+        <View style={[styles.pigCard, NEU_RAISED]}>
           <PigMascot size={70} mood={pigMood} />
           <View style={styles.tributeClockWrap}>
             <Text style={styles.tributeLabel}>LAST FEEDING</Text>
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   carouselContent: { paddingLeft: 32, paddingRight: 32 },
   carouselCard: {
     width: CARD_W,
-    backgroundColor: C.bg,
+    backgroundColor: C.white,
     borderRadius: 24,
     paddingVertical: 24,
     paddingHorizontal: 20,

@@ -12,7 +12,7 @@ import {
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
+import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import { initIAP, buyCoins, endIAP, iapAvailable } from "../utils/iap";
 
 export default function CoinShopScreen({ navigation }) {

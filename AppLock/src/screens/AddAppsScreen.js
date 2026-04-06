@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -11,11 +11,12 @@ import {
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS, CATEGORIES } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
-import { C, T, CARD_SHADOW } from "../utils/theme";
+import SwipeToLock from "../components/SwipeToLock";
+import { C, T, NEU_RAISED } from "../utils/theme";
 
 export default function AddAppsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = React.useState("All");
   const filtered =
     selectedCategory === "All"
       ? POPULAR_APPS
@@ -50,20 +51,15 @@ export default function AddAppsScreen({ navigation }) {
     return LOCK_WARNINGS[idx];
   };
 
-  const toggle = (id) => {
+  const handleSwipeLock = (id) => {
+    const warning = getWarning();
+    dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: state.settings.defaultFee } });
+    Alert.alert("Locked.", warning, [{ text: "Oink." }]);
+  };
+
+  const handleTap = (id) => {
     if (isLocked(id)) {
       dispatch({ type: "REMOVE_APP", payload: { appId: id } });
-    } else {
-      const warning = getWarning();
-      Alert.alert("Lock this app?", warning, [
-        { text: "Nevermind", style: "cancel" },
-        {
-          text: "Lock it.",
-          onPress: () => {
-            dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: state.settings.defaultFee } });
-          },
-        },
-      ]);
     }
   };
 
@@ -79,6 +75,7 @@ export default function AddAppsScreen({ navigation }) {
         </TouchableOpacity>
       </View>
       <Text style={styles.headerTitle}>Lock More Slop</Text>
+      <Text style={styles.hint}>Swipe right to lock</Text>
 
       {/* Categories */}
       <FlatList
@@ -111,22 +108,27 @@ export default function AddAppsScreen({ navigation }) {
         renderItem={({ item }) => {
           const locked = isLocked(item.id);
           return (
-            <TouchableOpacity
-              style={[styles.row, CARD_SHADOW]}
-              activeOpacity={0.8}
-              onPress={() => toggle(item.id)}
+            <SwipeToLock
+              locked={locked}
+              onLock={() => handleSwipeLock(item.id)}
             >
-              <AppIcon app={item} size={40} />
-              <View style={styles.rowInfo}>
-                <Text style={styles.rowName}>{item.name}</Text>
-                <Text style={styles.rowCat}>{item.category}</Text>
-              </View>
-              <View style={[styles.badge, locked && styles.badgeActive]}>
-                <Text style={[styles.badgeText, locked && styles.badgeTextActive]}>
-                  {locked ? "Locked" : "Lock"}
-                </Text>
-              </View>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.row, NEU_RAISED]}
+                activeOpacity={locked ? 0.8 : 1}
+                onPress={() => handleTap(item.id)}
+              >
+                <AppIcon app={item} size={40} />
+                <View style={styles.rowInfo}>
+                  <Text style={styles.rowName}>{item.name}</Text>
+                  <Text style={styles.rowCat}>{item.category}</Text>
+                </View>
+                <View style={[styles.badge, locked && styles.badgeActive]}>
+                  <Text style={[styles.badgeText, locked && styles.badgeTextActive]}>
+                    {locked ? "Locked" : "Lock"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </SwipeToLock>
           );
         }}
       />
@@ -145,7 +147,8 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   back: { ...T.body, color: C.textSecondary, fontWeight: "500" },
-  headerTitle: { ...T.h2, textAlign: "center", marginBottom: 10 },
+  headerTitle: { ...T.h2, textAlign: "center", marginBottom: 2 },
+  hint: { ...T.caption, textAlign: "center", marginBottom: 10, color: C.textTertiary },
   done: { ...T.body, color: C.pink, fontWeight: "600" },
 
   // Categories
@@ -172,7 +175,6 @@ const styles = StyleSheet.create({
     backgroundColor: C.white,
     borderRadius: 14,
     padding: 12,
-    marginBottom: 8,
   },
   rowInfo: { flex: 1, marginLeft: 12 },
   rowName: { ...T.bodyBold, fontSize: 15 },
