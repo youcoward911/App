@@ -98,6 +98,55 @@ export const POPULAR_APPS = [
   { id: "outlook", name: "Outlook", letter: "O", colors: ["#0078D4", "#005EA6"], category: "Productivity", bundleId: "com.microsoft.Office.Outlook" },
   { id: "photos", name: "Photos", letter: "P", colors: ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#5AC8FA", "#007AFF"], category: "Productivity", bundleId: "com.apple.mobileslideshow" },
   { id: "tiktokshop", name: "TikTok Shop", letter: "T", colors: ["#000000", "#EE1D52"], category: "Shopping", bundleId: "com.zhiliaoapp.musically" },
+
+  // ── Gambling / Betting ──
+  { id: "kalshi", name: "Kalshi", letter: "K", colors: ["#1A1A2E", "#0F0F1A"], category: "Gambling", bundleId: "com.kalshi.kalshi" },
+  { id: "polymarket", name: "Polymarket", letter: "P", colors: ["#0052FF", "#003CC2"], category: "Gambling", bundleId: "com.polymarket" },
+  { id: "draftkings", name: "DraftKings", letter: "D", colors: ["#53D337", "#3BA828"], category: "Gambling", bundleId: "com.draftkings.DKApp" },
+  { id: "fanduel", name: "FanDuel", letter: "F", colors: ["#1493FF", "#0077DD"], category: "Gambling", bundleId: "com.fanduel.sportsbook" },
+  { id: "betmgm", name: "BetMGM", letter: "B", colors: ["#C5A76C", "#9E8555"], category: "Gambling", bundleId: "com.betmgm.sportsbook" },
+  { id: "caesars", name: "Caesars", letter: "C", colors: ["#1B3A4B", "#0F2633"], category: "Gambling", bundleId: "com.williamhill.sportsbook" },
+  { id: "espnbet", name: "ESPN BET", letter: "E", colors: ["#D00000", "#AA0000"], category: "Gambling", bundleId: "com.pennentertainment.sportsbook" },
+  { id: "stake", name: "Stake", letter: "S", colors: ["#2B3A67", "#1E2A4A"], category: "Gambling", bundleId: "com.stake.app" },
+  { id: "robinhood", name: "Robinhood", letter: "R", colors: ["#00C805", "#00A004"], category: "Gambling", bundleId: "com.robinhood.release.Robinhood" },
+  { id: "coinbase", name: "Coinbase", letter: "C", colors: ["#0052FF", "#003FCC"], category: "Gambling", bundleId: "com.coinbase.Coinbase" },
+  { id: "webull", name: "Webull", letter: "W", colors: ["#E41B17", "#C0160F"], category: "Gambling", bundleId: "com.webull.WebBull" },
+
+  // ── More Social ──
+  { id: "mastodon", name: "Mastodon", letter: "M", colors: ["#6364FF", "#4E4FCC"], category: "Social", bundleId: "org.joinmastodon.app" },
+  { id: "locket", name: "Locket", letter: "L", colors: ["#FFD700", "#E6C200"], category: "Social", bundleId: "com.locket.Locket" },
+  { id: "yubo", name: "Yubo", letter: "Y", colors: ["#FFCC00", "#E6B800"], category: "Social", bundleId: "co.yellw.yellowapp" },
+  { id: "vsco", name: "VSCO", letter: "V", colors: ["#000000", "#1A1A1A"], category: "Social", bundleId: "com.vsco.vsco" },
+  { id: "clubhouse", name: "Clubhouse", letter: "C", colors: ["#F2E8CF", "#D9CEB4"], category: "Social", bundleId: "com.joinclubhouse.clubhouse" },
+
+  // ── More Games ──
+  { id: "supercell_squad", name: "Squad Busters", letter: "S", colors: ["#FF6B35", "#E55A2B"], category: "Gaming", bundleId: "com.supercell.laser" },
+  { id: "brawlstars", name: "Brawl Stars", letter: "B", colors: ["#F8D210", "#E0BD0E"], category: "Gaming", bundleId: "com.supercell.spike" },
+  { id: "clashroyale", name: "Clash Royale", letter: "C", colors: ["#2196F3", "#1976D2"], category: "Gaming", bundleId: "com.supercell.scroll" },
+  { id: "monopolygo", name: "Monopoly GO!", letter: "M", colors: ["#00A86B", "#008C59"], category: "Gaming", bundleId: "com.scopely.monopolygo" },
+  { id: "royalmatch", name: "Royal Match", letter: "R", colors: ["#FFB800", "#E6A600"], category: "Gaming", bundleId: "com.dreamgames.royalmatch" },
+  { id: "subwaysurfers", name: "Subway Surfers", letter: "S", colors: ["#FF6600", "#E65C00"], category: "Gaming", bundleId: "com.kiloo.SubwaySurfers" },
+  { id: "amongus", name: "Among Us", letter: "A", colors: ["#C51111", "#A00E0E"], category: "Gaming", bundleId: "com.innersloth.amongus" },
+  { id: "stumbleguys", name: "Stumble Guys", letter: "S", colors: ["#00D4FF", "#00AAD4"], category: "Gaming", bundleId: "com.kitkagames.fallbuddies" },
+  { id: "honkaistarrail", name: "Honkai: Star Rail", letter: "H", colors: ["#3B4CCA", "#2E3DA2"], category: "Gaming", bundleId: "com.miHoYo.hkrpg" },
+  { id: "zenless", name: "Zenless Zone Zero", letter: "Z", colors: ["#FF4D00", "#CC3D00"], category: "Gaming", bundleId: "com.miHoYo.Nap" },
+  { id: "diablo", name: "Diablo Immortal", letter: "D", colors: ["#8B0000", "#660000"], category: "Gaming", bundleId: "com.blizzard.diablo.immortal" },
+
+  // ── More Entertainment ──
+  { id: "tubi", name: "Tubi", letter: "T", colors: ["#FA382F", "#D93028"], category: "Entertainment", bundleId: "com.foxcorporation.tubi" },
+  { id: "pluto", name: "Pluto TV", letter: "P", colors: ["#000000", "#1A1A1A"], category: "Entertainment", bundleId: "tv.pluto" },
+  { id: "dazn", name: "DAZN", letter: "D", colors: ["#F1F514", "#D8DC12"], category: "Entertainment", bundleId: "com.dazn.DAZN" },
+  { id: "espn", name: "ESPN", letter: "E", colors: ["#D00000", "#AA0000"], category: "Entertainment", bundleId: "com.espn.ScoreCenter" },
+
+  // ── More Shopping / Food ──
+  { id: "stockx", name: "StockX", letter: "S", colors: ["#006340", "#004D30"], category: "Shopping", bundleId: "com.stockx.stockx" },
+  { id: "goat", name: "GOAT", letter: "G", colors: ["#000000", "#1A1A1A"], category: "Shopping", bundleId: "com.airgoat.goat" },
+  { id: "depop", name: "Depop", letter: "D", colors: ["#FF2300", "#D91E00"], category: "Shopping", bundleId: "com.depop" },
+  { id: "mercari", name: "Mercari", letter: "M", colors: ["#4DC4F1", "#3AA8D4"], category: "Shopping", bundleId: "com.kouzoh.mercari" },
+  { id: "poshmark", name: "Poshmark", letter: "P", colors: ["#7B2E8E", "#621F74"], category: "Shopping", bundleId: "com.poshmark.PoshmarkInc" },
+  { id: "chipotle", name: "Chipotle", letter: "C", colors: ["#A81612", "#8C120F"], category: "Shopping", bundleId: "com.chipotle.ordering" },
+  { id: "starbucks", name: "Starbucks", letter: "S", colors: ["#00704A", "#005C3E"], category: "Shopping", bundleId: "com.starbucks.mystarbucks" },
+  { id: "mcdonalds", name: "McDonald's", letter: "M", colors: ["#FFC72C", "#E6B326"], category: "Shopping", bundleId: "com.mcdonalds.mobileapp" },
 ];
 
 export const CATEGORIES = [
@@ -108,6 +157,7 @@ export const CATEGORIES = [
   "Gaming",
   "Shopping",
   "Dating",
+  "Gambling",
   "Browser",
   "News",
   "Productivity",
