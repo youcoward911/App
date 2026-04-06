@@ -293,7 +293,7 @@ export default function SettingsScreen() {
         {/* About */}
         <View style={[styles.card, CARD_SHADOW, styles.aboutCard]}>
           <PigMascot size={100} />
-          <Text style={styles.aboutName}>PayPig</Text>
+          <Text style={styles.aboutName}>ScrollPiggy</Text>
           <Text style={styles.aboutVer}>v1.0.0</Text>
         </View>
       </ScrollView>
