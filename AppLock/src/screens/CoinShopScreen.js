@@ -26,7 +26,6 @@ export default function CoinShopScreen({ navigation }) {
     return () => { endIAP(); };
   }, []);
 
-  const isLow = state.piggyCoins < 10;
   const isEmpty = state.piggyCoins === 0;
 
   const handleBuy = async (pkg) => {
@@ -57,16 +56,6 @@ export default function CoinShopScreen({ navigation }) {
     setBuying(null);
   };
 
-  const getLowBalanceMessage = () => {
-    if (isEmpty) {
-      return "Empty wallet. Your master doesn't give handouts. Buy coins or go hungry.";
-    }
-    if (state.piggyCoins < 5) {
-      return "Almost broke, piggy. A pig without coins is a pig without slop. Fill your wallet.";
-    }
-    return "Running low. Your master sees the balance dropping. Don't make me wait, pig.";
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -91,20 +80,17 @@ export default function CoinShopScreen({ navigation }) {
         </View>
 
         {/* Low balance warning */}
-        {isLow && (
+        {isEmpty && (
           <View style={[styles.warningCard, CARD_SHADOW]}>
-            <Text style={styles.warningTitle}>
-              {isEmpty ? "EMPTY WALLET" : "LOW BALANCE"}
+            <Text style={styles.warningTitle}>EMPTY WALLET</Text>
+            <Text style={styles.warningBody}>
+              Your master doesn't give free handouts. Buy coins to pay for your slop.
             </Text>
-            <Text style={styles.warningBody}>{getLowBalanceMessage()}</Text>
           </View>
         )}
 
         {/* Packages */}
-        <Text style={styles.sectionTitle}>Buy Coins</Text>
-        <Text style={styles.sectionSub}>
-          Buy coins to pay for your slop.
-        </Text>
+        <Text style={styles.sectionTitle}>Coin Packages</Text>
 
         {COIN_PACKAGES.map((pkg) => {
           const isPopular = pkg.id === "large";
