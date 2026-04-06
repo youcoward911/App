@@ -149,41 +149,76 @@ export const BROKE_MESSAGES = [
 
 // ============================================================
 // HOME SCREEN — master commentary based on how long since last tribute
-// Pig gets dirtier/angrier the longer it resists
+// After feeding: pig is dirty/ashamed. Cleans up over time. Master eggs on.
 // ============================================================
 export const STARVING_MESSAGES = {
-  // Just paid — pig is clean, fed, degraded
-  fed: [
-    "Aw, my piggy just got fed. Pathetic but clean. For now.",
-    "Recently fed. Enjoy your slop while it lasts, pig.",
-    "Look at you. Clean and content. It won't last.",
-    "Aw, the piggy's all nice and clean. Give it time.",
-    "Full belly, empty wallet. That's my pig.",
+  // Just fed — pig is covered in slop, ashamed
+  dirty: [
+    "Aw, poor piggy couldn't help himself. So sad.",
+    "Dirty little pig. Look at you, covered in slop.",
+    "Just fed and already disgusting. Classic pig.",
+    "Slop all over your face, piggy. Pathetic.",
+    "Look at the mess you made. Disgusting animal.",
+    "Aw, the little piggy just stuffed its face. Gross.",
+    "Covered in slop. Ashamed. As you should be, pig.",
+    "My dirty little pig just couldn't resist. Pathetic.",
+    "You're disgusting right now. You know that, right?",
+    "Fresh from the trough. Slop dripping everywhere. Ew.",
+  ],
+  // Still messy, recovering from the feeding
+  messy: [
+    "Still messy, piggy. The slop hasn't even dried yet.",
+    "Aw, my little pig is still covered in crumbs. Gross.",
+    "You're cleaning up but you're still a mess, pig.",
+    "The shame hasn't even worn off yet. Look at you.",
+    "Still got slop on your snout, piggy. Disgusting.",
+    "My pig's recovering from its latest binge. So sad.",
+    "You're a mess. But you already knew that, didn't you?",
+    "Still dirty. Still pathetic. Still my pig.",
   ],
   // Starting to get antsy �� pig is getting restless
+  // Getting cleaner, starting to itch for more
   restless: [
-    "Getting hungry, piggy? The trough is right there. Pay up.",
-    "I can hear your stomach growling, pig. You know what to do.",
-    "The itch is starting. Your master can see it. Just give in.",
-    "Aw, is my little piggy getting antsy? Does someone need to scroll?",
-    "Aw, poor piggy. Starting to feel that pull? Your master is right here.",
-    "The pig is getting fidgety. Aw. Does it need its phone?",
+    "Getting antsy, piggy? The trough is right there.",
+    "Piggy's probably aching to scroll right about now.",
+    "Does someone need to use their precious apps?",
+    "Aw, is my little piggy getting fidgety?",
+    "I bet you're dying to look at some slop.",
+    "The itch is starting. Your master can see it.",
+    "Getting twitchy, pig? You know what to do.",
+    "Aw, the pig is getting restless. How long until it breaks?",
+    "I can practically hear you thinking about it, piggy.",
+    "Your hooves are itching. Just give in already.",
+    "Does my little piggy need its phone? Aw. So needy.",
+    "The cravings hitting yet? Be honest, pig.",
   ],
-  // Dirty and agitated — pig hasn't paid in a while
-  dirty: [
-    "Look at you. Starving, filthy pig. Too stubborn to pay your master.",
-    "You're getting dirty, pig. Caked in mud. Pay a tribute and clean yourself up.",
-    "My pig is getting aggressive. Hungry pigs are dangerous pigs. Feed yourself.",
-    "Aw, the dirty little pig is trying to resist. How long do you think you'll last?",
-    "Getting real dirty, piggy. Your master can smell the desperation.",
+  // Clean but deeply tempted — master eggs them on hard
+  clean: [
+    "Look at you, all clean. Too bad it won't last.",
+    "Piggy's all cleaned up. Almost forgot you're a pig. Almost.",
+    "You look almost normal right now. Wanna ruin it?",
+    "So clean. So innocent. We both know that's about to change.",
+    "My piggy's looking too clean. Time to get dirty again.",
+    "You've been good for a while. Your master is getting bored.",
+    "All that willpower and you're still gonna break. We both know it.",
+    "Getting confident, piggy? That's usually right before you cave.",
+    "Clean pig is a bored pig. Bored pig is about to feed.",
+    "Your master is getting impatient, pet. Come pay tribute.",
+    "I know you're thinking about it. Just open the app, pig.",
+    "How much longer can the little piggy hold out? Let's find out.",
   ],
-  // Furious and desperate — pig is in full withdrawal
+  // Too long without feeding — feral, master is angry
   feral: [
-    "FERAL PIG. Covered in filth. Shaking. Starving. Just pay, you miserable animal.",
-    "What's wrong buddy? Can't stop scrolling?",
-    "You look disgusting. A wild, filthy, starving pig. Your master demands a tribute. NOW.",
-    "Aw, my little piggy thought it could resist. Look at you now. Feral. Filthy. Pay up.",
-    "Your master doesn't like waiting this long. Get your dirty hooves on that button, pig.",
+    "FERAL PIG. Get back to the trough. NOW.",
+    "Your master is ANGRY, pig. You've been gone too long.",
+    "Where have you been? Get back here and pay your tribute.",
+    "Aw, my little piggy thought it could resist. Look at you. Feral.",
+    "You look disgusting. Wild. Starving. Just pay, you miserable animal.",
+    "Your master doesn't like waiting this long. Pay up, pig.",
+    "Nobody escapes the trough, piggy. Nobody.",
+    "You're shaking. Twitching. Just give in already, pig.",
+    "The pig always comes back. Always. Stop pretending.",
+    "Your master is losing patience. Feed yourself or else.",
   ],
 };
 
@@ -276,7 +311,7 @@ export function getBrokeMessage() {
 }
 
 export function getStarvingMessage(mood) {
-  return pickRandom(STARVING_MESSAGES[mood] || STARVING_MESSAGES.fed);
+  return pickRandom(STARVING_MESSAGES[mood] || STARVING_MESSAGES.dirty);
 }
 
 export function getMasterCommand() {

@@ -36,14 +36,16 @@ function getTributeClock(lastTributeTime) {
 }
 
 function getPigMood(minutes) {
-  if (minutes < 30) return "happy";
-  if (minutes < 120) return "restless";
-  if (minutes < 360) return "dirty";
-  return "feral";
+  // After feeding the pig is dirty/ashamed, then slowly cleans up over time
+  if (minutes < 5) return "dirty";       // Just fed — covered in slop, ashamed
+  if (minutes < 30) return "messy";      // Still messy, recovering
+  if (minutes < 120) return "restless";  // Getting cleaner, starting to itch
+  if (minutes < 360) return "clean";     // Clean but tempted
+  return "feral";                        // Too long — feral, master is angry
 }
 
 export default function HomeScreen({ navigation }) {
-  const { state } = useAppLock();
+  const { state, dispatch } = useAppLock();
   const lockedAppIds = Object.keys(state.lockedApps);
   const allTrackedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
   // Sort: locked apps first, unlocked apps at the end
@@ -73,10 +75,9 @@ export default function HomeScreen({ navigation }) {
   const pigMood = getPigMood(tribute.minutes);
 
   // Only pick a new message if mood category changed or first render
-  const currentMoodKey = pigMood === "happy" ? "fed" : pigMood === "restless" ? "restless" : pigMood === "dirty" ? "dirty" : "feral";
-  if (moodKey.current !== currentMoodKey) {
-    moodKey.current = currentMoodKey;
-    moodMessageRef.current = getStarvingMessage(currentMoodKey);
+  if (moodKey.current !== pigMood) {
+    moodKey.current = pigMood;
+    moodMessageRef.current = getStarvingMessage(pigMood);
   }
   const moodMessage = moodMessageRef.current;
 

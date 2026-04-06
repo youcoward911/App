@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { requestPermissions, refreshNotifications, onTributePaid } from "../utils/notifications";
 
 const AppLockContext = createContext();
 
@@ -143,7 +144,13 @@ export function AppLockProvider({ children }) {
         await AsyncStorage.removeItem("@paypig_state");
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
-          dispatch({ type: "LOAD_STATE", payload: JSON.parse(stored) });
+          const parsed = JSON.parse(stored);
+          dispatch({ type: "LOAD_STATE", payload: parsed });
+          // Request notification permissions + schedule based on last feed
+          await requestPermissions();
+          await refreshNotifications(parsed.lastTributeTime);
+        } else {
+          await requestPermissions();
         }
       } catch (e) {
         console.warn("Failed to load state:", e);
@@ -163,6 +170,13 @@ export function AppLockProvider({ children }) {
     }, 5000);
     return () => clearInterval(interval);
   }, [state.lockedApps]);
+
+  // Reschedule push notifications when a tribute is paid
+  useEffect(() => {
+    if (state.lastTributeTime) {
+      onTributePaid().catch(() => {});
+    }
+  }, [state.lastTributeTime]);
 
   useEffect(() => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch((e) =>

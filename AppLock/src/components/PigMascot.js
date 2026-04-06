@@ -2,11 +2,10 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 
 // Animated pig mascot — the USER is the pig.
-// Moods: "happy" (just fed/paid), "restless", "dirty", "feral"
-// Happy = pink, clean, smiling. Fed and satisfied.
-// Restless = slightly off-color, antsy.
-// Dirty = brownish, mud splotches, angry brows.
-// Feral = dark red/brown, shaking, furious, filthy.
+// Moods: "dirty" (just fed, covered in slop), "messy" (recovering),
+//        "restless" (getting cleaner, itchy), "clean" (tempted), "feral" (too long)
+// After feeding: pig is dirty/ashamed. Over time it cleans up.
+// The cleaner it gets, the more the master eggs it on to feed again.
 
 export default function PigMascot({ size = 80, animate = true, mood = "happy" }) {
   const bob = useRef(new Animated.Value(0)).current;
@@ -17,9 +16,8 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
   useEffect(() => {
     if (!animate) return;
 
-    // Happy pig bobs gently. Feral pig shakes fast.
-    const bobSpeed = mood === "feral" ? 300 : mood === "dirty" ? 600 : mood === "restless" ? 1000 : 1200;
-    const bobHeight = mood === "feral" ? -2 : mood === "dirty" ? -3 : -6;
+    const bobSpeed = mood === "feral" ? 300 : mood === "dirty" ? 600 : mood === "messy" ? 800 : mood === "restless" ? 1000 : 1200;
+    const bobHeight = mood === "feral" ? -2 : mood === "dirty" ? -3 : mood === "messy" ? -4 : -6;
 
     Animated.loop(
       Animated.sequence([
@@ -36,7 +34,7 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
       ])
     ).start();
 
-    const blinkRate = mood === "feral" ? 800 : mood === "dirty" ? 1500 : 3500;
+    const blinkRate = mood === "feral" ? 800 : mood === "dirty" ? 1200 : mood === "messy" ? 2000 : 3500;
     const blinkInterval = setInterval(() => {
       Animated.sequence([
         Animated.timing(blink, {
@@ -53,7 +51,7 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
     }, blinkRate);
 
     // Occasional crying tears — fade in, drip down, fade out
-    const tearInterval = mood === "feral" ? 4000 : mood === "dirty" ? 6000 : mood === "restless" ? 10000 : 8000;
+    const tearInterval = mood === "feral" ? 4000 : mood === "dirty" ? 5000 : mood === "messy" ? 7000 : 10000;
     const tearTimer = setInterval(() => {
       tearDrop.setValue(0);
       Animated.parallel([
@@ -72,40 +70,44 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
 
   const s = size / 80;
 
-  // HAPPY = clean pink. DIRTY = brownish. FERAL = dark red-brown, filthy.
+  // dirty = slop-covered brown. messy = recovering. restless/clean = pink. feral = dark.
   const faceColor =
     mood === "feral" ? "#B85555" :
-    mood === "dirty" ? "#D4897A" :
+    mood === "dirty" ? "#C4795A" :
+    mood === "messy" ? "#D4897A" :
     mood === "restless" ? "#F0A8A8" :
     "#FFB6C1";
 
   const earColor =
     mood === "feral" ? "#8B3535" :
-    mood === "dirty" ? "#B0705F" :
+    mood === "dirty" ? "#A06040" :
+    mood === "messy" ? "#B0705F" :
     mood === "restless" ? "#D88A8A" :
     "#E8899A";
 
   const snoutColor =
     mood === "feral" ? "#A04545" :
-    mood === "dirty" ? "#C07868" :
+    mood === "dirty" ? "#B06848" :
+    mood === "messy" ? "#C07868" :
     mood === "restless" ? "#E09898" :
     "#F09AAF";
 
-  // Angry squinted eyes for dirty/feral, happy wide eyes for fed
   const eyeHeight =
     mood === "feral" ? 3 * s :
     mood === "dirty" ? 4 * s :
+    mood === "messy" ? 5 * s :
     mood === "restless" ? 7 * s :
     8 * s;
 
   const eyeTop =
     mood === "feral" ? 19 * s :
     mood === "dirty" ? 18 * s :
+    mood === "messy" ? 17 * s :
     16 * s;
 
-  const showAngryBrows = mood === "dirty" || mood === "feral";
-  const showMudSplotches = mood === "dirty" || mood === "feral";
-  const showSmile = mood === "happy";
+  const showAngryBrows = mood === "dirty" || mood === "messy" || mood === "feral";
+  const showMudSplotches = mood === "dirty" || mood === "messy" || mood === "feral";
+  const showSmile = mood === "clean";
   const showFrown = mood === "dirty" || mood === "feral";
 
   return (
@@ -142,17 +144,17 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy" })
             <View style={[styles.mud, {
               width: 8 * s, height: 6 * s, borderRadius: 3 * s,
               top: 10 * s, left: 8 * s,
-              backgroundColor: mood === "feral" ? "#6B3030" : "#A06050",
+              backgroundColor: mood === "feral" ? "#6B3030" : mood === "dirty" ? "#8A5030" : "#A06050",
             }]} />
             <View style={[styles.mud, {
               width: 6 * s, height: 5 * s, borderRadius: 3 * s,
               top: 30 * s, right: 10 * s,
-              backgroundColor: mood === "feral" ? "#6B3030" : "#A06050",
+              backgroundColor: mood === "feral" ? "#6B3030" : mood === "dirty" ? "#8A5030" : "#A06050",
             }]} />
             <View style={[styles.mud, {
               width: 5 * s, height: 4 * s, borderRadius: 2 * s,
               bottom: 18 * s, left: 18 * s,
-              backgroundColor: mood === "feral" ? "#5A2525" : "#906050",
+              backgroundColor: mood === "feral" ? "#5A2525" : mood === "dirty" ? "#7A4525" : "#906050",
             }]} />
           </>
         )}
