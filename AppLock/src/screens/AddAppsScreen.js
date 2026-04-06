@@ -54,7 +54,14 @@ export default function AddAppsScreen({ navigation }) {
   const handleLock = (id) => {
     const warning = getWarning();
     dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: state.settings.defaultFee } });
-    Alert.alert("Locked.", warning, [{ text: "Oink." }]);
+    Alert.alert("Locked.", warning, [
+      {
+        text: "Undo",
+        style: "cancel",
+        onPress: () => dispatch({ type: "REMOVE_APP", payload: { appId: id } }),
+      },
+      { text: "Oink." },
+    ]);
   };
 
   const handleUnlock = (id) => {
