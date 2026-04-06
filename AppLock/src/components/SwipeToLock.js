@@ -17,41 +17,50 @@ export default function SlideToLock({ onLock, locked }) {
   const triggered = useRef(false);
   const lastDx = useRef(0);
 
+  const snapToLock = () => {
+    triggered.current = true;
+    Animated.timing(pan, {
+      toValue: MAX_SLIDE,
+      duration: 100,
+      useNativeDriver: true,
+    }).start(() => {
+      if (onLock) onLock();
+      setTimeout(() => {
+        triggered.current = false;
+        lastDx.current = 0;
+        pan.setValue(0);
+      }, 500);
+    });
+  };
+
+  const snapBack = () => {
+    lastDx.current = 0;
+    Animated.timing(pan, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => !locked && !triggered.current,
-      onMoveShouldSetPanResponder: (_, g) => !locked && !triggered.current && Math.abs(g.dx) > 5,
+      onMoveShouldSetPanResponder: (_, g) => !locked && !triggered.current && g.dx > 3,
       onPanResponderMove: (_, g) => {
         if (triggered.current || locked) return;
         const x = Math.max(0, Math.min(g.dx, MAX_SLIDE));
         lastDx.current = x;
         pan.setValue(x);
+
+        // Auto-magnet: if past halfway, snap to lock immediately
+        if (x >= MAX_SLIDE * 0.5) {
+          snapToLock();
+        }
       },
       onPanResponderRelease: () => {
         if (triggered.current || locked) return;
-
-        if (lastDx.current >= MAX_SLIDE * 0.65) {
-          triggered.current = true;
-          Animated.timing(pan, {
-            toValue: MAX_SLIDE,
-            duration: 120,
-            useNativeDriver: true,
-          }).start(() => {
-            if (onLock) onLock();
-            setTimeout(() => {
-              triggered.current = false;
-              lastDx.current = 0;
-              pan.setValue(0);
-            }, 500);
-          });
-        } else {
-          lastDx.current = 0;
-          Animated.timing(pan, {
-            toValue: 0,
-            duration: 180,
-            useNativeDriver: true,
-          }).start();
-        }
+        // Anything less than 50% snaps back
+        snapBack();
       },
     })
   ).current;
