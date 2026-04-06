@@ -20,9 +20,9 @@ export function getPersonalizedShame(usage) {
 
     if (topCount >= 20) {
       messages.push(`${name} owns you. ${topCount} unlocks. You're obsessed, piggy.`);
-      messages.push(`${topCount} times you've crawled back to ${name}. That's not a habit. That's a leash.`);
+      messages.push(`${topCount} times you've crawled back to ${name}. You're on a leash, piggy.`);
     } else if (topCount >= 10) {
-      messages.push(`${name} is your biggest weakness. ${topCount} unlocks and counting.`);
+      messages.push(`My pig and ${name}. ${topCount} unlocks. Obsessed.`);
       messages.push(`My pig can't stay away from ${name}. ${topCount} times. Pathetic.`);
     } else if (topCount >= 3) {
       messages.push(`Already ${topCount} unlocks on ${name}. Getting attached, piggy?`);
@@ -67,7 +67,7 @@ export function getPersonalizedShame(usage) {
     const fastest = usage.fastestCave;
     if (fastest < 30) {
       messages.push(`Your fastest cave: ${fastest} seconds. You didn't even TRY to resist.`);
-      messages.push(`${fastest} seconds. That's your record. My pig broke in ${fastest} seconds. Hilarious.`);
+      messages.push(`My pig broke in ${fastest} seconds. ${fastest}. Hilarious.`);
     } else if (fastest < 120) {
       const m = Math.floor(fastest / 60);
       messages.push(`Fastest cave: ${m} minute${m > 1 ? "s" : ""}. Barely a fight. Weak piggy.`);
@@ -80,17 +80,17 @@ export function getPersonalizedShame(usage) {
   if (usage.averageCaveTime > 0 && usage.caveTimeSamples >= 3) {
     const avg = Math.floor(usage.averageCaveTime / 60);
     if (avg < 5) {
-      messages.push(`Average resistance: ${avg} minutes. You barely put up a fight, piggy.`);
+      messages.push(`${avg} minutes on average before you cave. Barely a fight, piggy.`);
     } else if (avg < 30) {
       messages.push(`You last about ${avg} minutes on average before caving. Predictable pig.`);
     } else {
-      messages.push(`Average holdout: ${avg} minutes. Decent for a pig. But you always break eventually.`);
+      messages.push(`${avg} minutes average holdout. Cute. You still always break, piggy.`);
     }
   }
 
   // --- Total stats shaming ---
   if (usage.totalUnlocks >= 50) {
-    messages.push(`${usage.totalUnlocks} total unlocks. You're not a user anymore. You're livestock.`);
+    messages.push(`${usage.totalUnlocks} total unlocks. Actual livestock behavior, piggy.`);
   } else if (usage.totalUnlocks >= 20) {
     messages.push(`${usage.totalUnlocks} unlocks so far. Your master is building quite the record on you.`);
   } else if (usage.totalUnlocks >= 5) {
@@ -105,7 +105,7 @@ export function getPersonalizedShame(usage) {
   const today = new Date().toISOString().slice(0, 10);
   const todayOpens = usage.dailyOpenCounts?.[today] || 0;
   if (todayOpens >= 10) {
-    messages.push(`You've opened this app ${todayOpens} times today. ${todayOpens} times. Let that sink in.`);
+    messages.push(`${todayOpens} times today. You opened this app ${todayOpens} times today, piggy. Wow.`);
   } else if (todayOpens >= 5) {
     messages.push(`${todayOpens} times today, piggy. You keep coming back. Can't help yourself.`);
   }

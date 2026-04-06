@@ -234,7 +234,7 @@ export const MASTER_COMMANDS = [
   "Your coins exist to feed your master. Accept that, pet.",
   "The pig always pays. Always. That's the only rule.",
   "More coins. More tributes. More obedience. That's your life now, piggy.",
-  "You're not quitting. You're a pig and pigs don't quit. They wallow.",
+  "Quit? Pigs don't quit, piggy. Pigs wallow.",
   "One day you'll try to delete me. But you won't. Because I own you.",
   "Piggy always pays.",
   "Be a good pig. Open the app. Pay the coins. Repeat.",
