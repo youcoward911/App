@@ -216,7 +216,7 @@ export default function HomeScreen({ navigation }) {
     const countdown = getCountdown(item.id);
     const showX = deleteMode === item.id && !locked;
     return (
-      <WiggleWrap wiggle={showX}>
+      <WiggleWrap wiggle={showX} style={{ width: CARD_W + CARD_SPACING }}>
       <TouchableOpacity
         style={[styles.carouselCard, NEU_RAISED]}
         activeOpacity={0.9}
