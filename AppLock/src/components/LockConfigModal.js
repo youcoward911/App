@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
 import { DURATION_PRESETS, FEE_TIERS } from "../context/AppLockContext";
@@ -118,8 +119,19 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
           )}
 
           {/* Fee Section */}
-          <Text style={[styles.sectionLabel, { marginTop: 20 }]}>UNLOCK FEES</Text>
-          <Text style={styles.feeExplain}>Peek (1 min) / Full unlock</Text>
+          <View style={styles.feeLabelRow}>
+            <Text style={[styles.sectionLabel, { marginTop: 20 }]}>SET PEEK / FULL UNLOCK COST</Text>
+            <TouchableOpacity
+              style={[styles.infoBtn, { marginTop: 20 }]}
+              onPress={() => Alert.alert(
+                "Peek vs Full Unlock",
+                "Peek lets you use the app for 1 minute, then it locks again. Full unlock removes the lock permanently.\n\nPeek cost doubles after each peek during the same lock session (1 → 2 → 4 → 8...). Full unlock always costs 10x the base peek price.",
+                [{ text: "Got it" }]
+              )}
+            >
+              <Text style={styles.infoBtnText}>?</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.presetRow}>
             {FEE_TIERS.map((t, i) => (
               <TouchableOpacity
@@ -132,15 +144,6 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
-          <View style={styles.feeSummary}>
-            <Text style={styles.feeSummaryText}>
-              Peek: {FEE_TIERS[feeIdx].peek} coin{FEE_TIERS[feeIdx].peek > 1 ? "s" : ""} for 1 min
-            </Text>
-            <Text style={styles.feeSummaryText}>
-              Full unlock: {FEE_TIERS[feeIdx].full} coins (permanent)
-            </Text>
-            <Text style={styles.feeSummaryHint}>Peek cost doubles each time</Text>
           </View>
 
           {/* Selected time callout */}
@@ -262,30 +265,22 @@ const styles = StyleSheet.create({
     zIndex: 1,
     pointerEvents: "none",
   },
-  feeExplain: {
-    ...T.caption,
-    marginBottom: 10,
-    fontStyle: "italic",
+  feeLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  feeSummary: {
-    marginTop: 10,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: C.white,
-    ...NEU_RAISED,
+  infoBtn: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: C.pinkPale,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  feeSummaryText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: C.text,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  feeSummaryHint: {
-    ...T.caption,
-    fontStyle: "italic",
-    marginTop: 4,
+  infoBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
     color: C.pink,
   },
   selectedTimeWrap: {
