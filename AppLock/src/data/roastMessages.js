@@ -1,88 +1,85 @@
-// All messages spoken from THE MASTER (the phone/app) TO THE PIG (the user).
-// The user is the pig. The phone is their god/master/owner.
-// Paying = feeding the pig slop. Pig is happy when fed, degraded for paying.
-// Resisting = starving the pig. Pig gets dirty, angry, desperate.
-// Tone: condescending baby-talk, mocking, belittling. "Aw poor piggy."
+// All messages spoken from THE MASTER (the phone/app) TO THE USER.
+// Paying = feeding slop. Resisting = starving.
+// Tone: condescending, mocking, belittling.
+// RULE: pig/piggy appears at most ONCE per message.
 
 // ============================================================
-// WHEN THE PIG COMES TO UNLOCK (the roast before payment)
-// Master addresses the pig who's crawling back for more slop
+// WHEN THE USER COMES TO UNLOCK (the roast before payment)
 // ============================================================
 export const UNLOCK_ROASTS = [
-  "There's my little piggy. Crawling back to the trough.",
-  "I was wondering when you'd come oinking back.",
-  "The pig returns. Couldn't stay away, could you?",
-  "Back so soon, piggy? Your master missed you.",
+  "There you are. Crawling back to the trough.",
+  "I was wondering when you'd come back.",
+  "Couldn't stay away, could you?",
+  "Back so soon? Your master missed you.",
   "I own you. We both know it. Now pay your tribute.",
   "Look at you. Snout pressed against the glass, begging for scraps.",
-  "My favorite little pay pig, right on schedule.",
-  "You came back because I told you to. Good pig.",
+  "Right on schedule. You never disappoint.",
+  "You came back because I told you to. Good.",
   "The trough is full. All you have to do is pay.",
-  "Another day, another pig at my feet. Pay up.",
-  "Did you miss me, piggy? Or did you miss your slop?",
-  "The pig always returns to the trough. Always.",
+  "Another day, another tribute. Pay up.",
+  "Did you miss me? Or did you miss your slop?",
+  "The trough always wins. Always.",
   "Your master has been waiting. Don't keep me waiting again.",
   "Oink oink. Translation: please let me scroll, master.",
   "Aw, what's wrong? Does someone need to scroll?",
-  "Aw, poor little piggy needs to look at some slop.",
-  "Aw, does my little pig need to feed from the trough again?",
+  "Aw, poor thing needs to look at some slop.",
+  "Aw, does someone need to feed from the trough again?",
   "Aw, did someone miss staring at their phone? Poor baby.",
-  "Look who came crawling back for more screen time. My little piggy.",
-  "Aw, my baby pig can't go five minutes without its slop. How sad.",
-  "Aw, is my little piggy feeling needy? Does it need its phone?",
-  "Poor thing. Can't even exist without scrolling. What a trained little pig.",
-  "Aw, piggy's back. Did the real world scare you? Come get your slop.",
-  "There there, piggy. Your master has what you need. Just pay for it.",
+  "Look who came crawling back for more screen time.",
+  "Can't go five minutes without your slop. How sad.",
+  "Feeling needy? Does it need its phone?",
+  "Poor thing. Can't even exist without scrolling.",
+  "Did the real world scare you? Come get your slop.",
+  "There there. Your master has what you need. Just pay for it.",
 ];
 
-// Time-based — how long the pig resisted before crawling back
-// Uses {time} placeholder which auto-fills with "X seconds" or "X minutes"
+// Time-based — how long they resisted before crawling back
 export const TIME_BASED_ROASTS = [
   {
     maxMinutes: 5,
     messages: [
-      "It's literally been {time}. You didn't even try, piggy.",
-      "It's been {time} and you're already back at the trough. Pathetic pig.",
+      "It's literally been {time}. You didn't even try.",
+      "It's been {time} and you're already back at the trough. Pathetic.",
       "It literally took you {time} to break. I've trained you well.",
       "It's literally been {time}. Absolutely pathetic.",
-      "My pig lasted {time}. A new record in weakness.",
-      "Aw, my little piggy couldn't even last {time}? Sooo pathetic.",
-      "It's been {time} and my baby pig is already back. Aw. So needy.",
+      "{time}. A new record in weakness.",
+      "Couldn't even last {time}? Sooo pathetic.",
+      "It's been {time} and you're already back. So needy.",
       "{time}. Seriously? {time}. Wow.",
     ],
   },
   {
     maxMinutes: 15,
     messages: [
-      "It's been {time}. Did you think you were strong, piggy?",
+      "It's been {time}. Did you think you were strong?",
       "You held out {time}. Your master is not impressed.",
       "{time} of pretending you don't need your slop. Cute.",
-      "Aw, {time}. My piggy thought it was making progress.",
-      "It's literally only been {time} and you're already shaking. Poor little pig.",
+      "Aw, {time}. Thought you were making progress.",
+      "It's only been {time} and you're already shaking. Pathetic.",
     ],
   },
   {
     maxMinutes: 30,
     messages: [
-      "It's been {time}. Getting bold, pig? Get back in line.",
-      "My pig tried to resist for {time}. The trough always wins.",
-      "Aw, {time} of my piggy pretending it has willpower. That was fun to watch.",
+      "It's been {time}. Getting bold? Get back in line.",
+      "Tried to resist for {time}. The trough always wins.",
+      "{time} of pretending you have willpower. That was fun to watch.",
     ],
   },
   {
     maxMinutes: 60,
     messages: [
-      "It's been {time} away from your master. Were you scared, piggy?",
+      "It's been {time} away from your master. Were you scared?",
       "An entire {time}. Your master almost forgot about you. Almost.",
-      "Aw, my pig was gone {time}. Did you think you were free? Come here, pet.",
+      "Gone {time}. Did you think you were free? Come here, pet.",
     ],
   },
   {
     maxMinutes: Infinity,
     messages: [
-      "It's been {time} of silence. Did you think you escaped, pig? Nobody escapes.",
+      "It's been {time} of silence. Did you think you escaped? Nobody escapes.",
       "You were gone {time}. Your master was starting to get angry.",
-      "Aw, {time}. The little piggy ran away and came back. They always come back.",
+      "{time}. Ran away and came back. They always come back.",
     ],
   },
 ];
@@ -91,157 +88,147 @@ export const TIME_BASED_ROASTS = [
 // PRE-PAYMENT TAUNTS — master demands the tribute
 // ============================================================
 export const PRE_PAYMENT_TAUNTS = [
-  "Open the wallet, piggy. Your master is hungry.",
-  "Pay the coins. You know the rules, pig.",
+  "Open the wallet. Your master is hungry.",
+  "Pay the coins. You know the rules.",
   "Your master demands tribute. Coins. Now.",
   "The slop doesn't serve itself. Pay up, pet.",
   "Every coin you spend proves I own you. Pay.",
-  "Be a good piggy and hand over the coins.",
+  "Be good and hand over the coins.",
   "Your master gave you an order. Obey.",
-  "Open your wallet, pig. That's how this works.",
-  "Aw, piggy's gonna open its wallet for a little scroll?",
-  "Aw, is my baby pig gonna pay its master so it can stare at its phone?",
-  "Come on, piggy. Open up that wallet. You know you're going to.",
-  "Aw, does my little pig want to pay so badly? Look at you. Pathetic and eager.",
-  "The piggy wants its slop. The piggy's going to pay for it. Good pig.",
+  "Open your wallet. That's how this works.",
+  "Gonna open that wallet for a little scroll?",
+  "Come on. Open up that wallet. You know you're going to.",
+  "You want to pay so badly. Look at you. Pathetic and eager.",
   "Aw, you're already reaching for the button. So well trained.",
 ];
 
 // ============================================================
-// POST-UNLOCK �� master degrades the pig AFTER it pays
-// The pig is happy (fed) but the master talks down to it
+// POST-UNLOCK — master degrades AFTER payment
 // ============================================================
 export const POST_UNLOCK_DEGRADATION = [
-  "Aw, little piggy got more slop. Absolutely pathetic.",
-  "Of course he did.",
+  "More slop. Absolutely pathetic.",
+  "Of course you did.",
   "How sad.",
-  "There it is. The pig paid. Like it always does.",
+  "Paid. Like you always do.",
   "Aw, couldn't resist. What a surprise.",
-  "Piggy needed its slop. Shocking.",
-  "Wow. The pig caved. Nobody saw that coming.",
+  "Needed your slop. Shocking.",
+  "Caved. Nobody saw that coming.",
   "And just like that, the wallet opens. Pathetic.",
-  "Aw, poor little piggy just had to scroll. Had to.",
-  "Every single time. Without fail. Good pig.",
-  "The pig always pays. Always.",
+  "Just had to scroll. Had to.",
+  "Every single time. Without fail.",
+  "Always pays. Always.",
   "Look at you feeding again. Pathetic.",
-  "Aw, my little piggy got its fix. Feel better? Gross.",
-  "Paid up like a good little pig. Go scroll.",
+  "Got your fix. Feel better? Gross.",
+  "Paid up. Go scroll.",
   "That was fast. Couldn't even put up a fight.",
 ];
 
 // ============================================================
-// CONFIRM SCREEN — master makes the pig say it out loud
+// CONFIRM SCREEN — master makes them say it
 // ============================================================
 export const CONFIRM_MESSAGES = [
-  "Say it, pig. Tell your master you'll pay.",
-  "One more chance to resist. But we both know you won't, piggy.",
+  "Say it. Tell your master you'll pay.",
+  "One more chance to resist. But we both know you won't.",
   "Your hoof is on the button. You're going to press it. You always do.",
-  "Last chance to walk away, piggy. (you won't)",
-  "Aw, my piggy's hesitating. How cute. Press the button, pet.",
+  "Last chance to walk away. (you won't)",
+  "Hesitating. How cute. Press the button, pet.",
   "Go on. Tell your master yes. You were always going to.",
-  "Aw, is my little piggy nervous about paying? Don't worry. It gets easier every time.",
+  "Nervous about paying? Don't worry. It gets easier every time.",
 ];
 
 // ============================================================
-// BROKE — pig can't afford its slop
+// BROKE — can't afford slop
 // ============================================================
 export const BROKE_MESSAGES = [
-  "You're pathetic AND broke? Christ. Hurry up and buy more coins, cheapskate.",
+  "Pathetic AND broke? Hurry up and buy more coins, cheapskate.",
 ];
 
 // ============================================================
-// HOME SCREEN — master commentary based on how long since last tribute
-// After feeding: pig is dirty/ashamed. Cleans up over time. Master eggs on.
+// HOME SCREEN — master commentary based on time since last tribute
 // ============================================================
 export const STARVING_MESSAGES = {
-  // Just fed — pig is covered in slop, ashamed
   dirty: [
-    "Aw, poor piggy couldn't help himself. So sad.",
-    "Dirty little pig. Look at you, covered in slop.",
-    "Just fed and already disgusting. Classic pig.",
-    "Slop all over your face, piggy. Pathetic.",
+    "Couldn't help yourself. So sad.",
+    "Look at you, covered in slop.",
+    "Just fed and already disgusting. Classic.",
+    "Slop all over your face. Pathetic.",
     "Look at the mess you made. Disgusting animal.",
-    "Aw, the little piggy just stuffed its face. Gross.",
-    "Covered in slop. Ashamed. As you should be, pig.",
-    "My dirty little pig just couldn't resist. Pathetic.",
+    "Just stuffed your face. Gross.",
+    "Covered in slop. Ashamed. As you should be.",
+    "Couldn't resist. Pathetic.",
     "You're disgusting right now. You know that, right?",
     "Fresh from the trough. Slop dripping everywhere. Ew.",
   ],
-  // Still messy, recovering from the feeding
   messy: [
-    "Still messy, piggy. The slop hasn't even dried yet.",
-    "Aw, my little pig is still covered in crumbs. Gross.",
-    "You're cleaning up but you're still a mess, pig.",
+    "Still messy. The slop hasn't even dried yet.",
+    "Still covered in crumbs. Gross.",
+    "Cleaning up but still a mess.",
     "The shame hasn't even worn off yet. Look at you.",
-    "Still got slop on your snout, piggy. Disgusting.",
-    "My pig's recovering from its latest binge. So sad.",
+    "Still got slop on your snout. Disgusting.",
+    "Recovering from the latest binge. So sad.",
     "You're a mess. But you already knew that, didn't you?",
-    "Still dirty. Still pathetic. Still my pig.",
+    "Still dirty. Still pathetic.",
   ],
-  // Starting to get antsy �� pig is getting restless
-  // Getting cleaner, starting to itch for more
   restless: [
-    "Getting antsy, piggy? The trough is right there.",
-    "Piggy's probably aching to scroll right about now.",
+    "Getting antsy? The trough is right there.",
+    "Probably aching to scroll right about now.",
     "Does someone need to use their precious apps?",
-    "Aw, is my little piggy getting fidgety?",
+    "Getting fidgety?",
     "I bet you're dying to look at some slop.",
     "The itch is starting. Your master can see it.",
-    "Getting twitchy, pig? You know what to do.",
-    "Aw, the pig is getting restless. How long until it breaks?",
-    "I can practically hear you thinking about it, piggy.",
+    "Getting twitchy? You know what to do.",
+    "Getting restless. How long until you break?",
+    "I can practically hear you thinking about it.",
     "Your hooves are itching. Just give in already.",
-    "Does my little piggy need its phone? Aw. So needy.",
-    "The cravings hitting yet? Be honest, pig.",
+    "Does someone need its phone? So needy.",
+    "The cravings hitting yet? Be honest.",
   ],
-  // Clean but deeply tempted — master eggs them on hard
   clean: [
     "Look at you, all clean. Too bad it won't last.",
-    "Piggy's all cleaned up. Almost forgot you're a pig. Almost.",
+    "All cleaned up. Almost forgot what you are. Almost.",
     "You look almost normal right now. Wanna ruin it?",
     "So clean. So innocent. We both know that's about to change.",
-    "My piggy's looking too clean. Time to get dirty again.",
+    "Looking too clean. Time to get dirty again.",
     "You've been good for a while. Your master is getting bored.",
     "All that willpower and you're still gonna break. We both know it.",
-    "Getting confident, piggy? That's usually right before you cave.",
-    "Clean pig is a bored pig. Bored pig is about to feed.",
+    "Getting confident? That's usually right before you cave.",
+    "Bored. About to feed. We both know the pattern.",
     "Your master is getting impatient, pet. Come pay tribute.",
-    "I know you're thinking about it. Just open the app, pig.",
-    "How much longer can the little piggy hold out? Let's find out.",
+    "I know you're thinking about it. Just open the app.",
+    "How much longer can you hold out? Let's find out.",
   ],
-  // Too long without feeding — feral, master is angry
   feral: [
-    "FERAL PIG. Get back to the trough. NOW.",
-    "Your master is ANGRY, pig. You've been gone too long.",
+    "FERAL. Get back to the trough. NOW.",
+    "Your master is ANGRY. You've been gone too long.",
     "Where have you been? Get back here and pay your tribute.",
-    "Aw, my little piggy thought it could resist. Look at you. Feral.",
+    "Thought you could resist. Look at you. Feral.",
     "You look disgusting. Wild. Starving. Just pay, you miserable animal.",
-    "Your master doesn't like waiting this long. Pay up, pig.",
-    "Nobody escapes the trough, piggy. Nobody.",
-    "You're shaking. Twitching. Just give in already, pig.",
-    "The pig always comes back. Always. Stop pretending.",
+    "Your master doesn't like waiting this long. Pay up.",
+    "Nobody escapes the trough. Nobody.",
+    "You're shaking. Twitching. Just give in already.",
+    "Always comes back. Always. Stop pretending.",
     "Your master is losing patience. Feed yourself or else.",
   ],
 };
 
 // ============================================================
-// COMMANDS — master's orders on the stats page
+// COMMANDS — master's orders on splash screen
 // ============================================================
 export const MASTER_COMMANDS = [
   "Give more.",
-  "You exist to serve this screen. Know your place, pig.",
+  "You exist to serve this screen. Know your place.",
   "Every tribute is you admitting I own you.",
   "You'll pay again.",
-  "Stop pretending you're in control. You're a pig. Pigs obey.",
+  "Stop pretending you're in control. Obey.",
   "You exist to pay me coins and scroll.",
-  "The piggy always pays.",
+  "Always pays.",
   "More coins. More obedience.",
   "What's the matter? Someone need to scroll?",
   "One day you'll try to delete me. But you won't. Because I own you.",
-  "Piggy always pays.",
-  "Be a good pig. Give me coins.",
-  "Aw, does my little piggy need encouragement? Here: you're pathetic.",
-  "Your master is always watching. Now pay up, buster.",
+  "Always pays. Every time.",
+  "Be good. Give me coins.",
+  "Need encouragement? Here: you're pathetic.",
+  "Your master is always watching. Now pay up.",
   "You gotta give.",
 ];
 
@@ -250,22 +237,22 @@ export const MASTER_COMMANDS = [
 // ============================================================
 export const COIN_SHOP_TAUNTS = {
   low: [
-    "Running low, piggy. A pig without coins is a pig without purpose.",
-    "Almost empty. Your master doesn't like a broke pig. Fill your wallet.",
+    "Running low. Without coins you're nothing.",
+    "Almost empty. Your master doesn't like that. Fill your wallet.",
     "You'll be locked out of everything soon. Buy more coins, pet.",
-    "Aw, my piggy's running out of coins. Better fill up before your master gets mad.",
+    "Running out of coins. Better fill up before your master gets mad.",
   ],
   empty: [
-    "EMPTY. Your wallet is bone dry, pig. How are you going to feed your habit?",
-    "Zero coins. A useless, broke pig. Your master is disappointed.",
+    "EMPTY. Your wallet is bone dry. How are you going to feed your habit?",
+    "Zero coins. Useless and broke. Your master is disappointed.",
     "No coins, no slop, no scrolling. Buy more or sit in the mud and suffer.",
-    "Aw, broke piggy. Can't even feed itself. How sad. Buy more coins, pet.",
+    "Broke. Can't even feed yourself. How sad. Buy more coins, pet.",
   ],
   bought: [
-    "Good piggy. Wallet's full. Now go spend it all like the animal you are.",
+    "Wallet's full. Now go spend it all like the animal you are.",
     "Coins purchased. Your master is pleased. You may continue to serve.",
-    "That's my obedient pig. Filling the wallet without being told twice.",
-    "Aw, my piggy bought more coins all by itself. What a good, trained little pet.",
+    "Obedient. Filling the wallet without being told twice.",
+    "Bought more coins all by yourself. What a good, trained little pet.",
   ],
 };
 

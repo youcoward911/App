@@ -19,13 +19,13 @@ export function getPersonalizedShame(usage) {
     const name = appName(topApp);
 
     if (topCount >= 20) {
-      messages.push(`${name} owns you. ${topCount} unlocks. You're obsessed, piggy.`);
-      messages.push(`${topCount} times you've crawled back to ${name}. You're on a leash, piggy.`);
+      messages.push(`${name} owns you. ${topCount} unlocks. You're obsessed.`);
+      messages.push(`${topCount} times you've crawled back to ${name}. You're on a leash.`);
     } else if (topCount >= 10) {
-      messages.push(`My pig and ${name}. ${topCount} unlocks. Obsessed.`);
-      messages.push(`My pig can't stay away from ${name}. ${topCount} times. Pathetic.`);
+      messages.push(`You and ${name}. ${topCount} unlocks. Obsessed.`);
+      messages.push(`Can't stay away from ${name}. ${topCount} times. Pathetic.`);
     } else if (topCount >= 3) {
-      messages.push(`Already ${topCount} unlocks on ${name}. Getting attached, piggy?`);
+      messages.push(`Already ${topCount} unlocks on ${name}. Getting attached?`);
       messages.push(`${name} keeps pulling you back. ${topCount} times now. Weak.`);
     }
 
@@ -34,7 +34,7 @@ export function getPersonalizedShame(usage) {
       const [secondApp, secondCount] = appEntries[1];
       const secondName = appName(secondApp);
       if (topCount > secondCount * 2) {
-        messages.push(`You open ${name} twice as much as ${secondName}. Your master sees the pattern, pig.`);
+        messages.push(`You open ${name} twice as much as ${secondName}. Your master sees the pattern.`);
       }
     }
   }
@@ -49,16 +49,16 @@ export function getPersonalizedShame(usage) {
     const display = peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour;
 
     if (peakHour >= 22 || peakHour < 4) {
-      messages.push(`${display} ${period}. That's your witching hour, piggy. ${peakCount} late-night scrolls.`);
+      messages.push(`${display} ${period}. That's your witching hour. ${peakCount} late-night scrolls.`);
       messages.push(`Scrolling at ${display} ${period}? Can't even sleep without your slop.`);
-      messages.push(`My pig scrolls at ${display} ${period} like clockwork. Pathetic.`);
+      messages.push(`Scrolling at ${display} ${period} like clockwork. Pathetic.`);
     } else if (peakHour >= 6 && peakHour < 9) {
       messages.push(`${display} ${period}. First thing in the morning. Can't even start your day without slop.`);
-      messages.push(`Morning piggy. ${peakCount} unlocks at ${display} ${period}. You reach for your phone before your own life.`);
+      messages.push(`Morning feeding. ${peakCount} unlocks at ${display} ${period}. You reach for your phone before your own life.`);
     } else if (peakHour >= 12 && peakHour < 14) {
       messages.push(`Lunch break scrolling at ${display} ${period}. ${peakCount} times. Your master owns your free time.`);
     } else {
-      messages.push(`Peak feeding time: ${display} ${period}. Your master knows your schedule now, piggy.`);
+      messages.push(`Peak feeding time: ${display} ${period}. Your master knows your schedule now.`);
     }
   }
 
@@ -67,10 +67,10 @@ export function getPersonalizedShame(usage) {
     const fastest = usage.fastestCave;
     if (fastest < 30) {
       messages.push(`Your fastest cave: ${fastest} seconds. You didn't even TRY to resist.`);
-      messages.push(`My pig broke in ${fastest} seconds. ${fastest}. Hilarious.`);
+      messages.push(`Broke in ${fastest} seconds. ${fastest}. Hilarious.`);
     } else if (fastest < 120) {
       const m = Math.floor(fastest / 60);
-      messages.push(`Fastest cave: ${m} minute${m > 1 ? "s" : ""}. Barely a fight. Weak piggy.`);
+      messages.push(`Fastest cave: ${m} minute${m > 1 ? "s" : ""}. Barely a fight.`);
     } else if (fastest < 600) {
       const m = Math.floor(fastest / 60);
       messages.push(`Your fastest cave was ${m} minutes. You thought about it and STILL caved.`);
@@ -80,41 +80,41 @@ export function getPersonalizedShame(usage) {
   if (usage.averageCaveTime > 0 && usage.caveTimeSamples >= 3) {
     const avg = Math.floor(usage.averageCaveTime / 60);
     if (avg < 5) {
-      messages.push(`${avg} minutes on average before you cave. Barely a fight, piggy.`);
+      messages.push(`${avg} minutes on average before you cave. Barely a fight.`);
     } else if (avg < 30) {
-      messages.push(`You last about ${avg} minutes on average before caving. Predictable pig.`);
+      messages.push(`You last about ${avg} minutes on average before caving. Predictable.`);
     } else {
-      messages.push(`${avg} minutes average holdout. Cute. You still always break, piggy.`);
+      messages.push(`${avg} minutes average holdout. Cute. You still always break.`);
     }
   }
 
   // --- Total stats shaming ---
   if (usage.totalUnlocks >= 50) {
-    messages.push(`${usage.totalUnlocks} total unlocks. Actual livestock behavior, piggy.`);
+    messages.push(`${usage.totalUnlocks} total unlocks. Actual livestock behavior.`);
   } else if (usage.totalUnlocks >= 20) {
     messages.push(`${usage.totalUnlocks} unlocks so far. Your master is building quite the record on you.`);
   } else if (usage.totalUnlocks >= 5) {
-    messages.push(`${usage.totalUnlocks} unlocks. The pattern is already set, piggy.`);
+    messages.push(`${usage.totalUnlocks} unlocks. The pattern is already set.`);
   }
 
   if (usage.totalCoinsSpent >= 100) {
-    messages.push(`${usage.totalCoinsSpent} coins spent. That's a lot of slop, piggy.`);
+    messages.push(`${usage.totalCoinsSpent} coins spent. That's a lot of slop.`);
   }
 
   // --- Today's opens ---
   const today = new Date().toISOString().slice(0, 10);
   const todayOpens = usage.dailyOpenCounts?.[today] || 0;
   if (todayOpens >= 10) {
-    messages.push(`${todayOpens} times today. You opened this app ${todayOpens} times today, piggy. Wow.`);
+    messages.push(`${todayOpens} times today. You opened this app ${todayOpens} times today. Wow.`);
   } else if (todayOpens >= 5) {
-    messages.push(`${todayOpens} times today, piggy. You keep coming back. Can't help yourself.`);
+    messages.push(`${todayOpens} times today. You keep coming back. Can't help yourself.`);
   }
 
   // --- Streak shaming ---
   if (usage.streakDays >= 7) {
-    messages.push(`${usage.streakDays}-day feeding streak. You haven't missed a single day, pig.`);
+    messages.push(`${usage.streakDays}-day feeding streak. You haven't missed a single day.`);
   } else if (usage.streakDays >= 3) {
-    messages.push(`${usage.streakDays} days straight. The pig feeds daily now.`);
+    messages.push(`${usage.streakDays} days straight. Feeding daily now.`);
   }
 
   // --- Day of week ---
