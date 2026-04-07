@@ -506,9 +506,6 @@ export default function UnlockScreen({ route, navigation }) {
               <Text style={styles.peekTimerValue}>{peekCountdown}</Text>
               <Text style={styles.peekTimerUnit}>seconds</Text>
               <Text style={styles.peekShameText}>{peekShame}</Text>
-              <Text style={styles.peekSubText}>
-                You have {peekCountdown} second{peekCountdown !== 1 ? "s" : ""} of weakness left.
-              </Text>
             </View>
           )}
 
