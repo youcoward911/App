@@ -414,7 +414,7 @@ export default function HomeScreen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => navigation.navigate("AddApps")}
             >
-              <Text style={styles.primaryBtnText}>Lock More Slop</Text>
+              <Text style={styles.primaryBtnText}>Lock Some Slop</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
   // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: 0, paddingVertical: 2, paddingHorizontal: 20 },
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: -4, paddingVertical: 2, paddingHorizontal: 20 },
   dot: {
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: C.pinkPale, marginHorizontal: 4,
