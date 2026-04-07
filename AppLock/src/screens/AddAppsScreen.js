@@ -5,8 +5,8 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS, CATEGORIES } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";

@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { C, T, NEU_RAISED } from "../utils/theme";
 import { getCityLeaderboard, getGlobalLeaderboard, getUserRank } from "../utils/leaderboard";
 import { ensureAuth } from "../utils/firebase";
