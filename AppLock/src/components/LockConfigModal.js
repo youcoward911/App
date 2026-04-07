@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
 import { DURATION_PRESETS, FEE_TIERS } from "../context/AppLockContext";
@@ -24,7 +25,7 @@ for (let m = 15; m <= 480; m += 15) {
 }
 
 const ITEM_HEIGHT = 44;
-const VISIBLE_ITEMS = 5;
+const VISIBLE_ITEMS = 3;
 const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
 export default function LockConfigModal({ visible, onClose, onConfirm, appName }) {
@@ -64,6 +65,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
+          <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <Text style={styles.title}>Lock {appName}</Text>
 
           {/* Duration Section */}
@@ -157,6 +159,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
             />
             <GlowButton title="Nevermind" ghost onPress={onClose} />
           </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
