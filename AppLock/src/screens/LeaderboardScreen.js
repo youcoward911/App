@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getPigWeight } from "../utils/pigWeight";
 import { C, T, NEU_RAISED } from "../utils/theme";
 import { getCityLeaderboard, getGlobalLeaderboard, getUserRank } from "../utils/leaderboard";
 import { ensureAuth } from "../utils/firebase";
@@ -62,11 +63,12 @@ export default function LeaderboardScreen() {
         <Text style={styles.rank}>{medal}</Text>
         <View style={styles.rowInfo}>
           <Text style={[styles.rowName, isMe && styles.rowNameMe]}>
+            {item.weightEmoji || getPigWeight(item.totalCoinsSpent || 0).emoji}{" "}
             {item.pigName || "Anonymous Pig"}
             {isMe ? " (YOU)" : ""}
           </Text>
           <Text style={styles.rowSub}>
-            {item.totalUnlocks || 0} tribute{item.totalUnlocks === 1 ? "" : "s"}
+            {item.weightLabel || getPigWeight(item.totalCoinsSpent || 0).label} · {item.totalUnlocks || 0} tribute{item.totalUnlocks === 1 ? "" : "s"}
           </Text>
         </View>
         <View style={styles.coinWrap}>

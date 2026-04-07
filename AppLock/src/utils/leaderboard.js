@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { db, ensureAuth } from "./firebase";
 import { getUserCity } from "./location";
+import { getPigWeight } from "./pigWeight";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PIG_NAMES_KEY = "@scrollpig_pigname";
@@ -58,11 +59,15 @@ export async function updateLeaderboard(totalCoinsSpent, totalUnlocks) {
     const location = await getUserCity();
     const pigName = await getPigName();
 
+    const weight = getPigWeight(totalCoinsSpent);
     const data = {
       uid: user.uid,
       pigName,
       totalCoinsSpent,
       totalUnlocks,
+      weightKey: weight.key,
+      weightLabel: weight.label,
+      weightEmoji: weight.emoji,
       city: location?.city || "Unknown",
       state: location?.state || "",
       country: location?.country || "",

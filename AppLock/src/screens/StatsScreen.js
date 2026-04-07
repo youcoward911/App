@@ -12,6 +12,7 @@ import { useAppLock } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import { POPULAR_APPS } from "../data/defaultApps";
 import { getFullUsage, formatCaveTime } from "../utils/usageTracker";
+import { getPigWeight, getWeightProgress, WEIGHT_TIERS } from "../utils/pigWeight";
 import { C, T, NEU_RAISED } from "../utils/theme";
 
 function appName(appId) {
@@ -57,7 +58,7 @@ export default function StatsScreen() {
 
         {/* Pig Rank */}
         <View style={[styles.heroCard, NEU_RAISED]}>
-          <PigMascot size={70} mood={state.totalUnlocks > 15 ? "happy" : "restless"} />
+          <PigMascot size={70} mood={state.totalUnlocks > 15 ? "happy" : "restless"} weight={getPigWeight(state.totalCoinsSpent).key} />
           <Text style={styles.heroLabel}>PIG RANK</Text>
           <Text style={[styles.heroValue, { color: rank.color }]}>
             {rank.label}
@@ -68,6 +69,34 @@ export default function StatsScreen() {
             />
           </View>
         </View>
+
+        {/* Pig Weight Evolution */}
+        {(() => {
+          const wt = getPigWeight(state.totalCoinsSpent);
+          const wp = getWeightProgress(state.totalCoinsSpent);
+          const wtIdx = WEIGHT_TIERS.findIndex((t) => t.key === wt.key);
+          const nextTier = wtIdx >= 0 && wtIdx < WEIGHT_TIERS.length - 1 ? WEIGHT_TIERS[wtIdx + 1] : null;
+          return (
+            <View style={[styles.sectionCard, NEU_RAISED]}>
+              <Text style={styles.sectionTitle}>PIG WEIGHT</Text>
+              <Text style={styles.sectionSub}>Grows fatter with every coin spent</Text>
+              <View style={styles.weightHero}>
+                <Text style={styles.weightEmoji}>{wt.emoji}</Text>
+                <Text style={styles.weightTier}>{wt.label}</Text>
+              </View>
+              <View style={styles.meterTrack}>
+                <View style={[styles.meterFill, { width: `${wp * 100}%`, backgroundColor: C.pink }]} />
+              </View>
+              {nextTier ? (
+                <Text style={styles.weightNext}>
+                  Next: {nextTier.emoji} {nextTier.label} at {nextTier.minCoins} coins
+                </Text>
+              ) : (
+                <Text style={styles.weightNext}>MAX TIER. Absolute unit.</Text>
+              )}
+            </View>
+          );
+        })()}
 
         {/* Tributes row */}
         <View style={styles.statRow}>
@@ -222,6 +251,12 @@ const styles = StyleSheet.create({
   weakLabel: { ...T.body, fontSize: 14 },
   weakVal: { ...T.bodyBold, fontSize: 15 },
   divider: { height: 1, backgroundColor: C.divider, marginVertical: 6 },
+
+  // Weight evolution
+  weightHero: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 },
+  weightEmoji: { fontSize: 28 },
+  weightTier: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
+  weightNext: { ...T.caption, textAlign: "center", marginTop: 8, fontWeight: "600" },
 
   footer: {
     ...T.caption,

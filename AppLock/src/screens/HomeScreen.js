@@ -19,6 +19,7 @@ import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
+import { getPigWeight, getWeightProgress } from "../utils/pigWeight";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 let Haptics = null;
@@ -354,10 +355,16 @@ export default function HomeScreen({ navigation }) {
 
         {/* Pig mascot + tribute clock — compact horizontal */}
         <View style={[styles.pigCard, NEU_RAISED]}>
-          <PigMascot size={70} mood={pigMood} />
+          <View style={styles.pigMascotWrap}>
+            <PigMascot size={70} mood={pigMood} weight={getPigWeight(state.totalCoinsSpent).key} showSpeech />
+          </View>
           <View style={styles.tributeClockWrap}>
             <Text style={styles.tributeLabel}>LAST FEEDING</Text>
             <Text style={styles.tributeTime}>{tribute.text}</Text>
+            <View style={styles.weightRow}>
+              <Text style={styles.weightEmoji}>{getPigWeight(state.totalCoinsSpent).emoji}</Text>
+              <Text style={styles.weightLabel}>{getPigWeight(state.totalCoinsSpent).label}</Text>
+            </View>
             <Text style={styles.moodMsg}>{moodMessage}</Text>
           </View>
         </View>
@@ -461,15 +468,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginHorizontal: 24,
     paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+    minHeight: 110,
   },
+  pigMascotWrap: { width: 100, alignItems: "center", justifyContent: "flex-end" },
   tributeClockWrap: { flex: 1, marginLeft: 16 },
   tributeLabel: { ...T.label, marginBottom: 2 },
   tributeTime: { fontSize: 18, fontWeight: "900", color: C.pink, letterSpacing: -0.5, textTransform: "uppercase" },
-  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 4, flexShrink: 1 },
+  weightRow: { flexDirection: "row", alignItems: "center", marginTop: 3, gap: 4 },
+  weightEmoji: { fontSize: 13 },
+  weightLabel: { fontSize: 12, fontWeight: "800", color: C.pink, textTransform: "uppercase", letterSpacing: 0.5 },
+  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 3, flexShrink: 1 },
 
   // Carousel
   carouselWrap: { flex: 1 },
