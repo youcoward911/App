@@ -4,6 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
@@ -91,27 +93,15 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {/* Cave times */}
-        {usage && (usage.fastestCave !== Infinity || usage.averageCaveTime > 0) && (
+        {/* Cave time */}
+        {usage && usage.averageCaveTime > 0 && (
           <View style={[styles.sectionCard, NEU_RAISED]}>
-            <Text style={styles.sectionTitle}>CAVE TIMES</Text>
+            <Text style={styles.sectionTitle}>CAVE TIME</Text>
             <Text style={styles.sectionSub}>How fast you break</Text>
-
-            {usage.fastestCave !== Infinity && (
-              <View style={styles.weakRow}>
-                <Text style={styles.weakLabel}>Fastest Cave</Text>
-                <Text style={[styles.weakVal, { color: C.pink }]}>{formatCaveTime(usage.fastestCave)}</Text>
-              </View>
-            )}
-            {usage.averageCaveTime > 0 && (
-              <>
-                <View style={styles.divider} />
-                <View style={styles.weakRow}>
-                  <Text style={styles.weakLabel}>Average Cave</Text>
-                  <Text style={styles.weakVal}>{formatCaveTime(usage.averageCaveTime)}</Text>
-                </View>
-              </>
-            )}
+            <View style={styles.weakRow}>
+              <Text style={styles.weakLabel}>Average Cave</Text>
+              <Text style={styles.weakVal}>{formatCaveTime(usage.averageCaveTime)}</Text>
+            </View>
           </View>
         )}
 
@@ -120,7 +110,19 @@ export default function StatsScreen() {
           <View style={styles.statRow}>
             <View style={[styles.statCard, NEU_RAISED]}>
               <Text style={[styles.statVal, { color: "#FF6B35" }]}>{usage.streakDays}</Text>
-              <Text style={styles.statLabel}>Day Streak</Text>
+              <View style={styles.labelRow}>
+                <Text style={styles.statLabel}>Day Streak</Text>
+                <TouchableOpacity
+                  style={styles.infoBtn}
+                  onPress={() => Alert.alert(
+                    "Day Streak",
+                    "How many days in a row you've opened the app and paid at least one tribute. Miss a day and it resets to zero.",
+                    [{ text: "Got it" }]
+                  )}
+                >
+                  <Text style={styles.infoBtnText}>?</Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={[styles.statCard, NEU_RAISED]}>
               <Text style={styles.statVal}>{usage.longestStreak}</Text>
@@ -134,7 +136,19 @@ export default function StatsScreen() {
           <View style={[styles.statCard, NEU_RAISED]}>
             <Text style={styles.statEmoji}>🐽</Text>
             <Text style={[styles.statVal, { color: "#FF6B35" }]}>{state.ironSnoutStreak || 0}</Text>
-            <Text style={styles.statLabel}>Iron Snout</Text>
+            <View style={styles.labelRow}>
+              <Text style={styles.statLabel}>Iron Snout</Text>
+              <TouchableOpacity
+                style={styles.infoBtn}
+                onPress={() => Alert.alert(
+                  "Iron Snout",
+                  "Every time a lock timer expires naturally without you peeking or surrendering, your Iron Snout streak goes up. Any peek or full unlock resets it. How disciplined is your pig?",
+                  [{ text: "Oink" }]
+                )}
+              >
+                <Text style={styles.infoBtnText}>?</Text>
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={[styles.statCard, NEU_RAISED]}>
             <Text style={styles.statVal}>{state.bestIronSnout || 0}</Text>
@@ -196,6 +210,13 @@ const styles = StyleSheet.create({
   statVal: { ...T.stat, fontSize: 32 },
   statEmoji: { fontSize: 20, marginBottom: 2 },
   statLabel: { ...T.caption, marginTop: 6, textAlign: "center" },
+  labelRow: { flexDirection: "row", alignItems: "center", marginTop: 6, gap: 4 },
+  infoBtn: {
+    width: 16, height: 16, borderRadius: 8,
+    backgroundColor: C.pinkPale,
+    alignItems: "center", justifyContent: "center",
+  },
+  infoBtnText: { fontSize: 10, fontWeight: "800", color: C.pink },
 
   // Section cards
   sectionCard: { backgroundColor: C.white, borderRadius: 20, padding: 20, marginBottom: 12 },
