@@ -125,7 +125,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
               style={[styles.infoBtn, { marginTop: 20 }]}
               onPress={() => Alert.alert(
                 "Peek vs Full Unlock",
-                "Peek lets you use the app for 1 minute, then it locks again. Full unlock removes the lock permanently.\n\nPeek cost doubles after each peek during the same lock session (1 → 2 → 4 → 8...). Full unlock always costs 10x the base peek price.",
+                "Peek lets you use an app for 1 minute before re-locking. Peeks double for each use during the same lock session.\n\nFull unlocks cost 10x your set peek price.",
                 [{ text: "Got it" }]
               )}
             >
@@ -271,17 +271,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   infoBtn: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: C.pinkPale,
     alignItems: "center",
     justifyContent: "center",
   },
   infoBtnText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "800",
     color: C.pink,
+    marginTop: -1,
   },
   selectedTimeWrap: {
     alignItems: "center",

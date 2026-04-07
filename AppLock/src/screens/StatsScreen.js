@@ -258,11 +258,11 @@ const styles = StyleSheet.create({
   statLabel: { ...T.caption, marginTop: 6, textAlign: "center" },
   labelRow: { flexDirection: "row", alignItems: "center", marginTop: 6, gap: 4 },
   infoBtn: {
-    width: 22, height: 22, borderRadius: 11,
+    width: 24, height: 24, borderRadius: 12,
     backgroundColor: C.pinkPale,
     alignItems: "center", justifyContent: "center",
   },
-  infoBtnText: { fontSize: 13, fontWeight: "800", color: C.pink },
+  infoBtnText: { fontSize: 14, fontWeight: "800", color: C.pink, marginTop: -1 },
 
   // Section cards
   sectionCard: { backgroundColor: C.white, borderRadius: 20, padding: 20, marginBottom: 12 },
