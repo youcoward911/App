@@ -498,8 +498,8 @@ const styles = StyleSheet.create({
   moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 3, flexShrink: 1 },
 
   // Carousel
-  carouselWrap: { flex: 1 },
-  carouselContent: { paddingLeft: 32, paddingRight: 32 },
+  carouselWrap: { flex: 1, overflow: "visible" },
+  carouselContent: { paddingLeft: 32, paddingRight: 32, paddingBottom: 8 },
   carouselCard: {
     width: CARD_W,
     backgroundColor: C.white,
@@ -509,7 +509,8 @@ const styles = StyleSheet.create({
     marginRight: CARD_SPACING,
     alignItems: "center",
     justifyContent: "center",
-    height: 380,
+    height: 360,
+    overflow: "hidden",
   },
   deleteX: {
     position: "absolute",
