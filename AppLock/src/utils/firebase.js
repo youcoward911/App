@@ -6,12 +6,12 @@ import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 // TODO: Replace with your Firebase project config
 // Go to console.firebase.google.com → your project → Project Settings → General → Your apps → Web app
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDIDFvj09JrsX6ibR3pzeMMJRsONA-BMdU",
+  authDomain: "scrollpig.firebaseapp.com",
+  projectId: "scrollpig",
+  storageBucket: "scrollpig.firebasestorage.app",
+  messagingSenderId: "1086523023976",
+  appId: "1:1086523023976:web:904f1d5bcd8822359151dd",
 };
 
 const app = initializeApp(firebaseConfig);
