@@ -7,10 +7,10 @@ import { PIG_SPEECH } from "../utils/pigWeight";
 // Weight tiers: "starving","bony","scrawny","lean","average","plump","chubby","fat","obese","massive","legendary"
 
 const WEIGHT_SCALE = {
-  starving: 0.78,
-  bony: 0.84,
-  scrawny: 0.90,
-  lean: 0.95,
+  starving: 0.93,
+  bony: 0.95,
+  scrawny: 0.97,
+  lean: 0.98,
   average: 1.0,
   plump: 1.07,
   chubby: 1.14,
@@ -125,45 +125,41 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
 
   const showCheeks = weightScaleX >= 1.07;
   const showCrown = weight === "massive" || weight === "legendary";
-  const showRibs = weight === "starving" || weight === "bony";
 
-  // Mood colors
+  // Mood colors — sick pigs just look slightly pale/greenish, not brown
   const faceColor =
-    mood === "feral" ? "#B85555" :
-    mood === "dirty" ? "#C4795A" :
-    mood === "messy" ? "#D4897A" :
-    mood === "restless" ? "#F0A8A8" :
+    mood === "feral" ? "#E8A8B0" :
+    mood === "dirty" ? "#EDADB5" :
+    mood === "messy" ? "#F2B2B8" :
+    mood === "restless" ? "#F5B5BC" :
     "#FFB6C1";
 
   const earColor =
-    mood === "feral" ? "#C46878" :
-    mood === "dirty" ? "#D07888" :
-    mood === "messy" ? "#D88898" :
-    mood === "restless" ? "#E0949F" :
+    mood === "feral" ? "#D8909A" :
+    mood === "dirty" ? "#DD959E" :
+    mood === "messy" ? "#E29AA2" :
+    mood === "restless" ? "#E5949F" :
     "#E8899A";
 
   const snoutColor =
-    mood === "feral" ? "#A04545" :
-    mood === "dirty" ? "#B06848" :
-    mood === "messy" ? "#C07868" :
-    mood === "restless" ? "#E09898" :
+    mood === "feral" ? "#DA8A95" :
+    mood === "dirty" ? "#E08E98" :
+    mood === "messy" ? "#E5939C" :
+    mood === "restless" ? "#EA98A2" :
     "#F09AAF";
 
   const eyeHeight =
-    mood === "feral" ? 3 * s :
-    mood === "dirty" ? 4 * s :
-    mood === "messy" ? 5 * s :
+    mood === "feral" ? 6 * s :
+    mood === "dirty" ? 6 * s :
+    mood === "messy" ? 7 * s :
     mood === "restless" ? 7 * s :
     8 * s;
 
   const eyeTop =
-    mood === "feral" ? 19 * s :
-    mood === "dirty" ? 18 * s :
-    mood === "messy" ? 17 * s :
+    mood === "feral" ? 17 * s :
+    mood === "dirty" ? 17 * s :
+    mood === "messy" ? 16 * s :
     16 * s;
-
-  const showAngryBrows = mood === "dirty" || mood === "messy" || mood === "feral";
-  const showMudSplotches = mood === "dirty" || mood === "messy" || mood === "feral";
   const showSmile = mood === "clean" || mood === "happy";
   const showFrown = mood === "dirty" || mood === "feral";
 
@@ -237,27 +233,6 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
             { width: 64 * s, height: 60 * s, borderRadius: 30 * s, top: 12 * s, backgroundColor: faceColor },
           ]}
         >
-          {/* Mud splotches */}
-          {showMudSplotches && (
-            <>
-              <View style={[styles.mud, {
-                width: 8 * s, height: 6 * s, borderRadius: 3 * s,
-                top: 10 * s, left: 8 * s,
-                backgroundColor: mood === "feral" ? "#6B3030" : mood === "dirty" ? "#8A5030" : "#A06050",
-              }]} />
-              <View style={[styles.mud, {
-                width: 6 * s, height: 5 * s, borderRadius: 3 * s,
-                top: 30 * s, right: 10 * s,
-                backgroundColor: mood === "feral" ? "#6B3030" : mood === "dirty" ? "#8A5030" : "#A06050",
-              }]} />
-              <View style={[styles.mud, {
-                width: 5 * s, height: 4 * s, borderRadius: 2 * s,
-                bottom: 18 * s, left: 18 * s,
-                backgroundColor: mood === "feral" ? "#5A2525" : mood === "dirty" ? "#7A4525" : "#906050",
-              }]} />
-            </>
-          )}
-
           {/* Eyes */}
           <Animated.View
             style={[styles.eye, {
@@ -290,24 +265,6 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
             }]}
           />
 
-          {/* Angry brows */}
-          {showAngryBrows && (
-            <>
-              <View style={[styles.brow, {
-                width: 10 * s, height: 2.5 * s,
-                top: (eyeTop - 5 * s), left: 11 * s,
-                transform: [{ rotate: "-20deg" }],
-                backgroundColor: mood === "feral" ? "#4A1A1A" : "#6A3535",
-              }]} />
-              <View style={[styles.brow, {
-                width: 10 * s, height: 2.5 * s,
-                top: (eyeTop - 5 * s), right: 11 * s,
-                transform: [{ rotate: "20deg" }],
-                backgroundColor: mood === "feral" ? "#4A1A1A" : "#6A3535",
-              }]} />
-            </>
-          )}
-
           {/* Smile */}
           {showSmile && (
             <View style={[styles.mouth, {
@@ -329,7 +286,7 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
               borderTopLeftRadius: 7 * s, borderTopRightRadius: 7 * s,
               bottom: 14 * s,
               borderWidth: 2 * s, borderBottomWidth: 0,
-              borderColor: mood === "feral" ? "#4A1A1A" : "#7A4040",
+              borderColor: "#B06070",
               backgroundColor: "transparent",
             }]} />
           )}
@@ -361,14 +318,6 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
             </>
           )}
 
-          {/* Ribs for starving/bony */}
-          {showRibs && (
-            <>
-              <View style={[styles.rib, { top: 28 * s, left: 10 * s, width: 12 * s, height: 1.5 * s }]} />
-              <View style={[styles.rib, { top: 33 * s, left: 8 * s, width: 14 * s, height: 1.5 * s }]} />
-              <View style={[styles.rib, { top: 38 * s, left: 10 * s, width: 12 * s, height: 1.5 * s }]} />
-            </>
-          )}
         </View>
       </Animated.View>
     </View>
@@ -387,8 +336,6 @@ const styles = StyleSheet.create({
   face: { position: "absolute", zIndex: 1, alignSelf: "center", overflow: "hidden" },
   eye: { position: "absolute", backgroundColor: "#2C2C2E", zIndex: 2 },
   tear: { position: "absolute", backgroundColor: "#7AC5E8", zIndex: 4 },
-  brow: { position: "absolute", zIndex: 3, borderRadius: 1 },
-  mud: { position: "absolute", zIndex: 0, opacity: 0.6 },
   mouth: { position: "absolute", alignSelf: "center", zIndex: 3 },
   snout: {
     position: "absolute", alignSelf: "center", zIndex: 2,
@@ -396,7 +343,6 @@ const styles = StyleSheet.create({
   },
   nostril: { backgroundColor: "#D07888" },
   cheek: { position: "absolute", zIndex: 1 },
-  rib: { position: "absolute", backgroundColor: "rgba(0,0,0,0.1)", borderRadius: 1, zIndex: 1 },
   crown: { position: "absolute", alignSelf: "center", zIndex: 10, alignItems: "center" },
   crownPoints: { flexDirection: "row", alignItems: "flex-end", gap: 1 },
   crownPoint: { backgroundColor: "#FFD700", borderTopLeftRadius: 3, borderTopRightRadius: 3 },
