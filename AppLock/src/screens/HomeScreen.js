@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
   // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: 4, paddingHorizontal: 20 },
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: 4, marginBottom: 12, paddingHorizontal: 20 },
   dot: {
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: C.pinkPale, marginHorizontal: 4,
