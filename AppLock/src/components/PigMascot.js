@@ -182,9 +182,11 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
     <View style={{ alignItems: "center", overflow: "visible" }}>
       {/* Speech bubble */}
       {showSpeech && speechText !== "" && (
-        <Animated.View style={[styles.speechBubble, { opacity: speechOpacity }]}>
-          <Text style={styles.speechText}>{speechText}</Text>
-          <View style={styles.speechTail} />
+        <Animated.View style={[styles.speechWrap, { opacity: speechOpacity }]}>
+          <View style={styles.speechBubble}>
+            <Text style={styles.speechText}>{speechText}</Text>
+            <View style={styles.speechTail} />
+          </View>
         </Animated.View>
       )}
 
@@ -399,23 +401,26 @@ const styles = StyleSheet.create({
   crownPoints: { flexDirection: "row", alignItems: "flex-end", gap: 1 },
   crownPoint: { backgroundColor: "#FFD700", borderTopLeftRadius: 3, borderTopRightRadius: 3 },
   crownBase: { backgroundColor: "#FFD700", borderRadius: 1, marginTop: -1 },
-  // Speech bubble
-  speechBubble: {
+  // Speech bubble wrapper — spans wide so the inner bubble can center & auto-size
+  speechWrap: {
     position: "absolute",
-    top: -28,
-    left: -30,
-    right: -30,
+    top: -44,
+    left: -50,
+    right: -50,
     zIndex: 20,
+    alignItems: "center",
+  },
+  speechBubble: {
     backgroundColor: "#FFF",
     borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    maxWidth: 160,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    alignItems: "center",
   },
   speechText: {
     fontSize: 11,
@@ -427,7 +432,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: -6,
     alignSelf: "center",
-    left: "45%",
     width: 0,
     height: 0,
     borderLeftWidth: 6,
