@@ -45,7 +45,7 @@ export function getWeightProgress(totalCoinsSpent) {
 export const PIG_SPEECH = {
   starving: [
     "So...hungry...",
-    "Must....scroll...slop...",
+    "Must...scroll...\nslop...",
   ],
   bony: [
     "A crumb! Finally!",
