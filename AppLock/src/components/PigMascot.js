@@ -97,16 +97,18 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
     const showBubble = () => {
       const msg = messages[Math.floor(Math.random() * messages.length)];
       setSpeechText(msg);
+      // Show for 7-12 seconds
+      const displayTime = 7000 + Math.random() * 5000;
       Animated.sequence([
-        Animated.timing(speechOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-        Animated.delay(4000),
-        Animated.timing(speechOpacity, { toValue: 0, duration: 600, useNativeDriver: true }),
+        Animated.timing(speechOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.delay(displayTime),
+        Animated.timing(speechOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
       ]).start();
     };
 
-    // Show first bubble after a short delay
-    const initialTimeout = setTimeout(showBubble, 2000);
-    const interval = setInterval(showBubble, 30000);
+    // Show first bubble quickly
+    const initialTimeout = setTimeout(showBubble, 800);
+    const interval = setInterval(showBubble, 15000);
 
     return () => {
       clearTimeout(initialTimeout);
