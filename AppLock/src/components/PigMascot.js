@@ -411,7 +411,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    maxWidth: 180,
     alignSelf: "center",
   },
   speechText: {
@@ -419,6 +418,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#E8668A",
     textAlign: "center",
+    flexShrink: 0,
   },
   speechTail: {
     position: "absolute",
