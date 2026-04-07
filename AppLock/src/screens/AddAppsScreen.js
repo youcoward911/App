@@ -119,9 +119,7 @@ export default function AddAppsScreen({ navigation }) {
                 <Text style={styles.rowCat}>{item.category}</Text>
               </View>
               {locked ? (
-                <TouchableOpacity onPress={() => handleUnlock(item.id)}>
-                  <SlideToLock locked={true} />
-                </TouchableOpacity>
+                <SlideToLock locked={true} />
               ) : (
                 <SlideToLock onLock={() => handleLock(item.id)} locked={false} />
               )}

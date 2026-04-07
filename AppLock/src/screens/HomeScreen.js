@@ -59,6 +59,7 @@ export default function HomeScreen({ navigation }) {
   });
   const [now, setNow] = useState(Date.now());
   const [activeIndex, setActiveIndex] = useState(0);
+  const [deleteMode, setDeleteMode] = useState(null); // appId being deleted or null
   const carouselRef = useRef(null);
   const activeIndexRef = useRef(0);
 
@@ -172,12 +173,35 @@ export default function HomeScreen({ navigation }) {
     const locked = isLocked(item.id);
     const info = state.lockedApps[item.id];
     const countdown = getCountdown(item.id);
+    const showX = deleteMode === item.id && !locked;
     return (
       <TouchableOpacity
         style={[styles.carouselCard, NEU_RAISED]}
         activeOpacity={0.9}
-        onPress={() => navigation.navigate("Unlock", { appId: item.id })}
+        onPress={() => {
+          if (deleteMode) {
+            setDeleteMode(null);
+          } else {
+            navigation.navigate("Unlock", { appId: item.id });
+          }
+        }}
+        onLongPress={() => {
+          if (!locked) setDeleteMode(item.id);
+        }}
+        delayLongPress={500}
       >
+        {showX && (
+          <TouchableOpacity
+            style={styles.deleteX}
+            activeOpacity={0.7}
+            onPress={() => {
+              dispatch({ type: "REMOVE_APP", payload: { appId: item.id } });
+              setDeleteMode(null);
+            }}
+          >
+            <Text style={styles.deleteXText}>✕</Text>
+          </TouchableOpacity>
+        )}
         <AppIcon app={item} size={90} />
         <Text style={styles.cardAppName}>{item.name}</Text>
         <Text style={styles.cardStatus}>
@@ -200,6 +224,10 @@ export default function HomeScreen({ navigation }) {
         <GlowButton
           title={locked ? "Pay Tribute" : "Lock Me Back Up"}
           onPress={() => {
+            if (deleteMode) {
+              setDeleteMode(null);
+              return;
+            }
             if (locked) {
               navigation.navigate("Unlock", { appId: item.id });
             } else {
@@ -350,6 +378,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 260,
+  },
+  deleteX: {
+    position: "absolute",
+    top: -8,
+    left: -8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: C.pink,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  deleteXText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "900",
   },
   cardAppName: { ...T.h1, marginTop: 14, textAlign: "center" },
   cardStatus: { ...T.caption, marginTop: 4 },
