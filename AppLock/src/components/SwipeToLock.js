@@ -137,7 +137,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "600",
     color: C.pink,
-    top: (THUMB_SIZE + 8 - 26) / 2,
+    top: 0,
+    bottom: 0,
+    lineHeight: THUMB_SIZE + 8,
   },
   thumb: {
     width: THUMB_SIZE,
