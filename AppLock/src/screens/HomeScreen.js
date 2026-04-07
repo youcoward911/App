@@ -288,7 +288,6 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.timerSlot}>
           {locked && lockTimer ? (
             <View style={styles.countdownRow}>
-              <Text style={styles.countdownIcon}>T</Text>
               <Text style={styles.countdownText}>{lockTimer}</Text>
             </View>
           ) : peeking && peekTimer ? (

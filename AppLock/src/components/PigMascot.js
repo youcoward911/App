@@ -136,10 +136,10 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
     "#FFB6C1";
 
   const earColor =
-    mood === "feral" ? "#8B3535" :
-    mood === "dirty" ? "#A06040" :
-    mood === "messy" ? "#B0705F" :
-    mood === "restless" ? "#D88A8A" :
+    mood === "feral" ? "#C46878" :
+    mood === "dirty" ? "#D07888" :
+    mood === "messy" ? "#D88898" :
+    mood === "restless" ? "#E0949F" :
     "#E8899A";
 
   const snoutColor =
@@ -220,13 +220,13 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
         <View
           style={[
             styles.ear, styles.earLeft,
-            { width: 22 * s, height: 26 * s, borderRadius: 8 * s, top: 2 * s, left: 6 * s, backgroundColor: earColor },
+            { width: 24 * s, height: 20 * s, borderRadius: 10 * s, top: 4 * s, left: 5 * s, backgroundColor: earColor },
           ]}
         />
         <View
           style={[
             styles.ear, styles.earRight,
-            { width: 22 * s, height: 26 * s, borderRadius: 8 * s, top: 2 * s, right: 6 * s, backgroundColor: earColor },
+            { width: 24 * s, height: 20 * s, borderRadius: 10 * s, top: 4 * s, right: 5 * s, backgroundColor: earColor },
           ]}
         />
 
