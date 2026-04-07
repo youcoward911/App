@@ -25,6 +25,11 @@ for (let m = 15; m <= 480; m += 15) {
   CUSTOM_MINUTES.push({ label, minutes: m });
 }
 
+const CUSTOM_FEES = [];
+for (let p = 5; p <= 100; p += 5) {
+  CUSTOM_FEES.push({ label: `${p} / ${p * 10}`, peek: p, full: p * 10 });
+}
+
 const ITEM_HEIGHT = 44;
 const VISIBLE_ITEMS = 3;
 const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
@@ -34,7 +39,10 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
   const [feeIdx, setFeeIdx] = useState(0);
   const [showCustom, setShowCustom] = useState(false);
   const [customIdx, setCustomIdx] = useState(0);
+  const [showCustomFee, setShowCustomFee] = useState(false);
+  const [customFeeIdx, setCustomFeeIdx] = useState(0);
   const scrollRef = useRef(null);
+  const feeScrollRef = useRef(null);
 
   const handlePreset = (idx) => {
     setShowCustom(false);
@@ -47,8 +55,14 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
 
   const handleConfirm = () => {
     const dur = showCustom ? CUSTOM_MINUTES[customIdx].minutes : DURATION_PRESETS[durationIdx].minutes;
-    const tier = FEE_TIERS[feeIdx];
-    onConfirm({ durationMinutes: dur, peekFee: tier.peek, fullFee: tier.full });
+    const fee = showCustomFee ? CUSTOM_FEES[customFeeIdx] : FEE_TIERS[feeIdx];
+    onConfirm({ durationMinutes: dur, peekFee: fee.peek, fullFee: fee.full });
+  };
+
+  const onFeeScrollEnd = (e) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const idx = Math.round(y / ITEM_HEIGHT);
+    setCustomFeeIdx(Math.max(0, Math.min(idx, CUSTOM_FEES.length - 1)));
   };
 
   const onScrollEnd = (e) => {
@@ -136,15 +150,48 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
             {FEE_TIERS.map((t, i) => (
               <TouchableOpacity
                 key={t.label}
-                style={[styles.chip, feeIdx === i && styles.chipActive]}
-                onPress={() => setFeeIdx(i)}
+                style={[styles.chip, !showCustomFee && feeIdx === i && styles.chipActive]}
+                onPress={() => { setShowCustomFee(false); setFeeIdx(i); }}
               >
-                <Text style={[styles.chipText, feeIdx === i && styles.chipTextActive]}>
+                <Text style={[styles.chipText, !showCustomFee && feeIdx === i && styles.chipTextActive]}>
                   {t.label}
                 </Text>
               </TouchableOpacity>
             ))}
+            <TouchableOpacity
+              style={[styles.chip, showCustomFee && styles.chipActive]}
+              onPress={() => setShowCustomFee(true)}
+            >
+              <Text style={[styles.chipText, showCustomFee && styles.chipTextActive]}>Custom</Text>
+            </TouchableOpacity>
           </View>
+
+          {/* Custom fee scroll wheel */}
+          {showCustomFee && (
+            <View style={styles.wheelWrap}>
+              <View style={styles.wheelHighlight} />
+              <ScrollView
+                ref={feeScrollRef}
+                style={styles.wheel}
+                contentContainerStyle={{
+                  paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
+                }}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                showsVerticalScrollIndicator={false}
+                onMomentumScrollEnd={onFeeScrollEnd}
+                onScrollEndDrag={onFeeScrollEnd}
+              >
+                {CUSTOM_FEES.map((item, i) => (
+                  <View key={item.peek} style={styles.wheelItem}>
+                    <Text style={[styles.wheelText, i === customFeeIdx && styles.wheelTextActive]}>
+                      {item.label}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Selected time callout */}
           {showCustom && (
