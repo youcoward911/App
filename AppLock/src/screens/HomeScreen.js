@@ -377,9 +377,11 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.tributeClockWrap}>
             <Text style={styles.tributeLabel}>LAST FEEDING</Text>
             <Text style={styles.tributeTime}>{tribute.text}</Text>
-            <View style={styles.weightRow}>
-              <Text style={styles.weightLabel}>{getPigWeight(state.totalCoinsSpent).label}</Text>
-            </View>
+            {tribute.text !== "Never" && (
+              <View style={styles.weightRow}>
+                <Text style={styles.weightLabel}>{getPigWeight(state.totalCoinsSpent).label}</Text>
+              </View>
+            )}
             <Text style={styles.moodMsg}>{moodMessage}</Text>
           </View>
         </View>
