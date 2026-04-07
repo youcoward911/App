@@ -183,7 +183,7 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
       {/* Speech bubble */}
       {showSpeech && speechText !== "" && (
         <Animated.View style={[styles.speechBubble, { opacity: speechOpacity }]}>
-          <Text style={styles.speechText} numberOfLines={1}>{speechText}</Text>
+          <Text style={styles.speechText}>{speechText}</Text>
           <View style={styles.speechTail} />
         </Animated.View>
       )}
@@ -402,18 +402,20 @@ const styles = StyleSheet.create({
   // Speech bubble
   speechBubble: {
     position: "absolute",
-    top: -30,
+    top: -28,
+    left: -60,
+    right: -60,
     zIndex: 20,
     backgroundColor: "#FFF",
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    whiteSpace: "nowrap",
+    alignItems: "center",
   },
   speechText: {
     fontSize: 11,
