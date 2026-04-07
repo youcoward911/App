@@ -141,6 +141,14 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
             <Text style={styles.feeSummaryHint}>Peek cost doubles each time</Text>
           </View>
 
+          {/* Selected time callout */}
+          {showCustom && (
+            <View style={styles.selectedTimeWrap}>
+              <Text style={styles.selectedTimeLabel}>SELECTED:</Text>
+              <Text style={styles.selectedTimeValue}>{CUSTOM_MINUTES[customIdx].label}</Text>
+            </View>
+          )}
+
           {/* Confirm */}
           <View style={styles.buttons}>
             <GlowButton
@@ -276,6 +284,27 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     marginTop: 4,
     color: C.pink,
+  },
+  selectedTimeWrap: {
+    alignItems: "center",
+    marginTop: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,105,180,0.08)",
+  },
+  selectedTimeLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: C.textTertiary,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
+  selectedTimeValue: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: C.pink,
+    letterSpacing: -0.5,
+    marginTop: 2,
   },
   buttons: {
     marginTop: 20,
