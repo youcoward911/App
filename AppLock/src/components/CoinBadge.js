@@ -39,13 +39,15 @@ const styles = StyleSheet.create({
     backgroundColor: C.pink,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 6,
+    marginRight: 4,
+    marginTop: 1,
   },
   coinSmall: {
     width: 16,
     height: 16,
     borderRadius: 8,
-    marginRight: 4,
+    marginRight: 3,
+    marginTop: 1,
   },
   coinP: {
     color: "#FFF",

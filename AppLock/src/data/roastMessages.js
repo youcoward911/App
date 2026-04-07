@@ -156,7 +156,7 @@ export const STARVING_MESSAGES = {
     "Just stuffed your face. Gross.",
     "Covered in slop. Ashamed. As you should be.",
     "Couldn't resist. Pathetic.",
-    "You're disgusting right now. You know that, right?",
+    "You're disgusting. You know that, right?",
     "Fresh from the trough. Slop dripping everywhere. Ew.",
   ],
   messy: [

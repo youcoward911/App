@@ -126,7 +126,7 @@ export default function UnlockScreen({ route, navigation }) {
       `${cost} ${coinWord} down the drain so you can stare at a screen. Sad.`,
       `Handing over ${cost} ${coinWord} like a trained animal. Good.`,
       `${cost} ${coinWord}. Your master thanks you for the donation.`,
-      `${cost} ${coinWord} to feed your addiction. Pathetic.`,
+      `That'll be ${cost} ${coinWord} please. Good piggy.`,
       `${cost} whole ${coinWord}. And you'll do it again tomorrow.`,
       `Bye bye, ${cost} ${coinWord}.`,
     ];

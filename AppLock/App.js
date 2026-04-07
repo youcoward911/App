@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { StatusBar } from "expo-status-bar";
@@ -125,25 +125,50 @@ function HomeTabs() {
   );
 }
 
-function WeightWatcher({ children }) {
+function WeightWatcher({ children, navigationRef }) {
   const { state } = useAppLock();
   const prevWeightKey = useRef(getPigWeight(state.totalCoinsSpent).key);
-  const [levelUp, setLevelUp] = useState(null); // { oldWeight, newWeight }
+  const [levelUp, setLevelUp] = useState(null);
+  const pendingLevelUp = useRef(null);
   const initialized = useRef(false);
+  const [onMainScreen, setOnMainScreen] = useState(true);
 
+  // Detect weight changes — queue but don't show yet
   useEffect(() => {
     const current = getPigWeight(state.totalCoinsSpent).key;
     if (!initialized.current) {
-      // Don't trigger on initial load
       initialized.current = true;
       prevWeightKey.current = current;
       return;
     }
     if (current !== prevWeightKey.current) {
-      setLevelUp({ oldWeight: prevWeightKey.current, newWeight: current });
+      pendingLevelUp.current = { oldWeight: prevWeightKey.current, newWeight: current };
       prevWeightKey.current = current;
+      // If already on main screen, show immediately
+      if (onMainScreen) {
+        setLevelUp(pendingLevelUp.current);
+        pendingLevelUp.current = null;
+      }
     }
-  }, [state.totalCoinsSpent]);
+  }, [state.totalCoinsSpent, onMainScreen]);
+
+  // Listen for navigation state changes
+  useEffect(() => {
+    if (!navigationRef?.current) return;
+    const unsubscribe = navigationRef.current.addListener("state", () => {
+      const route = navigationRef.current.getCurrentRoute();
+      const isMain = route?.name === "Home" || route?.name === "Main" || route?.name === "Stats" || route?.name === "Leaderboard";
+      setOnMainScreen(isMain);
+      // Show queued level-up when returning to main
+      if (isMain && pendingLevelUp.current) {
+        setTimeout(() => {
+          setLevelUp(pendingLevelUp.current);
+          pendingLevelUp.current = null;
+        }, 500);
+      }
+    });
+    return unsubscribe;
+  }, [navigationRef]);
 
   return (
     <>
@@ -159,6 +184,7 @@ function WeightWatcher({ children }) {
 }
 
 export default function App() {
+  const navigationRef = useNavigationContainerRef();
   const [showSplash, setShowSplash] = useState(true);
   const splashBgOpacity = useRef(new Animated.Value(1)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
@@ -194,8 +220,8 @@ export default function App() {
 
   return (
     <AppLockProvider>
-      <WeightWatcher>
-      <NavigationContainer>
+      <WeightWatcher navigationRef={navigationRef}>
+      <NavigationContainer ref={navigationRef}>
         <StatusBar style="dark" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Main" component={HomeTabs} />
