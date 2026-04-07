@@ -1,10 +1,11 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Animated,
   PanResponder,
+  Easing,
 } from "react-native";
 import { C } from "../utils/theme";
 
@@ -16,6 +17,30 @@ export default function SlideToLock({ onLock, locked }) {
   const pan = useRef(new Animated.Value(0)).current;
   const triggered = useRef(false);
   const lastDx = useRef(0);
+  const arrowPulse = useRef(new Animated.Value(0.3)).current;
+
+  // Subtle pulsing glow on the arrow
+  useEffect(() => {
+    if (locked) return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowPulse, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(arrowPulse, {
+          toValue: 0.3,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [locked]);
 
   const snapToLock = () => {
     triggered.current = true;
@@ -82,8 +107,8 @@ export default function SlideToLock({ onLock, locked }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.track} {...panResponder.panHandlers}>
-        <Animated.Text style={[styles.trackLabel, { opacity: shimmer }]}>
-          ›››
+        <Animated.Text style={[styles.trackLabel, { opacity: Animated.multiply(shimmer, arrowPulse) }]}>
+          ›
         </Animated.Text>
         <Animated.View
           style={[styles.thumb, { transform: [{ translateX: pan }] }]}
@@ -109,10 +134,10 @@ const styles = StyleSheet.create({
   trackLabel: {
     position: "absolute",
     alignSelf: "center",
-    fontSize: 16,
-    fontWeight: "300",
-    color: C.pinkLight,
-    letterSpacing: 4,
+    fontSize: 22,
+    fontWeight: "600",
+    color: C.pink,
+    right: 16,
   },
   thumb: {
     width: THUMB_SIZE,
