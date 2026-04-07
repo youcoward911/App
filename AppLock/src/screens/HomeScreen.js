@@ -386,7 +386,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.moodMsg}>{moodMessage}</Text>
             )}
             {tribute.text === "Never" && (
-              <Text style={styles.moodMsg}>Aw what's wrong? Can't stop doomscrolling?</Text>
+              <Text style={styles.moodMsg}>Aw, what's wrong? Does little piggy need to scroll?</Text>
             )}
           </View>
         </View>
