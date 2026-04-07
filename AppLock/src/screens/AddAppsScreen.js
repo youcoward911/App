@@ -67,8 +67,6 @@ export default function AddAppsScreen({ navigation }) {
           <Text style={styles.done}>Done</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.headerTitle}>Lock More Slop</Text>
-
       {/* Categories */}
       <FlatList
         horizontal
@@ -138,7 +136,6 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   back: { ...T.body, color: C.textSecondary, fontWeight: "500" },
-  headerTitle: { ...T.h2, textAlign: "center", marginBottom: 10 },
   done: { ...T.body, color: C.pink, fontWeight: "600" },
 
   // Categories
