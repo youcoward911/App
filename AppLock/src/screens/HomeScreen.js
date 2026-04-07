@@ -161,14 +161,16 @@ export default function HomeScreen({ navigation }) {
   // Pick one phrase per app session — useRef so it doesn't change on re-render
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
-  // Tick every second when countdowns active or under 1 min, otherwise every 30s
-  const hasCountdowns = Object.values(state.lockedApps).some((a) => !a.lockedAt && a.unlockExpiresAt);
+  // Tick every second when any active lock/peek timers exist, otherwise every 30s
+  const hasActiveTimers = Object.values(state.lockedApps).some(
+    (a) => (a.lockedAt && a.lockExpiresAt) || a.peekExpiresAt
+  );
+  const tributeSecs = state.lastTributeTime ? Math.floor((Date.now() - state.lastTributeTime) / 1000) : Infinity;
+  const tickRate = hasActiveTimers || tributeSecs < 60 ? 1000 : 30000;
   useEffect(() => {
-    const tributeSecs = state.lastTributeTime ? Math.floor((Date.now() - state.lastTributeTime) / 1000) : Infinity;
-    const rate = hasCountdowns || tributeSecs < 60 ? 1000 : 30000;
-    const interval = setInterval(() => setNow(Date.now()), rate);
+    const interval = setInterval(() => setNow(Date.now()), tickRate);
     return () => clearInterval(interval);
-  }, [now, state.lastTributeTime, hasCountdowns]);
+  }, [tickRate]);
 
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);
@@ -285,7 +287,7 @@ export default function HomeScreen({ navigation }) {
         {/* Lock timer countdown */}
         {locked && lockTimer && (
           <View style={styles.countdownRow}>
-            <Text style={styles.countdownIcon}>⏱</Text>
+            <Text style={styles.countdownIcon}>T</Text>
             <Text style={styles.countdownText}>{lockTimer}</Text>
           </View>
         )}
@@ -293,7 +295,7 @@ export default function HomeScreen({ navigation }) {
         {/* Peek timer countdown */}
         {peeking && peekTimer && (
           <View style={styles.countdownRow}>
-            <Text style={styles.countdownIcon}>👀</Text>
+            <Text style={styles.countdownIcon}>P</Text>
             <Text style={[styles.countdownText, { color: C.gold }]}>{peekTimer}</Text>
           </View>
         )}
@@ -316,12 +318,13 @@ export default function HomeScreen({ navigation }) {
 
         {locked && (
           <GlowButton
-            title="Pay Tribute to Unlock"
+            title="Pay Tribute"
             onPress={() => {
               if (deleteMode) { setDeleteMode(null); return; }
               navigation.navigate("Unlock", { appId: item.id });
             }}
             style={{ marginTop: 16 }}
+            textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
           />
         )}
         {!locked && !peeking && (
@@ -332,6 +335,7 @@ export default function HomeScreen({ navigation }) {
               dispatch({ type: "RELOCK_APP", payload: { appId: item.id } });
             }}
             style={{ marginTop: 16 }}
+            textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
           />
         )}
       </TouchableOpacity>
@@ -362,7 +366,6 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.tributeLabel}>LAST FEEDING</Text>
             <Text style={styles.tributeTime}>{tribute.text}</Text>
             <View style={styles.weightRow}>
-              <Text style={styles.weightEmoji}>{getPigWeight(state.totalCoinsSpent).emoji}</Text>
               <Text style={styles.weightLabel}>{getPigWeight(state.totalCoinsSpent).label}</Text>
             </View>
             <Text style={styles.moodMsg}>{moodMessage}</Text>
@@ -370,7 +373,7 @@ export default function HomeScreen({ navigation }) {
         </View>
         {(state.ironSnoutStreak > 0 || state.bestIronSnout > 0) && (
           <View style={[styles.streakCard, NEU_RAISED]}>
-            <Text style={styles.streakIcon}>🐽</Text>
+            <View style={styles.streakBadge}><Text style={styles.streakBadgeText}>IS</Text></View>
             <View style={styles.streakInfo}>
               <Text style={styles.streakLabel}>IRON SNOUT</Text>
               <Text style={styles.streakValue}>
@@ -478,8 +481,7 @@ const styles = StyleSheet.create({
   tributeClockWrap: { flex: 1, marginLeft: 16 },
   tributeLabel: { ...T.label, marginBottom: 2 },
   tributeTime: { fontSize: 18, fontWeight: "900", color: C.pink, letterSpacing: -0.5, textTransform: "uppercase" },
-  weightRow: { flexDirection: "row", alignItems: "center", marginTop: 3, gap: 4 },
-  weightEmoji: { fontSize: 13 },
+  weightRow: { flexDirection: "row", alignItems: "center", marginTop: 3 },
   weightLabel: { fontSize: 12, fontWeight: "800", color: C.pink, textTransform: "uppercase", letterSpacing: 0.5 },
   moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 3, flexShrink: 1 },
 
@@ -522,7 +524,7 @@ const styles = StyleSheet.create({
   cardAppName: { ...T.h1, marginTop: 14, textAlign: "center" },
   cardStatus: { ...T.caption, marginTop: 4 },
   countdownRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
-  countdownIcon: { fontSize: 14, marginRight: 6 },
+  countdownIcon: { fontSize: 12, fontWeight: "900", color: C.pink, marginRight: 6, width: 20, height: 20, lineHeight: 20, textAlign: "center", backgroundColor: C.pinkPale, borderRadius: 10, overflow: "hidden" },
   countdownText: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: 1, fontVariant: ["tabular-nums"] },
   cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
   cardFeeCoin: {
@@ -559,7 +561,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  streakIcon: { fontSize: 22, marginRight: 10 },
+  streakBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.pinkPale, alignItems: "center", justifyContent: "center", marginRight: 10 },
+  streakBadgeText: { fontSize: 10, fontWeight: "900", color: C.pink },
   streakInfo: { flex: 1 },
   streakLabel: { ...T.label, color: C.pink, fontSize: 10 },
   streakValue: { fontSize: 16, fontWeight: "900", color: C.text, letterSpacing: -0.5 },

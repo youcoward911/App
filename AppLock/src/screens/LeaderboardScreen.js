@@ -56,19 +56,18 @@ export default function LeaderboardScreen() {
   const renderEntry = ({ item, index }) => {
     const isMe = item.uid === uid;
     const rank = index + 1;
-    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}.`;
+    const medal = `${rank}.`;
 
     return (
       <View style={[styles.row, NEU_RAISED, isMe && styles.rowMe]}>
         <Text style={styles.rank}>{medal}</Text>
         <View style={styles.rowInfo}>
           <Text style={[styles.rowName, isMe && styles.rowNameMe]}>
-            {item.weightEmoji || getPigWeight(item.totalCoinsSpent || 0).emoji}{" "}
             {item.pigName || "Anonymous Pig"}
             {isMe ? " (YOU)" : ""}
           </Text>
           <Text style={styles.rowSub}>
-            {item.weightLabel || getPigWeight(item.totalCoinsSpent || 0).label} · {item.totalUnlocks || 0} tribute{item.totalUnlocks === 1 ? "" : "s"}
+            {item.weightLabel || getPigWeight(item.totalCoinsSpent || 0).label} · {item.totalUnlocks || 0} tribute{(item.totalUnlocks || 0) === 1 ? "" : "s"}
           </Text>
         </View>
         <View style={styles.coinWrap}>

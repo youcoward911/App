@@ -78,10 +78,20 @@ export default function StatsScreen() {
           const nextTier = wtIdx >= 0 && wtIdx < WEIGHT_TIERS.length - 1 ? WEIGHT_TIERS[wtIdx + 1] : null;
           return (
             <View style={[styles.sectionCard, NEU_RAISED]}>
-              <Text style={styles.sectionTitle}>PIG WEIGHT</Text>
-              <Text style={styles.sectionSub}>Grows fatter with every coin spent</Text>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>PIG WEIGHT</Text>
+                <TouchableOpacity
+                  style={styles.infoBtn}
+                  onPress={() => Alert.alert(
+                    "Pig Weight",
+                    "Your pig gets fatter every time you eat your slop. The more coins you spend on unlocks, the bigger and rounder your pig grows. Feed it well.",
+                    [{ text: "Got it" }]
+                  )}
+                >
+                  <Text style={styles.infoBtnText}>?</Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.weightHero}>
-                <Text style={styles.weightEmoji}>{wt.emoji}</Text>
                 <Text style={styles.weightTier}>{wt.label}</Text>
               </View>
               <View style={styles.meterTrack}>
@@ -89,7 +99,7 @@ export default function StatsScreen() {
               </View>
               {nextTier ? (
                 <Text style={styles.weightNext}>
-                  Next: {nextTier.emoji} {nextTier.label} at {nextTier.minCoins} coins
+                  Next: {nextTier.label} at {nextTier.minCoins} coins
                 </Text>
               ) : (
                 <Text style={styles.weightNext}>MAX TIER. Absolute unit.</Text>
@@ -125,10 +135,20 @@ export default function StatsScreen() {
         {/* Cave time */}
         {usage && usage.averageCaveTime > 0 && (
           <View style={[styles.sectionCard, NEU_RAISED]}>
-            <Text style={styles.sectionTitle}>CAVE TIME</Text>
-            <Text style={styles.sectionSub}>How fast you break</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>AVERAGE CAVE TIME</Text>
+              <TouchableOpacity
+                style={styles.infoBtn}
+                onPress={() => Alert.alert(
+                  "Average Cave Time",
+                  "How long you resist before caving in and paying tribute. Measured from when you lock an app to when you unlock it. Lower is weaker.",
+                  [{ text: "Got it" }]
+                )}
+              >
+                <Text style={styles.infoBtnText}>?</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.weakRow}>
-              <Text style={styles.weakLabel}>Average Cave</Text>
               <Text style={styles.weakVal}>{formatCaveTime(usage.averageCaveTime)}</Text>
             </View>
           </View>
@@ -163,7 +183,7 @@ export default function StatsScreen() {
         {/* Iron Snout + Peek/Surrender stats */}
         <View style={styles.statRow}>
           <View style={[styles.statCard, NEU_RAISED]}>
-            <Text style={styles.statEmoji}>🐽</Text>
+            <View style={styles.statBadge}><Text style={styles.statBadgeText}>IS</Text></View>
             <Text style={[styles.statVal, { color: "#FF6B35" }]}>{state.ironSnoutStreak || 0}</Text>
             <View style={styles.labelRow}>
               <Text style={styles.statLabel}>Iron Snout</Text>
@@ -201,7 +221,7 @@ export default function StatsScreen() {
                 {i > 0 && <View style={styles.divider} />}
                 <View style={styles.weakRow}>
                   <Text style={styles.weakLabel}>
-                    {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"} {appName(id)}
+                    {i === 0 ? "#1" : i === 1 ? "#2" : "#3"} {appName(id)}
                   </Text>
                   <Text style={styles.weakVal}>{count}x</Text>
                 </View>
@@ -233,19 +253,21 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
   statCard: { flex: 1, backgroundColor: C.white, borderRadius: 20, padding: 22, alignItems: "center" },
   statVal: { ...T.stat, fontSize: 32 },
-  statEmoji: { fontSize: 20, marginBottom: 2 },
+  statBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.pinkPale, alignItems: "center", justifyContent: "center", marginBottom: 4 },
+  statBadgeText: { fontSize: 10, fontWeight: "900", color: C.pink },
   statLabel: { ...T.caption, marginTop: 6, textAlign: "center" },
   labelRow: { flexDirection: "row", alignItems: "center", marginTop: 6, gap: 4 },
   infoBtn: {
-    width: 16, height: 16, borderRadius: 8,
+    width: 22, height: 22, borderRadius: 11,
     backgroundColor: C.pinkPale,
     alignItems: "center", justifyContent: "center",
   },
-  infoBtnText: { fontSize: 10, fontWeight: "800", color: C.pink },
+  infoBtnText: { fontSize: 13, fontWeight: "800", color: C.pink },
 
   // Section cards
   sectionCard: { backgroundColor: C.white, borderRadius: 20, padding: 20, marginBottom: 12 },
-  sectionTitle: { ...T.label, marginBottom: 4 },
+  sectionTitleRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  sectionTitle: { ...T.label },
   sectionSub: { ...T.caption, marginBottom: 12 },
   weakRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 6 },
   weakLabel: { ...T.body, fontSize: 14 },
@@ -254,7 +276,6 @@ const styles = StyleSheet.create({
 
   // Weight evolution
   weightHero: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 },
-  weightEmoji: { fontSize: 28 },
   weightTier: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
   weightNext: { ...T.caption, textAlign: "center", marginTop: 8, fontWeight: "600" },
 

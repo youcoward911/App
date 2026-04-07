@@ -2,19 +2,19 @@
 // First coin spent = instant level up (tier 1 at just 1 coin).
 
 export const WEIGHT_TIERS = [
-  { key: "starving",    label: "Starving",     minCoins: 0,    scale: 0.70, emoji: "💀" },
-  { key: "bony",        label: "Bony",         minCoins: 1,    scale: 0.78, emoji: "🦴" },
-  { key: "scrawny",     label: "Scrawny",      minCoins: 20,   scale: 0.86, emoji: "🐽" },
-  { key: "lean",        label: "Lean",         minCoins: 60,   scale: 0.94, emoji: "🐷" },
-  { key: "average",     label: "Average",      minCoins: 100,  scale: 1.0,  emoji: "🐖" },
-  { key: "plump",       label: "Plump",        minCoins: 200,  scale: 1.08, emoji: "🍕" },
-  { key: "chubby",      label: "Chubby",       minCoins: 400,  scale: 1.16, emoji: "🍔" },
-  { key: "fat",         label: "Fat",          minCoins: 600,  scale: 1.24, emoji: "🐽" },
-  { key: "obese",       label: "Obese",        minCoins: 1000, scale: 1.34, emoji: "🏆" },
-  { key: "massive",     label: "Massive",      minCoins: 2000, scale: 1.45, emoji: "👑" },
+  { key: "starving",    label: "Starving",     minCoins: 0,    scale: 0.70 },
+  { key: "bony",        label: "Bony",         minCoins: 1,    scale: 0.78 },
+  { key: "scrawny",     label: "Scrawny",      minCoins: 20,   scale: 0.86 },
+  { key: "lean",        label: "Lean",         minCoins: 60,   scale: 0.94 },
+  { key: "average",     label: "Average",      minCoins: 100,  scale: 1.0 },
+  { key: "plump",       label: "Plump",        minCoins: 200,  scale: 1.08 },
+  { key: "chubby",      label: "Chubby",       minCoins: 400,  scale: 1.16 },
+  { key: "fat",         label: "Fat",          minCoins: 600,  scale: 1.24 },
+  { key: "obese",       label: "Obese",        minCoins: 1000, scale: 1.34 },
+  { key: "massive",     label: "Massive",      minCoins: 2000, scale: 1.45 },
 ];
 
-// Threshold for the secret 11th — just in case
+// Threshold for the secret 11th
 const LEGENDARY_COINS = 5000;
 
 export function getPigWeight(totalCoinsSpent) {
@@ -24,7 +24,7 @@ export function getPigWeight(totalCoinsSpent) {
   }
   // Legendary override
   if (totalCoinsSpent >= LEGENDARY_COINS) {
-    return { ...WEIGHT_TIERS[WEIGHT_TIERS.length - 1], label: "Legendary", emoji: "👑", key: "legendary" };
+    return { ...WEIGHT_TIERS[WEIGHT_TIERS.length - 1], label: "Legendary", key: "legendary" };
   }
   return tier;
 }

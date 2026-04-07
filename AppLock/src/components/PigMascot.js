@@ -196,12 +196,15 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
           },
         ]}
       >
-        {/* Crown for top tiers */}
+        {/* Crown for top tiers — drawn with Views */}
         {showCrown && (
-          <View style={[styles.crown, { top: -2 * s, width: 28 * s, height: 16 * s }]}>
-            <Text style={{ fontSize: 14 * s, textAlign: "center", marginTop: -4 * s }}>
-              {weight === "legendary" ? "👑" : "👑"}
-            </Text>
+          <View style={[styles.crown, { top: -1 * s }]}>
+            <View style={styles.crownPoints}>
+              <View style={[styles.crownPoint, { width: 5 * s, height: 5 * s }]} />
+              <View style={[styles.crownPoint, { width: 5 * s, height: 7 * s, marginTop: -2 * s }]} />
+              <View style={[styles.crownPoint, { width: 5 * s, height: 5 * s }]} />
+            </View>
+            <View style={[styles.crownBase, { width: 20 * s, height: 4 * s }]} />
           </View>
         )}
 
@@ -386,7 +389,10 @@ const styles = StyleSheet.create({
   nostril: { backgroundColor: "#D07888" },
   cheek: { position: "absolute", zIndex: 1 },
   rib: { position: "absolute", backgroundColor: "rgba(0,0,0,0.1)", borderRadius: 1, zIndex: 1 },
-  crown: { position: "absolute", alignSelf: "center", zIndex: 10 },
+  crown: { position: "absolute", alignSelf: "center", zIndex: 10, alignItems: "center" },
+  crownPoints: { flexDirection: "row", alignItems: "flex-end", gap: 1 },
+  crownPoint: { backgroundColor: "#FFD700", borderTopLeftRadius: 3, borderTopRightRadius: 3 },
+  crownBase: { backgroundColor: "#FFD700", borderRadius: 1, marginTop: -1 },
   // Speech bubble
   speechBubble: {
     backgroundColor: "#FFF",
