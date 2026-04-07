@@ -8,7 +8,7 @@ import HomeScreen from "./src/screens/HomeScreen";
 import AddAppsScreen from "./src/screens/AddAppsScreen";
 import UnlockScreen from "./src/screens/UnlockScreen";
 import StatsScreen from "./src/screens/StatsScreen";
-import SettingsScreen from "./src/screens/SettingsScreen";
+
 import CoinShopScreen from "./src/screens/CoinShopScreen";
 import LeaderboardScreen from "./src/screens/LeaderboardScreen";
 import WeightLevelUpModal from "./src/components/WeightLevelUpModal";
@@ -119,16 +119,6 @@ function HomeTabs() {
             <TabIcon type="leaderboard" focused={focused} />
           ),
           tabBarLabel: "Board",
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon type="settings" focused={focused} />
-          ),
-          tabBarLabel: "Settings",
         }}
       />
     </Tab.Navigator>
