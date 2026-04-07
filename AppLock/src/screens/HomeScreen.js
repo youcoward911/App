@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  Pressable,
   SafeAreaView,
   Dimensions,
   Alert,
@@ -19,6 +20,8 @@ import CoinBadge from "../components/CoinBadge";
 import { getStarvingMessage } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
+let Haptics = null;
+try { Haptics = require("expo-haptics"); } catch (e) {}
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 64;
@@ -186,7 +189,10 @@ export default function HomeScreen({ navigation }) {
           }
         }}
         onLongPress={() => {
-          if (!locked) setDeleteMode(item.id);
+          if (!locked) {
+            setDeleteMode(item.id);
+            try { Haptics?.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch (e) {}
+          }
         }}
         delayLongPress={500}
       >
@@ -248,7 +254,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
+      <Pressable style={styles.container} onPress={() => deleteMode && setDeleteMode(null)}>
         {/* Coin badge */}
         <View style={styles.header}>
           <View />
@@ -333,7 +339,7 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -381,18 +387,18 @@ const styles = StyleSheet.create({
   },
   deleteX: {
     position: "absolute",
-    top: -8,
-    left: -8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    top: 8,
+    left: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: C.pink,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
