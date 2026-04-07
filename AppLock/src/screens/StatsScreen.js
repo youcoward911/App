@@ -10,8 +10,7 @@ import { useAppLock } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import { POPULAR_APPS } from "../data/defaultApps";
 import { getFullUsage, formatCaveTime } from "../utils/usageTracker";
-import { getRandomShame } from "../data/shameMessages";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED } from "../utils/theme";
+import { C, T, NEU_RAISED } from "../utils/theme";
 
 function appName(appId) {
   const app = POPULAR_APPS.find((a) => a.id === appId);
@@ -21,14 +20,9 @@ function appName(appId) {
 export default function StatsScreen() {
   const { state } = useAppLock();
   const [usage, setUsage] = useState(null);
-  const [shame, setShame] = useState(null);
 
   useEffect(() => {
-    getFullUsage().then((data) => {
-      setUsage(data);
-      const msg = getRandomShame(data);
-      if (msg) setShame(msg);
-    });
+    getFullUsage().then((data) => setUsage(data));
   }, [state.totalUnlocks]);
 
   const today = new Date().toDateString();
@@ -49,32 +43,8 @@ export default function StatsScreen() {
   const rank = getShameRank();
   const progress = Math.min((state.totalUnlocks / 30) * 100, 100);
 
-  // Weakest app
-  const appEntries = usage ? Object.entries(usage.appUnlocks || {}).sort((a, b) => b[1] - a[1]) : [];
-  const weakestApp = appEntries.length > 0 ? { name: appName(appEntries[0][0]), count: appEntries[0][1] } : null;
-
-  // Peak hour
-  let peakHourDisplay = null;
-  if (usage) {
-    const hourEntries = Object.entries(usage.hourlyUnlocks || {}).sort((a, b) => b[1] - a[1]);
-    if (hourEntries.length > 0) {
-      const h = parseInt(hourEntries[0][0]);
-      const period = h >= 12 ? "PM" : "AM";
-      const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      peakHourDisplay = { text: `${display} ${period}`, count: hourEntries[0][1] };
-    }
-  }
-
-  // Weakest day
-  let weakestDay = null;
-  if (usage) {
-    const dayEntries = Object.entries(usage.dailyUnlocks || {}).sort((a, b) => b[1] - a[1]);
-    if (dayEntries.length > 0) {
-      weakestDay = { day: dayEntries[0][0], count: dayEntries[0][1] };
-    }
-  }
-
   // Top 3 apps
+  const appEntries = usage ? Object.entries(usage.appUnlocks || {}).sort((a, b) => b[1] - a[1]) : [];
   const topApps = appEntries.slice(0, 3);
 
   return (
@@ -82,13 +52,6 @@ export default function StatsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Hall of Shame</Text>
         <Text style={styles.sub}>Your master keeps score</Text>
-
-        {/* Shame message */}
-        {shame && (
-          <View style={[styles.shameCard, NEU_RAISED]}>
-            <Text style={styles.shameText}>{shame}</Text>
-          </View>
-        )}
 
         {/* Pig Rank */}
         <View style={[styles.heroCard, NEU_RAISED]}>
@@ -127,38 +90,6 @@ export default function StatsScreen() {
             <Text style={styles.statLabel}>App Opens</Text>
           </View>
         </View>
-
-        {/* Weakness section */}
-        {(weakestApp || peakHourDisplay || weakestDay) && (
-          <View style={[styles.sectionCard, NEU_RAISED]}>
-            <Text style={styles.sectionTitle}>YOUR WEAKNESSES</Text>
-
-            {weakestApp && (
-              <View style={styles.weakRow}>
-                <Text style={styles.weakLabel}>Weakest App</Text>
-                <Text style={styles.weakVal}>{weakestApp.name} ({weakestApp.count}x)</Text>
-              </View>
-            )}
-            {peakHourDisplay && (
-              <>
-                <View style={styles.divider} />
-                <View style={styles.weakRow}>
-                  <Text style={styles.weakLabel}>Peak Shame Hour</Text>
-                  <Text style={styles.weakVal}>{peakHourDisplay.text}</Text>
-                </View>
-              </>
-            )}
-            {weakestDay && (
-              <>
-                <View style={styles.divider} />
-                <View style={styles.weakRow}>
-                  <Text style={styles.weakLabel}>Weakest Day</Text>
-                  <Text style={styles.weakVal}>{weakestDay.day}s ({weakestDay.count}x)</Text>
-                </View>
-              </>
-            )}
-          </View>
-        )}
 
         {/* Cave times */}
         {usage && (usage.fastestCave !== Infinity || usage.averageCaveTime > 0) && (
@@ -251,23 +182,6 @@ const styles = StyleSheet.create({
   content: { padding: 24, paddingBottom: 40 },
   title: { ...T.hero },
   sub: { ...T.caption, marginTop: 2, marginBottom: 20 },
-
-  // Shame message
-  shameCard: {
-    backgroundColor: "#FFF0F5",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 3,
-    borderLeftColor: C.pink,
-  },
-  shameText: {
-    fontSize: 15,
-    fontWeight: "700",
-    fontStyle: "italic",
-    color: C.pink,
-    lineHeight: 22,
-  },
 
   // Hero rank
   heroCard: { backgroundColor: C.white, borderRadius: 24, padding: 28, alignItems: "center", marginBottom: 16 },

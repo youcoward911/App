@@ -10,7 +10,6 @@ import UnlockScreen from "./src/screens/UnlockScreen";
 import StatsScreen from "./src/screens/StatsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import CoinShopScreen from "./src/screens/CoinShopScreen";
-import TemplatesScreen from "./src/screens/TemplatesScreen";
 import LeaderboardScreen from "./src/screens/LeaderboardScreen";
 import { View, StyleSheet, Text, Animated, Dimensions } from "react-native";
 import { PigIcon } from "./src/components/PigMascot";
@@ -40,17 +39,6 @@ function TabIcon({ type, focused }) {
             <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
             <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
             <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
-          </View>
-        </View>
-      )}
-      {type === "templates" && (
-        <View style={styles.tabBarIcon}>
-          <View style={styles.templateIcon}>
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2", width: 8, height: 8 }]} />
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FF6B8A" : "#C7C7CC", width: 8, height: 8 }]} />
-            <View style={[styles.templateSwatch, { backgroundColor: focused ? "#FFB6C1" : "#D1D1D6", width: 8, height: 8 }]} />
-            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2" }]} />
-            <View style={[styles.templateLine, { backgroundColor: focused ? "#FF69B4" : "#AEAEB2", width: 14 }]} />
           </View>
         </View>
       )}
@@ -129,16 +117,6 @@ function HomeTabs() {
             <TabIcon type="leaderboard" focused={focused} />
           ),
           tabBarLabel: "Board",
-        }}
-      />
-      <Tab.Screen
-        name="Templates"
-        component={TemplatesScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon type="templates" focused={focused} />
-          ),
-          tabBarLabel: "Templates",
         }}
       />
       <Tab.Screen
@@ -304,24 +282,6 @@ const styles = StyleSheet.create({
   barShort: { height: 8 },
   barMed: { height: 14 },
   barTall: { height: 20 },
-  // Template icon
-  templateIcon: {
-    width: 22,
-    height: 22,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    alignContent: "space-between",
-    gap: 2,
-  },
-  templateSwatch: {
-    borderRadius: 2,
-  },
-  templateLine: {
-    width: 20,
-    height: 2.5,
-    borderRadius: 1,
-  },
   // Trophy icon
   trophyWrap: {
     alignItems: "center",
