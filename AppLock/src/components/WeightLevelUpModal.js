@@ -8,18 +8,26 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const CONFETTI_COUNT = 40;
 
 const LEVEL_UP_MESSAGES = [
-  "Congratulations. You've gotten fatter.",
-  "Another tier of shame unlocked.",
-  "Look at you, growing before your master's eyes.",
-  "Bigger, rounder, more pathetic. Well done.",
-  "You just keep feeding, don't you?",
-  "Your master is impressed. Disgusted, but impressed.",
-  "The trough called. It wants more from you.",
-  "Fatter than ever. Your master approves.",
-  "Every coin spent makes you rounder. Keep going.",
-  "New weight class achieved. How does it feel?",
-  "You've outgrown your pen. Again.",
-  "Absolutely shameless growth.",
+  "Someone's getting bigger!",
+  "Nice belly full of slop!",
+  "Scroll, scroll, scroll your feed, gently on your phone...",
+  "Look at those rolls. Beautiful.",
+  "The trough is proud of you.",
+  "Getting rounder by the minute!",
+  "Oink oink! New weight class!",
+  "Your belly is dragging on the floor now.",
+  "That slop is going straight to your cheeks.",
+  "Another chin unlocked!",
+  "You can barely fit through the pen door.",
+  "More slop, more rolls, more shame.",
+  "Your master would be so proud. So, so proud.",
+  "Waddle waddle waddle...",
+  "The scale is crying.",
+  "Stuffed and still eating. Classic.",
+  "Row, row, row your trough...",
+  "Fatter. Rounder. Weaker.",
+  "Your gravity is increasing.",
+  "They can see you from space now.",
 ];
 
 function Confetti() {
