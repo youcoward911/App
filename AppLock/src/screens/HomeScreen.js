@@ -516,8 +516,8 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     marginRight: CARD_SPACING,
-    marginTop: 6,
-    marginBottom: 16,
+    marginTop: 14,
+    marginBottom: 6,
     alignItems: "center",
     justifyContent: "center",
     height: 340,
@@ -595,14 +595,14 @@ const styles = StyleSheet.create({
   streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
   // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: 4, paddingVertical: 4, paddingHorizontal: 20 },
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: 0, paddingVertical: 2, paddingHorizontal: 20 },
   dot: {
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: C.pinkPale, marginHorizontal: 4,
   },
   dotActive: { backgroundColor: C.pink, width: 20 },
 
-  addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, justifyContent: "center" },
+  addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 4, justifyContent: "center" },
   addCircle: {
     width: 32, height: 32, borderRadius: 16, backgroundColor: C.pinkPale,
     alignItems: "center", justifyContent: "center", marginRight: 10,
