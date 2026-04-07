@@ -686,8 +686,8 @@ const styles = StyleSheet.create({
   },
 
   feeCard: {
-    backgroundColor: C.white, borderRadius: 20, padding: 20,
-    alignItems: "center", width: "100%",
+    backgroundColor: C.white, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16,
+    alignItems: "center",
   },
   feeLabel: { ...T.label, marginBottom: 6 },
   feeCoinRow: { flexDirection: "row", alignItems: "center" },
