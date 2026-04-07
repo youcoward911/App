@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { StatusBar } from "expo-status-bar";
-import { AppLockProvider } from "./src/context/AppLockContext";
+import { AppLockProvider, useAppLock } from "./src/context/AppLockContext";
 import HomeScreen from "./src/screens/HomeScreen";
 import AddAppsScreen from "./src/screens/AddAppsScreen";
 import UnlockScreen from "./src/screens/UnlockScreen";
@@ -11,9 +11,11 @@ import StatsScreen from "./src/screens/StatsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import CoinShopScreen from "./src/screens/CoinShopScreen";
 import LeaderboardScreen from "./src/screens/LeaderboardScreen";
+import WeightLevelUpModal from "./src/components/WeightLevelUpModal";
 import { View, StyleSheet, Text, Animated, Dimensions } from "react-native";
 import { PigIcon } from "./src/components/PigMascot";
 import { getMasterCommand } from "./src/data/roastMessages";
+import { getPigWeight } from "./src/utils/pigWeight";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -133,6 +135,39 @@ function HomeTabs() {
   );
 }
 
+function WeightWatcher({ children }) {
+  const { state } = useAppLock();
+  const prevWeightKey = useRef(getPigWeight(state.totalCoinsSpent).key);
+  const [levelUp, setLevelUp] = useState(null); // { oldWeight, newWeight }
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    const current = getPigWeight(state.totalCoinsSpent).key;
+    if (!initialized.current) {
+      // Don't trigger on initial load
+      initialized.current = true;
+      prevWeightKey.current = current;
+      return;
+    }
+    if (current !== prevWeightKey.current) {
+      setLevelUp({ oldWeight: prevWeightKey.current, newWeight: current });
+      prevWeightKey.current = current;
+    }
+  }, [state.totalCoinsSpent]);
+
+  return (
+    <>
+      {children}
+      <WeightLevelUpModal
+        visible={!!levelUp}
+        oldWeight={levelUp?.oldWeight || "starving"}
+        newWeight={levelUp?.newWeight || "bony"}
+        onDismiss={() => setLevelUp(null)}
+      />
+    </>
+  );
+}
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const splashBgOpacity = useRef(new Animated.Value(1)).current;
@@ -169,6 +204,7 @@ export default function App() {
 
   return (
     <AppLockProvider>
+      <WeightWatcher>
       <NavigationContainer>
         <StatusBar style="dark" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -207,6 +243,7 @@ export default function App() {
           </Animated.View>
         )}
       </NavigationContainer>
+      </WeightWatcher>
     </AppLockProvider>
   );
 }

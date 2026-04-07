@@ -31,21 +31,6 @@ export default function StatsScreen() {
   const today = new Date().toDateString();
   const tribToday = state.tributesTodayDate === today ? (state.tributesToday || 0) : 0;
 
-  const getShameRank = () => {
-    if (state.totalUnlocks === 0)
-      return { label: "Untrained", color: C.textTertiary };
-    if (state.totalUnlocks < 5)
-      return { label: "Rookie", color: C.green };
-    if (state.totalUnlocks < 15)
-      return { label: "Obedient Sow", color: C.gold };
-    if (state.totalUnlocks < 30)
-      return { label: "Trained", color: "#FF6B35" };
-    return { label: "Master's Pet", color: C.pink };
-  };
-
-  const rank = getShameRank();
-  const progress = Math.min((state.totalUnlocks / 30) * 100, 100);
-
   // Top 3 apps
   const appEntries = usage ? Object.entries(usage.appUnlocks || {}).sort((a, b) => b[1] - a[1]) : [];
   const topApps = appEntries.slice(0, 3);
@@ -56,34 +41,21 @@ export default function StatsScreen() {
         <Text style={styles.title}>Hall of Shame</Text>
         <Text style={styles.sub}>Your master keeps score</Text>
 
-        {/* Pig Rank */}
-        <View style={[styles.heroCard, NEU_RAISED]}>
-          <PigMascot size={70} mood={state.totalUnlocks > 15 ? "happy" : "restless"} weight={getPigWeight(state.totalCoinsSpent).key} />
-          <Text style={styles.heroLabel}>PIG RANK</Text>
-          <Text style={[styles.heroValue, { color: rank.color }]}>
-            {rank.label}
-          </Text>
-          <View style={styles.meterTrack}>
-            <View
-              style={[styles.meterFill, { width: `${progress}%`, backgroundColor: rank.color }]}
-            />
-          </View>
-        </View>
-
-        {/* Pig Weight Evolution */}
+        {/* Weight Class — hero card */}
         {(() => {
           const wt = getPigWeight(state.totalCoinsSpent);
           const wp = getWeightProgress(state.totalCoinsSpent);
           const wtIdx = WEIGHT_TIERS.findIndex((t) => t.key === wt.key);
           const nextTier = wtIdx >= 0 && wtIdx < WEIGHT_TIERS.length - 1 ? WEIGHT_TIERS[wtIdx + 1] : null;
           return (
-            <View style={[styles.sectionCard, NEU_RAISED]}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={styles.sectionTitle}>PIG WEIGHT</Text>
+            <View style={[styles.heroCard, NEU_RAISED]}>
+              <PigMascot size={70} mood={state.totalUnlocks > 15 ? "happy" : "restless"} weight={wt.key} />
+              <View style={styles.heroLabelRow}>
+                <Text style={styles.heroLabel}>WEIGHT CLASS</Text>
                 <TouchableOpacity
                   style={styles.infoBtn}
                   onPress={() => Alert.alert(
-                    "Pig Weight",
+                    "Weight Class",
                     "Your pig gets fatter every time you eat your slop. The more coins you spend on unlocks, the bigger and rounder your pig grows. Feed it well.",
                     [{ text: "Got it" }]
                   )}
@@ -91,16 +63,14 @@ export default function StatsScreen() {
                   <Text style={styles.infoBtnText}>?</Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.weightHero}>
-                <Text style={styles.weightTier}>{wt.label}</Text>
-              </View>
+              <Text style={[styles.heroValue, { color: C.pink }]}>
+                {wt.label}
+              </Text>
               <View style={styles.meterTrack}>
                 <View style={[styles.meterFill, { width: `${wp * 100}%`, backgroundColor: C.pink }]} />
               </View>
               {nextTier ? (
-                <Text style={styles.weightNext}>
-                  Next: {nextTier.label} at {nextTier.minCoins} coins
-                </Text>
+                <Text style={styles.weightNext}>Next Level: {nextTier.label}</Text>
               ) : (
                 <Text style={styles.weightNext}>MAX TIER. Absolute unit.</Text>
               )}
@@ -245,6 +215,7 @@ const styles = StyleSheet.create({
   // Hero rank
   heroCard: { backgroundColor: C.white, borderRadius: 24, padding: 28, alignItems: "center", marginBottom: 16 },
   heroLabel: { ...T.label, marginBottom: 6, marginTop: 14 },
+  heroLabelRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 14, marginBottom: 6 },
   heroValue: { fontSize: 26, fontWeight: "900", letterSpacing: -0.5 },
   meterTrack: { width: "100%", height: 6, borderRadius: 3, backgroundColor: C.pinkPale, marginTop: 16, overflow: "hidden" },
   meterFill: { height: "100%", borderRadius: 3 },
