@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginRight: CARD_SPACING,
     marginTop: 14,
-    marginBottom: 6,
+    marginBottom: 2,
     alignItems: "center",
     justifyContent: "center",
     height: 340,
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
   // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: -4, paddingVertical: 2, paddingHorizontal: 20 },
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: 4, paddingHorizontal: 20 },
   dot: {
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: C.pinkPale, marginHorizontal: 4,
