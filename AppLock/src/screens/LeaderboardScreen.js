@@ -93,7 +93,7 @@ export default function LeaderboardScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.title}>Leaderboard</Text>
-        <Text style={styles.sub}>Who's the most shameless?</Text>
+        <Text style={styles.sub}>Who's the biggest piggy?</Text>
       </View>
 
       {/* Your rank card */}
