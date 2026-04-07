@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
@@ -32,6 +33,17 @@ export default function AddAppsScreen({ navigation }) {
 
   const handleConfigConfirm = ({ durationMinutes, peekFee, fullFee }) => {
     if (!configApp) return;
+    if (state.piggyCoins < fullFee) {
+      Alert.alert(
+        "Not Enough Coins",
+        `You need at least ${fullFee} coins to lock this app. You currently have ${state.piggyCoins}.`,
+        [
+          { text: "Go to Coin Shop", onPress: () => { setConfigApp(null); navigation.navigate("CoinShop"); } },
+          { text: "Go Back", style: "cancel" },
+        ]
+      );
+      return;
+    }
     dispatch({
       type: "LOCK_APP",
       payload: {
