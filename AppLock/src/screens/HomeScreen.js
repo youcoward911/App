@@ -190,18 +190,37 @@ export default function HomeScreen({ navigation }) {
     return `${Math.floor(h / 24)}d`;
   };
 
-  const isLocked = (appId) => !!state.lockedApps[appId]?.lockedAt;
-
-  const getCountdown = (appId) => {
+  const isLocked = (appId) => {
     const app = state.lockedApps[appId];
-    if (!app?.unlockExpiresAt || app.lockedAt) return null;
-    const remaining = Math.max(0, Math.floor((app.unlockExpiresAt - Date.now()) / 1000));
+    if (!app) return false;
+    // Locked if lockedAt is set AND not currently peeking
+    if (app.lockedAt && (!app.peekExpiresAt || Date.now() >= app.peekExpiresAt)) return true;
+    return false;
+  };
+
+  const isPeeking = (appId) => {
+    const app = state.lockedApps[appId];
+    return app?.peekExpiresAt && Date.now() < app.peekExpiresAt;
+  };
+
+  const getLockCountdown = (appId) => {
+    const app = state.lockedApps[appId];
+    if (!app?.lockExpiresAt || !app.lockedAt) return null;
+    const remaining = Math.max(0, Math.floor((app.lockExpiresAt - Date.now()) / 1000));
     if (remaining <= 0) return null;
     const h = Math.floor(remaining / 3600);
     const m = Math.floor((remaining % 3600) / 60);
     const s = remaining % 60;
     if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
+  const getPeekCountdown = (appId) => {
+    const app = state.lockedApps[appId];
+    if (!app?.peekExpiresAt) return null;
+    const remaining = Math.max(0, Math.floor((app.peekExpiresAt - Date.now()) / 1000));
+    if (remaining <= 0) return null;
+    return `${remaining}s`;
   };
 
   const onScrollEnd = (e) => {
@@ -212,9 +231,18 @@ export default function HomeScreen({ navigation }) {
 
   const renderCarouselCard = ({ item }) => {
     const locked = isLocked(item.id);
+    const peeking = isPeeking(item.id);
     const info = state.lockedApps[item.id];
-    const countdown = getCountdown(item.id);
-    const showX = deleteMode === item.id && !locked;
+    const lockTimer = getLockCountdown(item.id);
+    const peekTimer = getPeekCountdown(item.id);
+    const showX = deleteMode === item.id && !locked && !peeking;
+
+    const peekCost = info ? (info.peekFee || 1) * Math.pow(2, info.peekCount || 0) : 0;
+
+    let statusText = "Unlocked";
+    if (peeking) statusText = "Peeking...";
+    else if (locked) statusText = `Locked ${getTimeSince(item.id)}`;
+
     return (
       <WiggleWrap wiggle={showX} style={{ width: CARD_W + CARD_SPACING }}>
       <TouchableOpacity
@@ -223,12 +251,12 @@ export default function HomeScreen({ navigation }) {
         onPress={() => {
           if (deleteMode) {
             setDeleteMode(null);
-          } else {
+          } else if (locked) {
             navigation.navigate("Unlock", { appId: item.id });
           }
         }}
         onLongPress={() => {
-          if (!locked) {
+          if (!locked && !peeking) {
             setDeleteMode(item.id);
             try { Haptics?.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch (e) {}
           }
@@ -249,44 +277,60 @@ export default function HomeScreen({ navigation }) {
         )}
         <AppIcon app={item} size={90} />
         <Text style={styles.cardAppName}>{item.name}</Text>
-        <Text style={styles.cardStatus}>
-          {locked ? `Locked ${getTimeSince(item.id)}` : "Unlocked"}
+        <Text style={[styles.cardStatus, peeking && { color: C.gold }]}>
+          {statusText}
         </Text>
-        {countdown && (
+
+        {/* Lock timer countdown */}
+        {locked && lockTimer && (
           <View style={styles.countdownRow}>
             <Text style={styles.countdownIcon}>⏱</Text>
-            <Text style={styles.countdownText}>{countdown}</Text>
+            <Text style={styles.countdownText}>{lockTimer}</Text>
           </View>
         )}
-        {locked && (
-          <View style={styles.cardFeeRow}>
-            <View style={styles.cardFeeCoin}>
-              <Text style={styles.cardFeeCoinP}>P</Text>
+
+        {/* Peek timer countdown */}
+        {peeking && peekTimer && (
+          <View style={styles.countdownRow}>
+            <Text style={styles.countdownIcon}>👀</Text>
+            <Text style={[styles.countdownText, { color: C.gold }]}>{peekTimer}</Text>
+          </View>
+        )}
+
+        {/* Fee info for locked apps */}
+        {locked && info && (
+          <View style={styles.feeInfoWrap}>
+            <View style={styles.feeInfoRow}>
+              <Text style={styles.feeInfoLabel}>Peek:</Text>
+              <Text style={styles.feeInfoValue}>{peekCost}c</Text>
             </View>
-            <Text style={styles.cardFeeAmount}>{info?.unlockFee}</Text>
+            <View style={styles.feeInfoRow}>
+              <Text style={styles.feeInfoLabel}>Full:</Text>
+              <Text style={styles.feeInfoValue}>{info.fullFee}c</Text>
+            </View>
           </View>
         )}
-        <GlowButton
-          title={locked ? "Pay Tribute" : "Lock Me Back Up"}
-          onPress={() => {
-            if (deleteMode) {
-              setDeleteMode(null);
-              return;
-            }
-            if (locked) {
+
+        {locked && (
+          <GlowButton
+            title="Pay Tribute"
+            onPress={() => {
+              if (deleteMode) { setDeleteMode(null); return; }
               navigation.navigate("Unlock", { appId: item.id });
-            } else {
-              Alert.alert("Lock it back up?", "Back in the pen, piggy.", [
-                { text: "Nevermind", style: "cancel" },
-                {
-                  text: "Lock it.",
-                  onPress: () => dispatch({ type: "RELOCK_APP", payload: { appId: item.id } }),
-                },
-              ]);
-            }
-          }}
-          style={{ marginTop: 16 }}
-        />
+            }}
+            style={{ marginTop: 16 }}
+          />
+        )}
+        {!locked && !peeking && (
+          <GlowButton
+            title="Lock Me Back Up"
+            onPress={() => {
+              if (deleteMode) { setDeleteMode(null); return; }
+              dispatch({ type: "RELOCK_APP", payload: { appId: item.id } });
+            }}
+            style={{ marginTop: 16 }}
+          />
+        )}
       </TouchableOpacity>
       </WiggleWrap>
     );
@@ -315,6 +359,20 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.moodMsg}>{moodMessage}</Text>
           </View>
         </View>
+        {(state.ironSnoutStreak > 0 || state.bestIronSnout > 0) && (
+          <View style={[styles.streakCard, NEU_RAISED]}>
+            <Text style={styles.streakIcon}>🐽</Text>
+            <View style={styles.streakInfo}>
+              <Text style={styles.streakLabel}>IRON SNOUT</Text>
+              <Text style={styles.streakValue}>
+                {state.ironSnoutStreak} streak{state.ironSnoutStreak !== 1 ? "s" : ""}
+              </Text>
+            </View>
+            {state.bestIronSnout > 0 && (
+              <Text style={styles.streakBest}>Best: {state.bestIronSnout}</Text>
+            )}
+          </View>
+        )}
         {lockedApps.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>No apps locked</Text>
@@ -459,14 +517,34 @@ const styles = StyleSheet.create({
   },
   cardFeeCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
   cardFeeAmount: { fontSize: 26, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
-  unlockBtn: {
-    backgroundColor: C.pink,
-    borderRadius: 14,
-    paddingHorizontal: 36,
-    paddingVertical: 12,
-    marginTop: 16,
+
+  // Fee info (peek/full) on locked cards
+  feeInfoWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    gap: 16,
   },
-  unlockBtnText: { ...T.button },
+  feeInfoRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  feeInfoLabel: { ...T.caption, fontWeight: "600" },
+  feeInfoValue: { fontSize: 16, fontWeight: "900", color: C.pink },
+
+  // Iron Snout streak card
+  streakCard: {
+    backgroundColor: C.white,
+    borderRadius: 16,
+    marginHorizontal: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  streakIcon: { fontSize: 22, marginRight: 10 },
+  streakInfo: { flex: 1 },
+  streakLabel: { ...T.label, color: C.pink, fontSize: 10 },
+  streakValue: { fontSize: 16, fontWeight: "900", color: C.text, letterSpacing: -0.5 },
+  streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
   // Dots
   dots: { flexDirection: "row", justifyContent: "center", marginTop: 16, paddingVertical: 10, paddingHorizontal: 20 },

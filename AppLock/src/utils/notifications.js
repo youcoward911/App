@@ -5,7 +5,7 @@ try {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
-      shouldPlaySound: false,
+      shouldPlaySound: true,
       shouldSetBadge: false,
     }),
   });
@@ -43,6 +43,17 @@ const NOTIFICATION_MESSAGES = {
   ],
 };
 
+// Lock expiry notification messages
+const LOCK_EXPIRED_MESSAGES = [
+  { title: "Timer's up, piggy.", body: "Your app is unlocked. Try not to be a pig about it." },
+  { title: "Lock expired.", body: "You survived. For now. Your app is free." },
+  { title: "Freedom. (For now.)", body: "Your lock timer ran out. Iron Snout streak continues." },
+  { title: "You made it, pig.", body: "Timer's done. You actually held out. Impressive." },
+  { title: "Unlocked.", body: "Your app is available again. Don't make your master regret it." },
+  { title: "Time served.", body: "Lock expired. Go use your app. We both know you will." },
+  { title: "IRON SNOUT.", body: "You held the line. Your app is unlocked. Respect." },
+];
+
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -54,6 +65,43 @@ export async function requestPermissions() {
     return status === "granted";
   } catch (e) {
     return false;
+  }
+}
+
+// Schedule a notification for when a lock timer expires
+export async function scheduleLockExpiryNotification(appName, expiresAt) {
+  if (!Notifications) return;
+  const delay = Math.max(1, Math.floor((expiresAt - Date.now()) / 1000));
+  const msg = pickRandom(LOCK_EXPIRED_MESSAGES);
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: msg.title,
+        body: appName ? `${appName}: ${msg.body}` : msg.body,
+        sound: true,
+      },
+      trigger: { type: "timeInterval", seconds: delay, repeats: false },
+    });
+  } catch (e) {
+    // skip
+  }
+}
+
+// Immediate notification when lock expires (called from context)
+export async function scheduleLockExpiry(appId) {
+  if (!Notifications) return;
+  const msg = pickRandom(LOCK_EXPIRED_MESSAGES);
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: msg.title,
+        body: msg.body,
+        sound: true,
+      },
+      trigger: null, // immediate
+    });
+  } catch (e) {
+    // skip
   }
 }
 

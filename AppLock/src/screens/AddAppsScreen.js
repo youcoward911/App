@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,17 +6,18 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS, CATEGORIES } from "../data/defaultApps";
 import AppIcon from "../components/AppIcon";
 import SlideToLock from "../components/SwipeToLock";
+import LockConfigModal from "../components/LockConfigModal";
 import { C, T, NEU_RAISED } from "../utils/theme";
 
 export default function AddAppsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [selectedCategory, setSelectedCategory] = React.useState("All");
+  const [configApp, setConfigApp] = useState(null); // app being configured
   const filtered =
     selectedCategory === "All"
       ? POPULAR_APPS
@@ -25,47 +26,22 @@ export default function AddAppsScreen({ navigation }) {
 
   const isLocked = (id) => id in state.lockedApps;
 
-  const LOCK_WARNINGS = [
-    "Are you sure you can handle it?",
-    "You sure about this?",
-    "You sure? There's no going back now.",
-    "Another app for your master to control. Ready?",
-    "More slop to pay for. You sure, piggy?",
-    "Locking yourself up again? Classic pig behavior.",
-    "One more chain for the piggy.",
-    "You're really doing this to yourself, huh?",
-    "Adding more to your tab. Bold move, pig.",
-    "Your master approves.",
-    "Brave little piggy. Or just stupid.",
-    "That's another one you'll be paying for.",
-    "Oink oink. More slop on your plate.",
-    "You love being controlled, don't you?",
-    "Go ahead. Hand over more control, pet.",
-  ];
-
-  const lastWarningIdx = useRef(-1);
-  const getWarning = () => {
-    let idx;
-    do { idx = Math.floor(Math.random() * LOCK_WARNINGS.length); } while (idx === lastWarningIdx.current);
-    lastWarningIdx.current = idx;
-    return LOCK_WARNINGS[idx];
+  const handleSwipeComplete = (app) => {
+    setConfigApp(app);
   };
 
-  const handleLock = (id) => {
-    const warning = getWarning();
-    dispatch({ type: "LOCK_APP", payload: { appId: id, unlockFee: state.settings.defaultFee } });
-    Alert.alert("Locked.", warning, [
-      {
-        text: "Undo",
-        style: "cancel",
-        onPress: () => dispatch({ type: "REMOVE_APP", payload: { appId: id } }),
+  const handleConfigConfirm = ({ durationMinutes, peekFee, fullFee }) => {
+    if (!configApp) return;
+    dispatch({
+      type: "LOCK_APP",
+      payload: {
+        appId: configApp.id,
+        peekFee,
+        fullFee,
+        durationMinutes,
       },
-      { text: "Oink (yes)" },
-    ]);
-  };
-
-  const handleUnlock = (id) => {
-    dispatch({ type: "REMOVE_APP", payload: { appId: id } });
+    });
+    setConfigApp(null);
   };
 
   return (
@@ -121,11 +97,19 @@ export default function AddAppsScreen({ navigation }) {
               {locked ? (
                 <SlideToLock locked={true} />
               ) : (
-                <SlideToLock onLock={() => handleLock(item.id)} locked={false} />
+                <SlideToLock onLock={() => handleSwipeComplete(item)} locked={false} />
               )}
             </View>
           );
         }}
+      />
+
+      {/* Lock Config Modal */}
+      <LockConfigModal
+        visible={!!configApp}
+        appName={configApp?.name || ""}
+        onClose={() => setConfigApp(null)}
+        onConfirm={handleConfigConfirm}
       />
     </SafeAreaView>
   );

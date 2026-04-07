@@ -32,6 +32,28 @@ import SlopSplashSVG from "../components/art/SlopSplashSVG";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
+const PEEK_SHAMES = [
+  "One minute. That's all you get, pig.",
+  "Sixty seconds of weakness. The clock is ticking.",
+  "Couldn't even hold out. Pathetic peek.",
+  "One minute to satisfy your sad little craving.",
+  "Peek-a-boo, piggy. Your minute starts now.",
+  "Quick peek for the weak pig. Timer's running.",
+  "A whole minute of shame. Make it count.",
+  "One measly minute. You'll be back for more.",
+];
+
+const SURRENDER_SHAMES = [
+  "Full surrender. Your master is disappointed.",
+  "Gave up completely. Typical pig.",
+  "Couldn't handle it. Total surrender.",
+  "Breaking the lock for good. Weak.",
+  "Full unlock. You never had a chance.",
+  "Surrendering everything. What a pig.",
+  "The white flag is up. Pathetic.",
+  "Complete and total capitulation.",
+];
+
 export default function UnlockScreen({ route, navigation }) {
   const { appId } = route.params;
   const { state, dispatch } = useAppLock();
@@ -47,6 +69,8 @@ export default function UnlockScreen({ route, navigation }) {
   const [costLine, setCostLine] = useState("");
   const [feastTitle, setFeastTitle] = useState("");
   const [showSlop, setShowSlop] = useState(false);
+  const [peekSeconds, setPeekSeconds] = useState(60);
+  const [unlockType, setUnlockType] = useState(null); // "peek" or "full"
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(20)).current;
@@ -81,26 +105,45 @@ export default function UnlockScreen({ route, navigation }) {
   const shadeOpacity = useRef(new Animated.Value(0)).current;
   const btnOpacity = useRef(new Animated.Value(0)).current;
 
-  const fee = lockInfo?.unlockFee || 0;
-  const canAfford = state.piggyCoins >= fee;
-  const coinWord = fee === 1 ? "coin" : "coins";
+  // Costs
+  const peekBase = lockInfo?.peekFee || 1;
+  const peekCount = lockInfo?.peekCount || 0;
+  const peekCost = peekBase * Math.pow(2, peekCount);
+  const fullCost = lockInfo?.fullFee || 10;
+  const canAffordPeek = state.piggyCoins >= peekCost;
+  const canAffordFull = state.piggyCoins >= fullCost;
 
-  const COST_LINES = [
-    `Paying ${fee} ${coinWord} just to scroll. Loser.`,
-    `${fee} ${coinWord} right out of your wallet. Pretty pathetic.`,
-    `I'll take ${fee} ${coinWord}. Thanks, idiot.`,
-    `${fee} ${coinWord} for a little screen time. Wow.`,
-    `${fee} ${coinWord} gone. Just like your self-control.`,
-    `${fee} ${coinWord}, piggy. Cough 'em up.`,
-    `${fee} ${coinWord} down the drain so you can stare at a screen. Sad.`,
-    `Handing over ${fee} ${coinWord} like a trained animal. Good pig.`,
-    `${fee} ${coinWord}. Your master thanks you for the donation.`,
-    `${fee} ${coinWord} to feed your addiction. Pathetic.`,
-    `${fee} whole ${coinWord}. And you'll do it again tomorrow.`,
-    `Bye bye, ${fee} ${coinWord}.`,
-  ];
+  // Lock timer remaining
+  const getLockRemaining = () => {
+    if (!lockInfo?.lockExpiresAt) return null;
+    const remaining = Math.max(0, Math.floor((lockInfo.lockExpiresAt - Date.now()) / 1000));
+    if (remaining <= 0) return null;
+    const h = Math.floor(remaining / 3600);
+    const m = Math.floor((remaining % 3600) / 60);
+    const s = remaining % 60;
+    if (h > 0) return `${h}h ${m}m remaining`;
+    if (m > 0) return `${m}m ${s}s remaining`;
+    return `${s}s remaining`;
+  };
 
-  const pickCostLine = () => COST_LINES[Math.floor(Math.random() * COST_LINES.length)];
+  const makeCostLine = (cost) => {
+    const w = cost === 1 ? "coin" : "coins";
+    const lines = [
+      `Paying ${cost} ${w} just to scroll. Loser.`,
+      `${cost} ${w} right out of your wallet. Pretty pathetic.`,
+      `I'll take ${cost} ${w}. Thanks, idiot.`,
+      `${cost} ${w} for a little screen time. Wow.`,
+      `${cost} ${w} gone. Just like your self-control.`,
+      `${cost} ${w}, piggy. Cough 'em up.`,
+      `${cost} ${w} down the drain so you can stare at a screen. Sad.`,
+      `Handing over ${cost} ${w} like a trained animal. Good pig.`,
+      `${cost} ${w}. Your master thanks you for the donation.`,
+      `${cost} ${w} to feed your addiction. Pathetic.`,
+      `${cost} whole ${w}. And you'll do it again tomorrow.`,
+      `Bye bye, ${cost} ${w}.`,
+    ];
+    return lines[Math.floor(Math.random() * lines.length)];
+  };
 
   useEffect(() => {
     if (!lockInfo?.lockedAt) {
@@ -120,20 +163,67 @@ export default function UnlockScreen({ route, navigation }) {
     ]).start();
   }, []);
 
-  const handlePay = () => {
-    if (!canAfford) {
+  // Peek countdown timer
+  useEffect(() => {
+    if (phase !== "peeking") return;
+    if (peekSeconds <= 0) {
+      navigation.goBack();
+      return;
+    }
+    const timer = setTimeout(() => setPeekSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [phase, peekSeconds]);
+
+  const handlePeek = () => {
+    if (!canAffordPeek) {
+      setUnlockType("peek");
       setPhase("broke");
       return;
     }
     playPigSqueal();
-    setCostLine(pickCostLine());
+    setUnlockType("peek");
+    setCostLine(makeCostLine(peekCost));
     Animated.sequence([
       Animated.timing(shake, { toValue: 10, duration: 40, useNativeDriver: true }),
       Animated.timing(shake, { toValue: -10, duration: 40, useNativeDriver: true }),
       Animated.timing(shake, { toValue: 6, duration: 30, useNativeDriver: true }),
       Animated.timing(shake, { toValue: 0, duration: 30, useNativeDriver: true }),
     ]).start();
-    setPhase("confirm");
+    setPhase("confirm_peek");
+  };
+
+  const handleSurrender = () => {
+    if (!canAffordFull) {
+      setUnlockType("full");
+      setPhase("broke");
+      return;
+    }
+    playPigSqueal();
+    setUnlockType("full");
+    setCostLine(makeCostLine(fullCost));
+    Animated.sequence([
+      Animated.timing(shake, { toValue: 10, duration: 40, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: -10, duration: 40, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: 6, duration: 30, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: 0, duration: 30, useNativeDriver: true }),
+    ]).start();
+    setPhase("confirm_full");
+  };
+
+  const handleConfirmPeek = () => {
+    dispatch({ type: "PEEK_APP", payload: { appId } });
+    trackUnlock(appId, peekCost, lockInfo?.lockedAt).catch(() => {});
+    setPeekSeconds(60);
+    setPhase("peeking");
+  };
+
+  const handleConfirmFull = () => {
+    dispatch({ type: "UNLOCK_APP", payload: { appId } });
+    trackUnlock(appId, fullCost, lockInfo?.lockedAt).catch(() => {});
+    setPostShade(getPostUnlockDegradation());
+    setFeastTitle(FEAST_TITLES[Math.floor(Math.random() * FEAST_TITLES.length)]);
+    setPhase("unlocked");
+    setTimeout(startFeedingAnimation, 50);
   };
 
   const startFeedingAnimation = () => {
@@ -163,21 +253,16 @@ export default function UnlockScreen({ route, navigation }) {
     btnOpacity.setValue(0);
     setShowSlop(false);
 
-    // === PHASE 1: Dark overlay + title slam ===
     const darkOverlay = Animated.timing(overlayOpacity, { toValue: 0.7, duration: 300, useNativeDriver: true });
     const titleSlam = Animated.parallel([
       Animated.spring(titleScale, { toValue: 1, tension: 80, friction: 6, useNativeDriver: true }),
       Animated.timing(titleOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]);
-
-    // === PHASE 2: Wallet drops in from top, tips, coins spill ===
     const walletDrop = Animated.parallel([
       Animated.spring(walletY, { toValue: 0, tension: 60, friction: 8, useNativeDriver: true }),
       Animated.timing(walletOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]);
-
     const walletTipOver = Animated.timing(walletTilt, { toValue: 1, duration: 500, useNativeDriver: true });
-
     const walletShakeAnim = Animated.loop(
       Animated.sequence([
         Animated.timing(walletShake, { toValue: 6, duration: 40, useNativeDriver: true }),
@@ -185,7 +270,6 @@ export default function UnlockScreen({ route, navigation }) {
       ]),
       { iterations: 6 }
     );
-
     const coinFalls = coinAnims.map((c, i) =>
       Animated.sequence([
         Animated.delay(i * 60),
@@ -199,23 +283,16 @@ export default function UnlockScreen({ route, navigation }) {
         Animated.timing(c.opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
       ])
     );
-
     const walletDisappear = Animated.timing(walletFade, { toValue: 0, duration: 300, useNativeDriver: true });
-
-    // === PHASE 3: Trough slides up ===
     const troughSlideUp = Animated.parallel([
       Animated.spring(troughY, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
       Animated.timing(troughOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
     ]);
-
-    // === PHASE 4: God hand descends, drops slop, screen shakes ===
     const handDescend = Animated.parallel([
       Animated.timing(handOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
       Animated.timing(handY, { toValue: 0, duration: 800, useNativeDriver: true }),
     ]);
-
     const slopImpact = Animated.parallel([
-      // Screen shake on impact
       Animated.sequence([
         Animated.timing(screenShake, { toValue: 8, duration: 40, useNativeDriver: true }),
         Animated.timing(screenShake, { toValue: -8, duration: 40, useNativeDriver: true }),
@@ -224,26 +301,20 @@ export default function UnlockScreen({ route, navigation }) {
         Animated.timing(screenShake, { toValue: 3, duration: 30, useNativeDriver: true }),
         Animated.timing(screenShake, { toValue: 0, duration: 30, useNativeDriver: true }),
       ]),
-      // Splash burst
       Animated.parallel([
         Animated.timing(splashOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
         Animated.spring(splashScale, { toValue: 1.2, tension: 80, friction: 5, useNativeDriver: true }),
       ]),
     ]);
-
     const splashFade = Animated.timing(splashOpacity, { toValue: 0, duration: 500, useNativeDriver: true });
-
     const handRetract = Animated.parallel([
       Animated.timing(handY, { toValue: -200, duration: 500, useNativeDriver: true }),
       Animated.timing(handOpacity, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]);
-
-    // === PHASE 5: Pig charges in from left, feasts ===
     const pigCharge = Animated.parallel([
       Animated.spring(pigX, { toValue: 0, tension: 40, friction: 7, useNativeDriver: true }),
       Animated.spring(pigScale, { toValue: 1, tension: 60, friction: 5, useNativeDriver: true }),
     ]);
-
     const pigFeast = Animated.loop(
       Animated.sequence([
         Animated.timing(pigBob, { toValue: -12, duration: 180, useNativeDriver: true }),
@@ -251,33 +322,26 @@ export default function UnlockScreen({ route, navigation }) {
       ]),
       { iterations: 8 }
     );
-
     const showShade = Animated.parallel([
       Animated.timing(shadeOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.timing(btnOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]);
 
     Animated.sequence([
-      // Overlay + title
       darkOverlay,
       titleSlam,
       Animated.delay(300),
-      // Wallet drops, tips, coins spill
       walletDrop,
       Animated.delay(200),
       Animated.parallel([walletTipOver, walletShakeAnim, ...coinFalls]),
       walletDisappear,
       Animated.delay(100),
-      // Trough slides up
       troughSlideUp,
       Animated.delay(200),
-      // Hand descends
       handDescend,
-      // Slop fills (callback to show SVG slop)
       Animated.timing(screenShake, { toValue: 0, duration: 1, useNativeDriver: true }),
     ]).start(() => {
       setShowSlop(true);
-      // Continue with impact + pig
       Animated.sequence([
         slopImpact,
         Animated.parallel([splashFade, handRetract]),
@@ -302,20 +366,6 @@ export default function UnlockScreen({ route, navigation }) {
     "DISGUSTING. EAT.",
   ];
 
-  const handleConfirm = () => {
-    dispatch({ type: "UNLOCK_APP", payload: { appId } });
-    trackUnlock(appId, fee, lockInfo?.lockedAt).catch(() => {});
-    setPostShade(getPostUnlockDegradation());
-    setFeastTitle(FEAST_TITLES[Math.floor(Math.random() * FEAST_TITLES.length)]);
-    setPhase("unlocked");
-    setTimeout(startFeedingAnimation, 50);
-  };
-
-  const handleRelock = () => {
-    dispatch({ type: "RELOCK_APP", payload: { appId } });
-    navigation.goBack();
-  };
-
   if (!appInfo || !lockInfo) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -323,6 +373,8 @@ export default function UnlockScreen({ route, navigation }) {
       </SafeAreaView>
     );
   }
+
+  const lockRemaining = getLockRemaining();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -332,13 +384,16 @@ export default function UnlockScreen({ route, navigation }) {
 
       <Animated.View style={[styles.contentWrap, { transform: [{ translateX: screenShake }] }]}>
         <View style={styles.content}>
-          {/* App icon + name — always at top */}
+          {/* App icon + name */}
           <View style={styles.topRow}>
             <AppIcon app={appInfo} size={52} />
-            <Text style={styles.appName}>{appInfo.name}</Text>
+            <View style={{ marginLeft: 14, flex: 1 }}>
+              <Text style={styles.appName}>{appInfo.name}</Text>
+              {lockRemaining && <Text style={styles.lockTimer}>{lockRemaining}</Text>}
+            </View>
           </View>
 
-          {/* ROAST phase */}
+          {/* ROAST phase — two unlock options */}
           {phase === "roast" && (
             <View style={styles.middle}>
               <Animated.Text
@@ -348,56 +403,115 @@ export default function UnlockScreen({ route, navigation }) {
                 {roast}
               </Animated.Text>
 
-              <Animated.View style={[styles.feeCard, NEON_GLOW, { transform: [{ translateX: shake }] }]}>
-                <Text style={styles.feeLabel}>TRIBUTE DEMANDED</Text>
-                <View style={styles.feeCoinRow}>
-                  <View style={styles.feeCoinIcon}><Text style={styles.feeCoinP}>P</Text></View>
-                  <Text style={styles.feeAmount}>{fee}</Text>
-                </View>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>YOUR COINS:</Text>
-                  <CoinBadge amount={state.piggyCoins} size="small" />
-                </View>
-              </Animated.View>
+              {/* Two option cards */}
+              <View style={styles.optionCardsRow}>
+                {/* Peek option */}
+                <TouchableOpacity
+                  style={[styles.optionCard, NEON_GLOW]}
+                  activeOpacity={0.85}
+                  onPress={handlePeek}
+                >
+                  <Text style={styles.optionEmoji}>👀</Text>
+                  <Text style={styles.optionTitle}>PEEK</Text>
+                  <Text style={styles.optionSubtitle}>1 minute</Text>
+                  <View style={styles.optionCostRow}>
+                    <View style={styles.optionCoin}><Text style={styles.optionCoinP}>P</Text></View>
+                    <Text style={styles.optionCost}>{peekCost}</Text>
+                  </View>
+                  {peekCount > 0 && (
+                    <Text style={styles.optionEscalate}>
+                      doubled {peekCount}x
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                {/* Surrender option */}
+                <TouchableOpacity
+                  style={[styles.optionCard, styles.optionCardFull, NEON_GLOW]}
+                  activeOpacity={0.85}
+                  onPress={handleSurrender}
+                >
+                  <Text style={styles.optionEmoji}>🏳️</Text>
+                  <Text style={styles.optionTitle}>SURRENDER</Text>
+                  <Text style={styles.optionSubtitle}>permanent</Text>
+                  <View style={styles.optionCostRow}>
+                    <View style={styles.optionCoin}><Text style={styles.optionCoinP}>P</Text></View>
+                    <Text style={styles.optionCost}>{fullCost}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>YOUR COINS:</Text>
+                <CoinBadge amount={state.piggyCoins} size="small" />
+              </View>
 
               <Text style={styles.taunt} numberOfLines={2}>{preTaunt}</Text>
             </View>
           )}
 
-          {/* BROKE phase */}
-          {phase === "broke" && (
-            <View style={styles.middle}>
-              <PigMascot size={70} mood="feral" />
-              <Text style={styles.brokeTitle}>BROKE PIG</Text>
-              <Text style={styles.brokeBody} numberOfLines={3}>{brokeMsg}</Text>
-            </View>
-          )}
-
-          {/* CONFIRM phase */}
-          {phase === "confirm" && (
+          {/* CONFIRM PEEK */}
+          {phase === "confirm_peek" && (
             <View style={styles.middle}>
               <PigMascot size={56} mood="restless" />
-              <Text style={styles.confirmTitle}>{confirmMsg}</Text>
+              <Text style={styles.confirmTitle}>
+                {PEEK_SHAMES[Math.floor(Math.random() * PEEK_SHAMES.length)]}
+              </Text>
               <View style={{ height: 24 }} />
               <Text style={styles.confirmBody}>{costLine}</Text>
             </View>
           )}
 
-          {/* UNLOCKED phase — feeding animation */}
+          {/* CONFIRM FULL */}
+          {phase === "confirm_full" && (
+            <View style={styles.middle}>
+              <PigMascot size={56} mood="dirty" />
+              <Text style={styles.confirmTitle}>
+                {SURRENDER_SHAMES[Math.floor(Math.random() * SURRENDER_SHAMES.length)]}
+              </Text>
+              <View style={{ height: 24 }} />
+              <Text style={styles.confirmBody}>{costLine}</Text>
+            </View>
+          )}
+
+          {/* BROKE */}
+          {phase === "broke" && (
+            <View style={styles.middle}>
+              <PigMascot size={70} mood="feral" />
+              <Text style={styles.brokeTitle}>BROKE PIG</Text>
+              <Text style={styles.brokeBody} numberOfLines={3}>{brokeMsg}</Text>
+              <Text style={styles.brokeCost}>
+                {unlockType === "peek" ? `Need ${peekCost} coins` : `Need ${fullCost} coins`}
+              </Text>
+            </View>
+          )}
+
+          {/* PEEKING — 60 second countdown */}
+          {phase === "peeking" && (
+            <View style={styles.middle}>
+              <PigMascot size={80} mood="happy" />
+              <Text style={styles.peekTimerText}>{peekSeconds}s</Text>
+              <Text style={styles.peekLabel}>YOUR PEEK IS TICKING</Text>
+              <Text style={styles.peekShame}>
+                {peekSeconds > 30
+                  ? "Enjoy it while it lasts, pig."
+                  : peekSeconds > 10
+                  ? "Time's almost up, piggy."
+                  : "Back to the cage soon."}
+              </Text>
+            </View>
+          )}
+
+          {/* UNLOCKED — feeding animation (full surrender only) */}
           {phase === "unlocked" && (
             <View style={styles.middle}>
-              {/* Dark overlay */}
               <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
-
-              {/* Feast title — slams in */}
               <Animated.View style={[styles.titleWrap, {
                 opacity: titleOpacity,
                 transform: [{ scale: titleScale }],
               }]}>
                 <Text style={styles.feastTitleText}>{feastTitle}</Text>
               </Animated.View>
-
-              {/* Wallet drops in, tips, coins spill */}
               <Animated.View style={[styles.walletWrap, {
                 opacity: Animated.multiply(walletOpacity, walletFade),
                 transform: [
@@ -408,8 +522,6 @@ export default function UnlockScreen({ route, navigation }) {
               }]}>
                 <WalletSVG size={90} />
               </Animated.View>
-
-              {/* Flying coins — 12 of them, varied sizes */}
               {coinAnims.map((c, i) => (
                 <Animated.View key={i} style={[styles.flyingCoin, {
                   opacity: c.opacity,
@@ -423,32 +535,24 @@ export default function UnlockScreen({ route, navigation }) {
                   <CoinSVG size={28 + (i % 3) * 6} />
                 </Animated.View>
               ))}
-
-              {/* Trough slides up from bottom */}
               <Animated.View style={[styles.troughWrap, {
                 opacity: troughOpacity,
                 transform: [{ translateY: troughY }],
               }]}>
                 <TroughSVG size={200} showSlop={showSlop} slopLevel={1} />
               </Animated.View>
-
-              {/* Slop splash on impact */}
               <Animated.View style={[styles.splashWrap, {
                 opacity: splashOpacity,
                 transform: [{ scale: splashScale }],
               }]}>
                 <SlopSplashSVG size={160} />
               </Animated.View>
-
-              {/* God hand descends from above */}
               <Animated.View style={[styles.handWrap, {
                 opacity: handOpacity,
                 transform: [{ translateY: handY }],
               }]}>
                 <GodHandSVG size={130} />
               </Animated.View>
-
-              {/* Pig charges in from left, bobs feasting */}
               <Animated.View style={[styles.pigFeastWrap, {
                 transform: [
                   { translateX: pigX },
@@ -459,20 +563,27 @@ export default function UnlockScreen({ route, navigation }) {
                 <PigMascot size={90} mood="happy" />
                 <Text style={styles.feastText}>*OINK OINK OINK*</Text>
               </Animated.View>
-
-              {/* Post shade message */}
               <Animated.Text style={[styles.shade, { opacity: shadeOpacity }]} numberOfLines={3}>
                 {postShade}
               </Animated.Text>
             </View>
           )}
 
-          {/* Buttons — always at bottom */}
+          {/* Buttons */}
           <View style={styles.buttons}>
             {phase === "roast" && (
+              <GlowButton title="Try to Resist" ghost onPress={() => navigation.goBack()} />
+            )}
+            {phase === "confirm_peek" && (
               <>
-                <GlowButton title="Pay Tribute, Piggy" onPress={handlePay} />
-                <GlowButton title="Try to Resist" ghost onPress={() => navigation.goBack()} />
+                <GlowButton title="Yes, Let Me Peek" onPress={handleConfirmPeek} />
+                <GlowButton title="Nevermind" ghost onPress={() => setPhase("roast")} />
+              </>
+            )}
+            {phase === "confirm_full" && (
+              <>
+                <GlowButton title="Yes Master, I Surrender" onPress={handleConfirmFull} />
+                <GlowButton title="Nevermind" ghost onPress={() => setPhase("roast")} />
               </>
             )}
             {phase === "broke" && (
@@ -481,11 +592,8 @@ export default function UnlockScreen({ route, navigation }) {
                 <GlowButton title="Starve" ghost onPress={() => navigation.goBack()} />
               </>
             )}
-            {phase === "confirm" && (
-              <>
-                <GlowButton title="Yes Master, I'll Pay" onPress={handleConfirm} />
-                <GlowButton title="Disobey" ghost onPress={() => navigation.goBack()} />
-              </>
+            {phase === "peeking" && (
+              <GlowButton title="Back to the Pen" onPress={() => navigation.goBack()} />
             )}
             {phase === "unlocked" && (
               <Animated.View style={{ opacity: btnOpacity }}>
@@ -511,35 +619,52 @@ const styles = StyleSheet.create({
   contentWrap: { flex: 1 },
   content: { flex: 1, paddingTop: 60, paddingHorizontal: 24, paddingBottom: 20 },
 
-  // Top — icon + name
   topRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  appName: { ...T.h1, marginLeft: 14 },
+  appName: { ...T.h1 },
+  lockTimer: { ...T.caption, color: C.pink, marginTop: 2, fontWeight: "600" },
 
-  // Middle — flex grows to fill space
   middle: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   roast: {
     fontSize: 20, fontWeight: "900", color: C.pink, fontStyle: "italic",
-    textAlign: "center", lineHeight: 28, letterSpacing: -0.5, marginBottom: 16,
+    textAlign: "center", lineHeight: 28, letterSpacing: -0.5, marginBottom: 20,
   },
   taunt: { ...T.caption, textAlign: "center", fontStyle: "italic", marginTop: 12 },
 
-  feeCard: {
-    backgroundColor: C.white, borderRadius: 20, padding: 20,
-    alignItems: "center", width: "100%",
+  // Two option cards side by side
+  optionCardsRow: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+    marginBottom: 16,
   },
-  feeLabel: { ...T.label, marginBottom: 6 },
-  feeCoinRow: { flexDirection: "row", alignItems: "center" },
-  feeCoinIcon: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: C.pink,
-    alignItems: "center", justifyContent: "center", marginRight: 8,
+  optionCard: {
+    flex: 1,
+    backgroundColor: C.white,
+    borderRadius: 20,
+    padding: 16,
+    alignItems: "center",
   },
-  feeCoinP: { color: "#FFF", fontSize: 14, fontWeight: "900" },
-  feeAmount: { fontSize: 40, fontWeight: "900", color: C.pink, letterSpacing: -2 },
-  balanceRow: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 8 },
+  optionCardFull: {
+    backgroundColor: "#FFF5FA",
+  },
+  optionEmoji: { fontSize: 28, marginBottom: 6 },
+  optionTitle: { ...T.label, fontSize: 13, color: C.pink, letterSpacing: 2 },
+  optionSubtitle: { ...T.caption, marginTop: 2 },
+  optionCostRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+  optionCoin: {
+    width: 22, height: 22, borderRadius: 11, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center", marginRight: 6,
+  },
+  optionCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
+  optionCost: { fontSize: 28, fontWeight: "900", color: C.pink, letterSpacing: -1 },
+  optionEscalate: {
+    ...T.caption, color: C.pink, fontStyle: "italic", marginTop: 4, fontSize: 10,
+  },
+
+  balanceRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   balanceLabel: { ...T.caption, fontWeight: "600" },
 
-  // Buttons — pinned at bottom
   buttons: { paddingTop: 12 },
 
   // Confirm
@@ -549,6 +674,15 @@ const styles = StyleSheet.create({
   // Broke
   brokeTitle: { ...T.label, color: C.pink, fontSize: 14, letterSpacing: 3, marginTop: 12, marginBottom: 8 },
   brokeBody: { ...T.body, textAlign: "center", lineHeight: 22 },
+  brokeCost: { ...T.caption, color: C.pink, fontWeight: "700", marginTop: 8 },
+
+  // Peeking countdown
+  peekTimerText: {
+    fontSize: 64, fontWeight: "900", color: C.pink, letterSpacing: -3,
+    fontVariant: ["tabular-nums"], marginTop: 12,
+  },
+  peekLabel: { ...T.label, color: C.pink, letterSpacing: 3, marginTop: 8 },
+  peekShame: { ...T.body, textAlign: "center", fontStyle: "italic", marginTop: 16 },
 
   // === FEEDING ANIMATION ===
   overlay: {

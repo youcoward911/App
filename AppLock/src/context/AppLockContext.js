@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { requestPermissions, refreshNotifications, onTributePaid } from "../utils/notifications";
+import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 import { updateLeaderboard } from "../utils/leaderboard";
 
@@ -14,6 +14,22 @@ export const COIN_PACKAGES = [
   { id: "large", productId: "scrollpiggy.coins.250", coins: 250, price: 19.99, label: "250 Coins", bonus: "+50 bonus" },
 ];
 
+// Fee tier presets: [peekFee, fullUnlockFee]
+export const FEE_TIERS = [
+  { label: "1 / 10", peek: 1, full: 10 },
+  { label: "2 / 20", peek: 2, full: 20 },
+  { label: "3 / 30", peek: 3, full: 30 },
+  { label: "4 / 40", peek: 4, full: 40 },
+];
+
+// Duration presets in minutes
+export const DURATION_PRESETS = [
+  { label: "15 min", minutes: 15 },
+  { label: "30 min", minutes: 30 },
+  { label: "1 hour", minutes: 60 },
+  { label: "90 min", minutes: 90 },
+];
+
 const initialState = {
   lockedApps: {},
   piggyCoins: 0,
@@ -21,12 +37,17 @@ const initialState = {
   totalCoinsPurchased: 0,
   totalMoneySpent: 0,
   totalUnlocks: 0,
+  totalPeeks: 0,
+  totalSurrenders: 0, // full unlocks (permanent)
   tributesToday: 0,
   tributesTodayDate: null,
   lastTributeTime: null,
+  ironSnoutStreak: 0,    // consecutive natural expirations without peek/unlock
+  bestIronSnout: 0,      // all-time best streak
   settings: {
-    defaultFee: 5,
-    timeLockMinutes: 0,
+    defaultPeekFee: 1,
+    defaultFullFee: 10,
+    defaultDuration: 15,   // minutes
     currency: "USD",
     roastIntensity: "medium",
   },
@@ -38,14 +59,22 @@ function reducer(state, action) {
       return { ...initialState, ...action.payload };
 
     case "LOCK_APP": {
-      const { appId, unlockFee } = action.payload;
+      const { appId, peekFee, fullFee, durationMinutes } = action.payload;
+      const pf = peekFee ?? state.settings.defaultPeekFee;
+      const ff = fullFee ?? state.settings.defaultFullFee;
+      const dur = durationMinutes ?? state.settings.defaultDuration;
       return {
         ...state,
         lockedApps: {
           ...state.lockedApps,
           [appId]: {
             lockedAt: Date.now(),
-            unlockFee: unlockFee ?? state.settings.defaultFee,
+            lockExpiresAt: Date.now() + dur * 60 * 1000,
+            durationMinutes: dur,
+            peekFee: pf,
+            fullFee: ff,
+            peekCount: 0,           // how many peeks this lock session
+            peekExpiresAt: null,    // when current peek window ends
             unlockCountToday: state.lockedApps[appId]?.unlockCountToday ?? 0,
             lastUnlockDate: state.lockedApps[appId]?.lastUnlockDate ?? null,
           },
@@ -53,43 +82,107 @@ function reducer(state, action) {
       };
     }
 
+    // Peek: 1-minute unlock, escalating cost
+    case "PEEK_APP": {
+      const { appId } = action.payload;
+      const app = state.lockedApps[appId];
+      if (!app) return state;
+
+      const baseFee = app.peekFee || 1;
+      // Escalating: doubles each peek (1, 2, 4, 8, 16...)
+      const cost = baseFee * Math.pow(2, app.peekCount);
+      const today = new Date().toDateString();
+      const isTodaySame = state.tributesTodayDate === today;
+
+      return {
+        ...state,
+        piggyCoins: Math.max(0, state.piggyCoins - cost),
+        totalCoinsSpent: state.totalCoinsSpent + cost,
+        totalPeeks: (state.totalPeeks || 0) + 1,
+        totalUnlocks: state.totalUnlocks + 1,
+        tributesToday: isTodaySame ? (state.tributesToday || 0) + 1 : 1,
+        tributesTodayDate: today,
+        lastTributeTime: Date.now(),
+        // Break the Iron Snout streak on peek
+        ironSnoutStreak: 0,
+        lockedApps: {
+          ...state.lockedApps,
+          [appId]: {
+            ...app,
+            peekCount: app.peekCount + 1,
+            peekExpiresAt: Date.now() + 60 * 1000, // 1 minute
+          },
+        },
+      };
+    }
+
+    // Full unlock: permanent, costs 10x
     case "UNLOCK_APP": {
       const { appId } = action.payload;
       const app = state.lockedApps[appId];
       if (!app) return state;
 
-      const fee = app.unlockFee || 0;
+      const fee = app.fullFee || 10;
       const today = new Date().toDateString();
+      const isTodaySame = state.tributesTodayDate === today;
       const isNewDay = app.lastUnlockDate !== today;
       const newCount = isNewDay ? 1 : (app.unlockCountToday || 0) + 1;
-
-      const isTodaySame = state.tributesTodayDate === today;
-
-      const timeLock = state.settings.timeLockMinutes;
-      const unlockExpiresAt = timeLock > 0 ? Date.now() + timeLock * 60 * 1000 : null;
 
       return {
         ...state,
         piggyCoins: Math.max(0, state.piggyCoins - fee),
         totalCoinsSpent: state.totalCoinsSpent + fee,
         totalUnlocks: state.totalUnlocks + 1,
+        totalSurrenders: (state.totalSurrenders || 0) + 1,
         tributesToday: isTodaySame ? (state.tributesToday || 0) + 1 : 1,
         tributesTodayDate: today,
         lastTributeTime: Date.now(),
+        // Break the Iron Snout streak on full unlock
+        ironSnoutStreak: 0,
         lockedApps: {
           ...state.lockedApps,
           [appId]: {
             ...app,
             lockedAt: null,
+            lockExpiresAt: null,
+            peekExpiresAt: null,
+            peekCount: 0,
             unlockCountToday: newCount,
             lastUnlockDate: today,
-            unlockExpiresAt,
           },
         },
       };
     }
 
-    case "RELOCK_APP": {
+    // Timer expired naturally — Iron Snout!
+    case "LOCK_EXPIRED": {
+      const { appId } = action.payload;
+      const app = state.lockedApps[appId];
+      if (!app) return state;
+
+      const wasPeeked = app.peekCount > 0;
+      const newStreak = wasPeeked ? 1 : (state.ironSnoutStreak || 0) + 1;
+      const best = Math.max(state.bestIronSnout || 0, newStreak);
+
+      return {
+        ...state,
+        ironSnoutStreak: newStreak,
+        bestIronSnout: best,
+        lockedApps: {
+          ...state.lockedApps,
+          [appId]: {
+            ...app,
+            lockedAt: null,
+            lockExpiresAt: null,
+            peekExpiresAt: null,
+            peekCount: 0,
+          },
+        },
+      };
+    }
+
+    // Re-lock a peek that expired (back to locked, timer keeps counting)
+    case "PEEK_EXPIRED": {
       const { appId } = action.payload;
       const app = state.lockedApps[appId];
       if (!app) return state;
@@ -97,7 +190,35 @@ function reducer(state, action) {
         ...state,
         lockedApps: {
           ...state.lockedApps,
-          [appId]: { ...app, lockedAt: Date.now() },
+          [appId]: {
+            ...app,
+            peekExpiresAt: null,
+          },
+        },
+      };
+    }
+
+    case "RELOCK_APP": {
+      const { appId, peekFee, fullFee, durationMinutes } = action.payload;
+      const app = state.lockedApps[appId];
+      if (!app) return state;
+      const pf = peekFee ?? app.peekFee ?? state.settings.defaultPeekFee;
+      const ff = fullFee ?? app.fullFee ?? state.settings.defaultFullFee;
+      const dur = durationMinutes ?? app.durationMinutes ?? state.settings.defaultDuration;
+      return {
+        ...state,
+        lockedApps: {
+          ...state.lockedApps,
+          [appId]: {
+            ...app,
+            lockedAt: Date.now(),
+            lockExpiresAt: Date.now() + dur * 60 * 1000,
+            durationMinutes: dur,
+            peekFee: pf,
+            fullFee: ff,
+            peekCount: 0,
+            peekExpiresAt: null,
+          },
         },
       };
     }
@@ -120,14 +241,6 @@ function reducer(state, action) {
 
     case "UPDATE_SETTINGS": {
       const newSettings = { ...state.settings, ...action.payload };
-      // If time lock turned off, clear expiry on all unlocked apps
-      if (newSettings.timeLockMinutes === 0 && state.settings.timeLockMinutes > 0) {
-        const updated = {};
-        Object.entries(state.lockedApps).forEach(([id, app]) => {
-          updated[id] = app.unlockExpiresAt ? { ...app, unlockExpiresAt: null } : app;
-        });
-        return { ...state, settings: newSettings, lockedApps: updated };
-      }
       return { ...state, settings: newSettings };
     }
 
@@ -162,17 +275,41 @@ export function AppLockProvider({ children }) {
     })();
   }, []);
 
-  // Auto-relock expired apps
+  // Timer checks: lock expiry, peek expiry
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
       Object.entries(state.lockedApps).forEach(([appId, app]) => {
-        if (!app.lockedAt && app.unlockExpiresAt && now >= app.unlockExpiresAt) {
-          dispatch({ type: "RELOCK_APP", payload: { appId } });
+        // Peek expired — close the peek window
+        if (app.peekExpiresAt && now >= app.peekExpiresAt) {
+          dispatch({ type: "PEEK_EXPIRED", payload: { appId } });
+        }
+        // Lock timer expired naturally
+        if (app.lockedAt && app.lockExpiresAt && now >= app.lockExpiresAt && !app.peekExpiresAt) {
+          dispatch({ type: "LOCK_EXPIRED", payload: { appId } });
+          // Schedule notification for this expiry
+          scheduleLockExpiry(appId).catch(() => {});
         }
       });
-    }, 5000);
+    }, 1000);
     return () => clearInterval(interval);
+  }, [state.lockedApps]);
+
+  // Schedule lock expiry notifications when new locks are created
+  const prevLockedRef = useRef({});
+  useEffect(() => {
+    const prev = prevLockedRef.current;
+    Object.entries(state.lockedApps).forEach(([appId, app]) => {
+      if (app.lockExpiresAt && app.lockedAt) {
+        const prevApp = prev[appId];
+        // New lock or re-lock (different lockExpiresAt)
+        if (!prevApp || prevApp.lockExpiresAt !== app.lockExpiresAt) {
+          const appInfo = require("../data/defaultApps").POPULAR_APPS.find((a) => a.id === appId);
+          scheduleLockExpiryNotification(appInfo?.name || appId, app.lockExpiresAt).catch(() => {});
+        }
+      }
+    });
+    prevLockedRef.current = { ...state.lockedApps };
   }, [state.lockedApps]);
 
   // Reschedule push notifications + update leaderboard when a tribute is paid

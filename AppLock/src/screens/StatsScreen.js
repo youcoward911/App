@@ -198,6 +198,30 @@ export default function StatsScreen() {
           </View>
         )}
 
+        {/* Iron Snout + Peek/Surrender stats */}
+        <View style={styles.statRow}>
+          <View style={[styles.statCard, NEU_RAISED]}>
+            <Text style={styles.statEmoji}>🐽</Text>
+            <Text style={[styles.statVal, { color: "#FF6B35" }]}>{state.ironSnoutStreak || 0}</Text>
+            <Text style={styles.statLabel}>Iron Snout</Text>
+          </View>
+          <View style={[styles.statCard, NEU_RAISED]}>
+            <Text style={styles.statVal}>{state.bestIronSnout || 0}</Text>
+            <Text style={styles.statLabel}>Best Streak</Text>
+          </View>
+        </View>
+
+        <View style={styles.statRow}>
+          <View style={[styles.statCard, NEU_RAISED]}>
+            <Text style={styles.statVal}>{state.totalPeeks || 0}</Text>
+            <Text style={styles.statLabel}>Peeks</Text>
+          </View>
+          <View style={[styles.statCard, NEU_RAISED]}>
+            <Text style={[styles.statVal, { color: C.pink }]}>{state.totalSurrenders || 0}</Text>
+            <Text style={styles.statLabel}>Surrenders</Text>
+          </View>
+        </View>
+
         {/* Top apps leaderboard */}
         {topApps.length > 1 && (
           <View style={[styles.sectionCard, NEU_RAISED]}>
@@ -256,6 +280,7 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
   statCard: { flex: 1, backgroundColor: C.white, borderRadius: 20, padding: 22, alignItems: "center" },
   statVal: { ...T.stat, fontSize: 32 },
+  statEmoji: { fontSize: 20, marginBottom: 2 },
   statLabel: { ...T.caption, marginTop: 6, textAlign: "center" },
 
   // Section cards
