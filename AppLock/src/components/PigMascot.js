@@ -94,11 +94,14 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
     if (!showSpeech) return;
     const messages = PIG_SPEECH[weight] || PIG_SPEECH.average;
 
+    let msgIndex = 0;
     const showBubble = () => {
-      const msg = messages[Math.floor(Math.random() * messages.length)];
+      // Starving cycles sequentially, others random
+      const msg = weight === "starving"
+        ? messages[msgIndex++ % messages.length]
+        : messages[Math.floor(Math.random() * messages.length)];
       setSpeechText(msg);
-      // Show for 7-12 seconds
-      const displayTime = 7000 + Math.random() * 5000;
+      const displayTime = weight === "starving" ? 4000 : 7000 + Math.random() * 5000;
       Animated.sequence([
         Animated.timing(speechOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
         Animated.delay(displayTime),
@@ -107,8 +110,9 @@ export default function PigMascot({ size = 80, animate = true, mood = "happy", w
     };
 
     // Show first bubble quickly
+    const cycleTime = weight === "starving" ? 6000 : 15000;
     const initialTimeout = setTimeout(showBubble, 800);
-    const interval = setInterval(showBubble, 15000);
+    const interval = setInterval(showBubble, cycleTime);
 
     return () => {
       clearTimeout(initialTimeout);

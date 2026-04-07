@@ -44,11 +44,8 @@ export function getWeightProgress(totalCoinsSpent) {
 // Speech bubble messages per weight tier — cycled every ~30s
 export const PIG_SPEECH = {
   starving: [
-    "So hungry...",
-    "Feed me... please...",
-    "Wasting away here...",
-    "Need slop... dying...",
-    "Is anyone there...?",
+    "So...hungry...",
+    "Must....scroll...slop...",
   ],
   bony: [
     "A crumb! Finally!",
