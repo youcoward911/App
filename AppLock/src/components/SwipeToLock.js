@@ -110,9 +110,9 @@ export default function SlideToLock({ onLock, locked }) {
         <Animated.View
           style={[styles.thumb, { transform: [{ translateX: pan }] }]}
         />
-        <Animated.Text style={[styles.trackLabel, { opacity: Animated.multiply(shimmer, arrowPulse), transform: [{ translateX: pan }] }]}>
-          ›
-        </Animated.Text>
+        <Animated.View style={[styles.arrowWrap, { opacity: Animated.multiply(shimmer, arrowPulse), transform: [{ translateX: pan }] }]}>
+          <Text style={styles.trackLabel}>›</Text>
+        </Animated.View>
       </View>
       <Text style={styles.hint}>swipe to lock</Text>
     </View>
@@ -131,15 +131,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 4,
   },
-  trackLabel: {
+  arrowWrap: {
     position: "absolute",
     left: THUMB_SIZE + 8,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
+  trackLabel: {
     fontSize: 22,
     fontWeight: "600",
     color: C.pink,
-    top: 0,
-    bottom: 0,
-    lineHeight: THUMB_SIZE + 8,
   },
   thumb: {
     width: THUMB_SIZE,
