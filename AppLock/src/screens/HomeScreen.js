@@ -284,60 +284,60 @@ export default function HomeScreen({ navigation }) {
           {statusText}
         </Text>
 
-        {/* Lock timer countdown */}
-        {locked && lockTimer && (
-          <View style={styles.countdownRow}>
-            <Text style={styles.countdownIcon}>T</Text>
-            <Text style={styles.countdownText}>{lockTimer}</Text>
-          </View>
-        )}
-
-        {/* Peek timer countdown */}
-        {peeking && peekTimer && (
-          <View style={styles.countdownRow}>
-            <Text style={styles.countdownIcon}>P</Text>
-            <Text style={[styles.countdownText, { color: C.gold }]}>{peekTimer}</Text>
-          </View>
-        )}
-
-        {/* Fee info for locked apps */}
-        {locked && info && (
-          <View style={styles.feeInfoWrap}>
-            <View style={styles.feeInfoRow}>
-              <Text style={styles.feeInfoLabel}>Peek:</Text>
-              <Text style={styles.feeInfoValue}>{peekCost}</Text>
-              <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
+        {/* Timer slot — always takes space */}
+        <View style={styles.timerSlot}>
+          {locked && lockTimer ? (
+            <View style={styles.countdownRow}>
+              <Text style={styles.countdownIcon}>T</Text>
+              <Text style={styles.countdownText}>{lockTimer}</Text>
             </View>
-            <View style={styles.feeInfoRow}>
-              <Text style={styles.feeInfoLabel}>Full:</Text>
-              <Text style={styles.feeInfoValue}>{info.fullFee}</Text>
-              <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
+          ) : peeking && peekTimer ? (
+            <View style={styles.countdownRow}>
+              <Text style={[styles.countdownText, { color: C.gold }]}>{peekTimer}</Text>
             </View>
-          </View>
-        )}
+          ) : null}
+        </View>
 
-        {locked && (
-          <GlowButton
-            title="Pay Tribute"
-            onPress={() => {
-              if (deleteMode) { setDeleteMode(null); return; }
-              navigation.navigate("Unlock", { appId: item.id });
-            }}
-            style={{ marginTop: 16 }}
-            textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
-          />
-        )}
-        {!locked && !peeking && (
-          <GlowButton
-            title="Lock Me Back Up"
-            onPress={() => {
-              if (deleteMode) { setDeleteMode(null); return; }
-              dispatch({ type: "RELOCK_APP", payload: { appId: item.id } });
-            }}
-            style={{ marginTop: 16 }}
-            textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
-          />
-        )}
+        {/* Fee info slot — always takes space */}
+        <View style={styles.feeSlot}>
+          {locked && info ? (
+            <View style={styles.feeInfoWrap}>
+              <View style={styles.feeInfoRow}>
+                <Text style={styles.feeInfoLabel}>Peek:</Text>
+                <Text style={styles.feeInfoValue}>{peekCost}</Text>
+                <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
+              </View>
+              <View style={styles.feeInfoRow}>
+                <Text style={styles.feeInfoLabel}>Full:</Text>
+                <Text style={styles.feeInfoValue}>{info.fullFee}</Text>
+                <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
+              </View>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Button slot — always takes space */}
+        <View style={styles.btnSlot}>
+          {locked ? (
+            <GlowButton
+              title="Pay Tribute"
+              onPress={() => {
+                if (deleteMode) { setDeleteMode(null); return; }
+                navigation.navigate("Unlock", { appId: item.id });
+              }}
+              textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
+            />
+          ) : !peeking ? (
+            <GlowButton
+              title="Lock Me Back Up"
+              onPress={() => {
+                if (deleteMode) { setDeleteMode(null); return; }
+                dispatch({ type: "RELOCK_APP", payload: { appId: item.id } });
+              }}
+              textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
+            />
+          ) : null}
+        </View>
       </TouchableOpacity>
       </WiggleWrap>
     );
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     marginRight: CARD_SPACING,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 260,
+    height: 380,
   },
   deleteX: {
     position: "absolute",
@@ -523,7 +523,10 @@ const styles = StyleSheet.create({
   },
   cardAppName: { ...T.h1, marginTop: 14, textAlign: "center" },
   cardStatus: { ...T.caption, marginTop: 4 },
-  countdownRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
+  timerSlot: { height: 36, justifyContent: "center", alignItems: "center" },
+  feeSlot: { height: 30, justifyContent: "center", alignItems: "center" },
+  btnSlot: { height: 48, width: "100%", justifyContent: "center", marginTop: 8 },
+  countdownRow: { flexDirection: "row", alignItems: "center" },
   countdownIcon: { fontSize: 12, fontWeight: "900", color: C.pink, marginRight: 6, width: 20, height: 20, lineHeight: 20, textAlign: "center", backgroundColor: C.pinkPale, borderRadius: 10, overflow: "hidden" },
   countdownText: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: 1, fontVariant: ["tabular-nums"] },
   cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
