@@ -150,10 +150,6 @@ export default function StatsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={[styles.statCard, NEU_RAISED]}>
-            <Text style={styles.statVal}>{state.bestIronSnout || 0}</Text>
-            <Text style={styles.statLabel}>Best Streak</Text>
-          </View>
         </View>
 
         <View style={styles.statRow}>
