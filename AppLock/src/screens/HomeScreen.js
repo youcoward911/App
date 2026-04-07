@@ -11,6 +11,7 @@ import {
   Alert,
   PanResponder,
   Animated,
+  Easing,
 } from "react-native";
 import { useAppLock } from "../context/AppLockContext";
 import { POPULAR_APPS } from "../data/defaultApps";
@@ -24,6 +25,43 @@ let Haptics = null;
 try { Haptics = require("expo-haptics"); } catch (e) {}
 
 const { width: SCREEN_W } = Dimensions.get("window");
+
+function WiggleWrap({ wiggle, children, style }) {
+  const rotate = useRef(new Animated.Value(0)).current;
+  const animRef = useRef(null);
+
+  useEffect(() => {
+    if (wiggle) {
+      const anim = Animated.loop(
+        Animated.sequence([
+          Animated.timing(rotate, { toValue: 1, duration: 80, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(rotate, { toValue: -1, duration: 80, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(rotate, { toValue: 0.5, duration: 70, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(rotate, { toValue: -0.5, duration: 70, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(rotate, { toValue: 0, duration: 60, easing: Easing.linear, useNativeDriver: true }),
+          Animated.delay(400),
+        ])
+      );
+      animRef.current = anim;
+      anim.start();
+    } else {
+      if (animRef.current) animRef.current.stop();
+      rotate.setValue(0);
+    }
+    return () => { if (animRef.current) animRef.current.stop(); };
+  }, [wiggle]);
+
+  const spin = rotate.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-1.5deg", "1.5deg"],
+  });
+
+  return (
+    <Animated.View style={[style, { transform: [{ rotate: spin }] }]}>
+      {children}
+    </Animated.View>
+  );
+}
 const CARD_W = SCREEN_W - 64;
 const CARD_SPACING = 12;
 const SNAP_INTERVAL = CARD_W + CARD_SPACING;
@@ -178,6 +216,7 @@ export default function HomeScreen({ navigation }) {
     const countdown = getCountdown(item.id);
     const showX = deleteMode === item.id && !locked;
     return (
+      <WiggleWrap wiggle={showX}>
       <TouchableOpacity
         style={[styles.carouselCard, NEU_RAISED]}
         activeOpacity={0.9}
@@ -249,6 +288,7 @@ export default function HomeScreen({ navigation }) {
           style={{ marginTop: 16 }}
         />
       </TouchableOpacity>
+      </WiggleWrap>
     );
   };
 
