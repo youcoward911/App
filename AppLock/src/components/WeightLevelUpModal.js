@@ -108,12 +108,11 @@ function Confetti() {
 export default function WeightLevelUpModal({ visible, onDismiss, oldWeight, newWeight }) {
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const [message] = useState(
-    LEVEL_UP_MESSAGES[Math.floor(Math.random() * LEVEL_UP_MESSAGES.length)]
-  );
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (visible) {
+      setMessage(LEVEL_UP_MESSAGES[Math.floor(Math.random() * LEVEL_UP_MESSAGES.length)]);
       scaleAnim.setValue(0.5);
       opacityAnim.setValue(0);
       Animated.parallel([
