@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 12,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
 
   pigCard: {
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
     overflow: "visible",
     zIndex: 10,
     minHeight: 110,
@@ -596,14 +596,14 @@ const styles = StyleSheet.create({
   streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
   // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: 16, paddingVertical: 10, paddingHorizontal: 20 },
+  dots: { flexDirection: "row", justifyContent: "center", marginTop: 4, paddingVertical: 4, paddingHorizontal: 20 },
   dot: {
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: C.pinkPale, marginHorizontal: 4,
   },
   dotActive: { backgroundColor: C.pink, width: 20 },
 
-  addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 16, justifyContent: "center" },
+  addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, justifyContent: "center" },
   addCircle: {
     width: 32, height: 32, borderRadius: 16, backgroundColor: C.pinkPale,
     alignItems: "center", justifyContent: "center", marginRight: 10,
