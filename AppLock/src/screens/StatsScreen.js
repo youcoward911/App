@@ -32,13 +32,13 @@ export default function StatsScreen() {
 
   const getShameRank = () => {
     if (state.totalUnlocks === 0)
-      return { label: "Untrained Pig", color: C.textTertiary };
+      return { label: "Untrained", color: C.textTertiary };
     if (state.totalUnlocks < 5)
-      return { label: "Piglet", color: C.green };
+      return { label: "Rookie", color: C.green };
     if (state.totalUnlocks < 15)
       return { label: "Obedient Sow", color: C.gold };
     if (state.totalUnlocks < 30)
-      return { label: "Trained Pay Pig", color: "#FF6B35" };
+      return { label: "Trained", color: "#FF6B35" };
     return { label: "Master's Pet", color: C.pink };
   };
 
@@ -142,7 +142,7 @@ export default function StatsScreen() {
                 style={styles.infoBtn}
                 onPress={() => Alert.alert(
                   "Iron Snout",
-                  "Every time a lock timer expires naturally without you peeking or surrendering, your Iron Snout streak goes up. Any peek or full unlock resets it. How disciplined is your pig?",
+                  "Every time a lock timer expires naturally without you peeking or surrendering, your Iron Snout streak goes up. Any peek or full unlock resets it. How disciplined are you?",
                   [{ text: "Oink" }]
                 )}
               >

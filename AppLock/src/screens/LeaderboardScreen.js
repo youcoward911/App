@@ -92,7 +92,7 @@ export default function LeaderboardScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.title}>Leaderboard</Text>
-        <Text style={styles.sub}>Who's the biggest pig?</Text>
+        <Text style={styles.sub}>Who's the most shameless?</Text>
       </View>
 
       {/* Your rank card */}
@@ -127,10 +127,10 @@ export default function LeaderboardScreen() {
       {/* List */}
       {entries.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>No pigs yet</Text>
+          <Text style={styles.emptyTitle}>No one here yet</Text>
           <Text style={styles.emptyBody}>
             {tab === "city"
-              ? "Be the first pig in your city. Pay some tributes."
+              ? "Be the first in your city. Pay some tributes."
               : "The trough is empty. Start feeding."}
           </Text>
         </View>

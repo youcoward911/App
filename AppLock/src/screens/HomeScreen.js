@@ -302,18 +302,20 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.feeInfoWrap}>
             <View style={styles.feeInfoRow}>
               <Text style={styles.feeInfoLabel}>Peek:</Text>
-              <Text style={styles.feeInfoValue}>{peekCost}c</Text>
+              <Text style={styles.feeInfoValue}>{peekCost}</Text>
+              <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
             </View>
             <View style={styles.feeInfoRow}>
               <Text style={styles.feeInfoLabel}>Full:</Text>
-              <Text style={styles.feeInfoValue}>{info.fullFee}c</Text>
+              <Text style={styles.feeInfoValue}>{info.fullFee}</Text>
+              <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
             </View>
           </View>
         )}
 
         {locked && (
           <GlowButton
-            title="Pay Tribute"
+            title="Pay Tribute to Unlock"
             onPress={() => {
               if (deleteMode) { setDeleteMode(null); return; }
               navigation.navigate("Unlock", { appId: item.id });
@@ -527,7 +529,12 @@ const styles = StyleSheet.create({
   },
   feeInfoRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   feeInfoLabel: { ...T.caption, fontWeight: "600" },
-  feeInfoValue: { fontSize: 16, fontWeight: "900", color: C.pink },
+  feeInfoValue: { fontSize: 16, fontWeight: "900", color: C.pink, marginRight: 2 },
+  feeInfoCoin: {
+    width: 16, height: 16, borderRadius: 8, backgroundColor: C.pink,
+    alignItems: "center", justifyContent: "center",
+  },
+  feeInfoCoinP: { color: "#FFF", fontSize: 9, fontWeight: "900" },
 
   // Iron Snout streak card
   streakCard: {

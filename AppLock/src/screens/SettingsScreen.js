@@ -56,9 +56,9 @@ export default function SettingsScreen() {
     } else {
       const label = pickerHours > 0 ? `${pickerHours}h ${pickerMins}m` : `${pickerMins}m`;
       const taunts = [
-        `${label}? That's all you trust yourself with. Smart pig.`,
+        `${label}? That's all you trust yourself with. Smart.`,
         `${label} of slop, then back in the pen. Deal.`,
-        `Tick tock, piggy. ${label} and you're done.`,
+        `Tick tock. ${label} and you're done.`,
         `Your master will drag you back in ${label}. Count on it.`,
       ];
       Alert.alert("Time Lock Set", taunts[Math.floor(Math.random() * taunts.length)]);
@@ -89,7 +89,7 @@ export default function SettingsScreen() {
   const FEE_TAUNTS = [
     "Jesus Christ lmao.",
     "Pathetic but ok.",
-    "Sure thing, piggy.",
+    "Sure thing.",
     "Lol. Done.",
     "Wow. Ok.",
     "That's adorable.",
@@ -105,7 +105,7 @@ export default function SettingsScreen() {
   const saveCustom = () => {
     const val = parseInt(customFee, 10);
     if (isNaN(val) || val < 0) {
-      Alert.alert("Nice Try", "Enter a real number, piggy.");
+      Alert.alert("Nice Try", "Enter a real number.");
       return;
     }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultFee: val } });
@@ -195,7 +195,7 @@ export default function SettingsScreen() {
               onPress={() => {
                 const val = parseInt(customTime, 10);
                 if (isNaN(val) || val < 0) {
-                  Alert.alert("Nice Try", "Pick a real number, piggy.");
+                  Alert.alert("Nice Try", "Pick a real number.");
                   return;
                 }
                 dispatch({ type: "UPDATE_SETTINGS", payload: { timeLockMinutes: val } });
@@ -204,9 +204,9 @@ export default function SettingsScreen() {
                 } else {
                   const m = val === 1 ? "minute" : "minutes";
                   const taunts = [
-                    `${val} ${m}? That's all you trust yourself with. Smart pig.`,
+                    `${val} ${m}? That's all you trust yourself with. Smart.`,
                     `${val} ${m} of slop, then back in the pen. Deal.`,
-                    `Tick tock, piggy. ${val} ${m} and you're done.`,
+                    `Tick tock. ${val} ${m} and you're done.`,
                     `Your master will drag you back in ${val} ${m}. Count on it.`,
                   ];
                   Alert.alert("Time Lock Set", taunts[Math.floor(Math.random() * taunts.length)]);

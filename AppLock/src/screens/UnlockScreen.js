@@ -33,21 +33,25 @@ import SlopSplashSVG from "../components/art/SlopSplashSVG";
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 const PEEK_SHAMES = [
-  "One minute. That's all you get, pig.",
+  "One minute. That's all you get.",
   "Sixty seconds of weakness. The clock is ticking.",
   "Couldn't even hold out. Pathetic peek.",
   "One minute to satisfy your sad little craving.",
-  "Peek-a-boo, piggy. Your minute starts now.",
-  "Quick peek for the weak pig. Timer's running.",
+  "Peek-a-boo. Your minute starts now.",
+  "Quick peek for the weak. Timer's running.",
+  "A whole minute of shame. Make it count.",
+  "One measly minute. You'll be back for more.",
 ];
 
 const SURRENDER_SHAMES = [
   "Full surrender. Your master is disappointed.",
-  "Gave up completely. Typical pig.",
+  "Gave up completely. Typical.",
   "Couldn't handle it. Total surrender.",
   "Breaking the lock for good. Weak.",
   "Full unlock. You never stood a chance.",
-  "Surrendering everything. What a pig.",
+  "Surrendering everything. Pathetic.",
+  "The white flag is up. Embarrassing.",
+  "Complete capitulation. As expected.",
 ];
 
 export default function UnlockScreen({ route, navigation }) {
@@ -118,9 +122,9 @@ export default function UnlockScreen({ route, navigation }) {
       `I'll take ${cost} ${coinWord}. Thanks, idiot.`,
       `${cost} ${coinWord} for a little screen time. Wow.`,
       `${cost} ${coinWord} gone. Just like your self-control.`,
-      `${cost} ${coinWord}, piggy. Cough 'em up.`,
+      `${cost} ${coinWord}. Cough 'em up.`,
       `${cost} ${coinWord} down the drain so you can stare at a screen. Sad.`,
-      `Handing over ${cost} ${coinWord} like a trained animal. Good pig.`,
+      `Handing over ${cost} ${coinWord} like a trained animal. Good.`,
       `${cost} ${coinWord}. Your master thanks you for the donation.`,
       `${cost} ${coinWord} to feed your addiction. Pathetic.`,
       `${cost} whole ${coinWord}. And you'll do it again tomorrow.`,
@@ -401,10 +405,10 @@ export default function UnlockScreen({ route, navigation }) {
   const FEAST_TITLES = [
     "FEAST, PIGGY!",
     "PATHETIC. ENJOY YOUR SLOP.",
-    "EAT UP, PIG.",
+    "EAT UP. ALL OF IT.",
     "YOUR MASTER HAS FED YOU.",
     "THERE'S YOUR SLOP. NOW EAT.",
-    "GOOD PIG. NOW FEAST.",
+    "GOOD. NOW FEAST.",
     "DINNER IS SERVED.",
     "FEEDING TIME.",
     "DISGUSTING. EAT.",
@@ -489,7 +493,7 @@ export default function UnlockScreen({ route, navigation }) {
           {phase === "broke" && (
             <View style={styles.middle}>
               <PigMascot size={70} mood="feral" />
-              <Text style={styles.brokeTitle}>BROKE PIG</Text>
+              <Text style={styles.brokeTitle}>BROKE</Text>
               <Text style={styles.brokeBody} numberOfLines={3}>{brokeMsg}</Text>
             </View>
           )}
