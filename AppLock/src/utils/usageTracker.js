@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const USAGE_KEY = "@scrollpiggy_usage_v1";
+const USAGE_KEY = "@scrollpiggy_usage_v2";
+const OLD_USAGE_KEY = "@scrollpiggy_usage_v1";
 
 // Default usage data structure
 const DEFAULT_USAGE = {
@@ -25,6 +26,8 @@ let usageData = null;
 async function loadUsage() {
   if (usageData) return usageData;
   try {
+    // Clear stale v1 data
+    await AsyncStorage.removeItem(OLD_USAGE_KEY).catch(() => {});
     const stored = await AsyncStorage.getItem(USAGE_KEY);
     usageData = stored ? { ...DEFAULT_USAGE, ...JSON.parse(stored) } : { ...DEFAULT_USAGE };
   } catch (e) {

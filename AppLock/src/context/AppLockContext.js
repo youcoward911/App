@@ -258,14 +258,17 @@ export function AppLockProvider({ children }) {
         // Clear old v1 data
         await AsyncStorage.removeItem("@paypig_state");
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        await requestPermissions();
+        // Cancel any stale notifications from previous sessions
+        try {
+          const Notifs = require("expo-notifications");
+          await Notifs.cancelAllScheduledNotificationsAsync();
+        } catch (e) {}
         if (stored) {
           const parsed = JSON.parse(stored);
           dispatch({ type: "LOAD_STATE", payload: parsed });
-          // Request notification permissions + schedule based on last feed
-          await requestPermissions();
+          // Re-schedule based on last feed
           await refreshNotifications(parsed.lastTributeTime);
-        } else {
-          await requestPermissions();
         }
         // Track app open
         await trackAppOpen();
@@ -276,6 +279,7 @@ export function AppLockProvider({ children }) {
   }, []);
 
   // Timer checks: lock expiry, peek expiry
+  const expiredLocksRef = useRef(new Set());
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -284,11 +288,17 @@ export function AppLockProvider({ children }) {
         if (app.peekExpiresAt && now >= app.peekExpiresAt) {
           dispatch({ type: "PEEK_EXPIRED", payload: { appId } });
         }
-        // Lock timer expired naturally
+        // Lock timer expired naturally — only fire once per lock session
         if (app.lockedAt && app.lockExpiresAt && now >= app.lockExpiresAt && !app.peekExpiresAt) {
-          dispatch({ type: "LOCK_EXPIRED", payload: { appId } });
-          // Schedule notification for this expiry
-          scheduleLockExpiry(appId).catch(() => {});
+          if (!expiredLocksRef.current.has(appId)) {
+            expiredLocksRef.current.add(appId);
+            dispatch({ type: "LOCK_EXPIRED", payload: { appId } });
+            scheduleLockExpiry(appId).catch(() => {});
+          }
+        }
+        // Clean up: if the app is re-locked (new lockedAt), remove from expired set
+        if (app.lockedAt && app.lockExpiresAt && now < app.lockExpiresAt) {
+          expiredLocksRef.current.delete(appId);
         }
       });
     }, 1000);
