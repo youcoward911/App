@@ -425,6 +425,7 @@ export default function HomeScreen({ navigation }) {
               snapToAlignment="start"
               decelerationRate="fast"
               showsHorizontalScrollIndicator={false}
+              style={{ overflow: "visible" }}
               contentContainerStyle={styles.carouselContent}
               onMomentumScrollEnd={onScrollEnd}
               onScrollEndDrag={onScrollEnd}
@@ -501,18 +502,19 @@ const styles = StyleSheet.create({
 
   // Carousel
   carouselWrap: { flex: 1 },
-  carouselContent: { paddingLeft: 32, paddingRight: 32, paddingTop: 4 },
+  carouselContent: { paddingLeft: 32, paddingRight: 32 },
   carouselCard: {
     width: CARD_W,
     backgroundColor: C.white,
     borderRadius: 24,
-    paddingVertical: 24,
+    paddingVertical: 20,
     paddingHorizontal: 20,
     marginRight: CARD_SPACING,
-    marginVertical: 8,
+    marginTop: 6,
+    marginBottom: 16,
     alignItems: "center",
     justifyContent: "center",
-    height: 350,
+    height: 340,
   },
   deleteX: {
     position: "absolute",
