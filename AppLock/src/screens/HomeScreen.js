@@ -382,7 +382,12 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.weightLabel}>{getPigWeight(state.totalCoinsSpent).label}</Text>
               </View>
             )}
-            <Text style={styles.moodMsg}>{moodMessage}</Text>
+            {tribute.text !== "Never" && (
+              <Text style={styles.moodMsg}>{moodMessage}</Text>
+            )}
+            {tribute.text === "Never" && (
+              <Text style={styles.moodMsg}>Aw what's wrong? Can't stop doomscrolling?</Text>
+            )}
           </View>
         </View>
         {(state.ironSnoutStreak > 0 || state.bestIronSnout > 0) && (
