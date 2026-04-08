@@ -185,7 +185,6 @@ export default function LeaderboardScreen() {
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitle}>Edit Pig Name</Text>
-              <Text style={styles.modalSub}>Keep it clean or face the trough.</Text>
               <TextInput
                 style={styles.nameInput}
                 value={nameInput}
