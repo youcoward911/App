@@ -173,22 +173,11 @@ export default function LeaderboardScreen() {
         <Text style={styles.sub}>Who's the biggest piggy?</Text>
       </View>
 
-      {/* Your rank card — always show with name editor */}
-      <View style={[styles.rankCard, NEU_RAISED]}>
-        <TouchableOpacity style={styles.nameRow} onPress={() => { setNameInput(myName); setEditingName(true); }}>
-          <Text style={styles.myName} numberOfLines={1}>{myName || "Tap to set name"}</Text>
-          <Text style={styles.editIcon}>✎</Text>
-        </TouchableOpacity>
-        {userRank ? (
-          <>
-            <Text style={styles.rankLabel}>YOUR RANK</Text>
-            <Text style={styles.rankNum}>#{userRank.rank}</Text>
-            <Text style={styles.rankCity}>in {userRank.city}</Text>
-          </>
-        ) : (
-          <Text style={styles.rankLabel}>PAY TRIBUTES TO GET RANKED</Text>
-        )}
-      </View>
+      {/* Edit pig name */}
+      <TouchableOpacity style={[styles.nameCard, NEU_RAISED]} onPress={() => { setNameInput(myName); setEditingName(true); }}>
+        <Text style={styles.nameCardText}>Edit Pig Name</Text>
+        <Text style={styles.editIcon}>✎</Text>
+      </TouchableOpacity>
 
       {/* Edit name modal */}
       <Modal visible={editingName} transparent animationType="fade">
@@ -287,12 +276,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: "center",
   },
-  nameRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  myName: { fontSize: 16, fontWeight: "800", color: C.text, flexShrink: 1 },
-  editIcon: { fontSize: 16, color: C.pink, marginLeft: 8 },
-  rankLabel: { ...T.label, marginBottom: 4 },
-  rankNum: { fontSize: 40, fontWeight: "900", color: C.pink, letterSpacing: -2 },
-  rankCity: { ...T.caption, marginTop: 4 },
+  nameCard: {
+    backgroundColor: C.white,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginHorizontal: 24,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nameCardText: { fontSize: 14, fontWeight: "700", color: C.pink },
+  editIcon: { fontSize: 14, color: C.pink, marginLeft: 6 },
 
   // Tabs
   tabs: {
