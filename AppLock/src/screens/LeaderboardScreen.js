@@ -14,6 +14,50 @@ import { C, T, NEU_RAISED } from "../utils/theme";
 import { getCityLeaderboard, getGlobalLeaderboard, getUserRank } from "../utils/leaderboard";
 import { ensureAuth } from "../utils/firebase";
 
+// ── DEMO MODE: set to false after taking screenshots ──
+const DEMO_MODE = true;
+
+const DEMO_CITY = "Los Angeles";
+const DEMO_UID = "demo-you";
+
+const DEMO_CITY_DATA = {
+  city: DEMO_CITY,
+  state: "CA",
+  entries: [
+    { uid: "u1", pigName: "Greasy Oinker #14", totalCoinsSpent: 8420, totalUnlocks: 312, weightLabel: "Legendary" },
+    { uid: "u2", pigName: "Sloppy Trotter #67", totalCoinsSpent: 5890, totalUnlocks: 245, weightLabel: "Legendary" },
+    { uid: "u3", pigName: "Muddy Scroll-Hog #3", totalCoinsSpent: 4210, totalUnlocks: 198, weightLabel: "Massive" },
+    { uid: DEMO_UID, pigName: "Crusty Piglet #42", totalCoinsSpent: 3150, totalUnlocks: 147, weightLabel: "Massive" },
+    { uid: "u4", pigName: "Filthy Porker #88", totalCoinsSpent: 2780, totalUnlocks: 134, weightLabel: "Massive" },
+    { uid: "u5", pigName: "Chunky Slop-Lord #21", totalCoinsSpent: 1950, totalUnlocks: 98, weightLabel: "Obese" },
+    { uid: "u6", pigName: "Stinky Mud-Roller #55", totalCoinsSpent: 1420, totalUnlocks: 76, weightLabel: "Obese" },
+    { uid: "u7", pigName: "Wobbly Coin-Pig #9", totalCoinsSpent: 980, totalUnlocks: 52, weightLabel: "Fat" },
+    { uid: "u8", pigName: "Pudgy Oink-Machine #33", totalCoinsSpent: 720, totalUnlocks: 41, weightLabel: "Chubby" },
+    { uid: "u9", pigName: "Grimy Feed-Beast #71", totalCoinsSpent: 540, totalUnlocks: 29, weightLabel: "Chubby" },
+    { uid: "u10", pigName: "Soggy Trough-Face #18", totalCoinsSpent: 380, totalUnlocks: 22, weightLabel: "Plump" },
+    { uid: "u11", pigName: "Drippy Pay-Pig #45", totalCoinsSpent: 210, totalUnlocks: 14, weightLabel: "Plump" },
+    { uid: "u12", pigName: "Lumpy Piggy #62", totalCoinsSpent: 85, totalUnlocks: 8, weightLabel: "Lean" },
+  ],
+};
+
+const DEMO_GLOBAL_DATA = [
+  { uid: "g1", pigName: "Nasty Wallow-King #1", totalCoinsSpent: 24500, totalUnlocks: 890, weightLabel: "Legendary" },
+  { uid: "g2", pigName: "Slobbery Hog #99", totalCoinsSpent: 18200, totalUnlocks: 720, weightLabel: "Legendary" },
+  { uid: "g3", pigName: "Mucky Swine #7", totalCoinsSpent: 14800, totalUnlocks: 612, weightLabel: "Legendary" },
+  { uid: "g4", pigName: "Scruffy Boar #44", totalCoinsSpent: 11350, totalUnlocks: 498, weightLabel: "Legendary" },
+  { uid: "g5", pigName: "Gooey Snout #26", totalCoinsSpent: 9100, totalUnlocks: 387, weightLabel: "Legendary" },
+  { uid: "g6", pigName: "Greasy Oinker #14", totalCoinsSpent: 8420, totalUnlocks: 312, weightLabel: "Legendary" },
+  { uid: "g7", pigName: "Sweaty Slop-Eater #83", totalCoinsSpent: 7200, totalUnlocks: 291, weightLabel: "Legendary" },
+  { uid: "g8", pigName: "Grubby Porker #38", totalCoinsSpent: 6100, totalUnlocks: 258, weightLabel: "Legendary" },
+  { uid: "g9", pigName: "Sloppy Trotter #67", totalCoinsSpent: 5890, totalUnlocks: 245, weightLabel: "Legendary" },
+  { uid: "g10", pigName: "Messy Piglet #52", totalCoinsSpent: 4900, totalUnlocks: 211, weightLabel: "Massive" },
+  { uid: "g11", pigName: "Muddy Scroll-Hog #3", totalCoinsSpent: 4210, totalUnlocks: 198, weightLabel: "Massive" },
+  { uid: "g12", pigName: "Mushy Oink-Machine #15", totalCoinsSpent: 3600, totalUnlocks: 165, weightLabel: "Massive" },
+  { uid: DEMO_UID, pigName: "Crusty Piglet #42", totalCoinsSpent: 3150, totalUnlocks: 147, weightLabel: "Massive" },
+  { uid: "g13", pigName: "Filthy Porker #88", totalCoinsSpent: 2780, totalUnlocks: 134, weightLabel: "Massive" },
+  { uid: "g14", pigName: "Chunky Slop-Lord #21", totalCoinsSpent: 1950, totalUnlocks: 98, weightLabel: "Obese" },
+];
+
 export default function LeaderboardScreen() {
   const [tab, setTab] = useState("city"); // "city" or "global"
   const [cityData, setCityData] = useState({ city: "", state: "", entries: [] });
@@ -24,6 +68,15 @@ export default function LeaderboardScreen() {
   const [uid, setUid] = useState(null);
 
   const loadData = useCallback(async () => {
+    if (DEMO_MODE) {
+      setUid(DEMO_UID);
+      setCityData(DEMO_CITY_DATA);
+      setGlobalData(DEMO_GLOBAL_DATA);
+      setUserRank({ rank: 4, city: DEMO_CITY, pigName: "Crusty Piglet #42", totalCoinsSpent: 3150 });
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const user = await ensureAuth();
       if (user) setUid(user.uid);
