@@ -173,18 +173,22 @@ export default function LeaderboardScreen() {
         <Text style={styles.sub}>Who's the biggest piggy?</Text>
       </View>
 
-      {/* Your rank card */}
-      {userRank && (
-        <View style={[styles.rankCard, NEU_RAISED]}>
-          <TouchableOpacity style={styles.nameRow} onPress={() => { setNameInput(myName); setEditingName(true); }}>
-            <Text style={styles.myName} numberOfLines={1}>{myName}</Text>
-            <Text style={styles.editIcon}>✎</Text>
-          </TouchableOpacity>
-          <Text style={styles.rankLabel}>YOUR RANK</Text>
-          <Text style={styles.rankNum}>#{userRank.rank}</Text>
-          <Text style={styles.rankCity}>in {userRank.city}</Text>
-        </View>
-      )}
+      {/* Your rank card — always show with name editor */}
+      <View style={[styles.rankCard, NEU_RAISED]}>
+        <TouchableOpacity style={styles.nameRow} onPress={() => { setNameInput(myName); setEditingName(true); }}>
+          <Text style={styles.myName} numberOfLines={1}>{myName || "Tap to set name"}</Text>
+          <Text style={styles.editIcon}>✎</Text>
+        </TouchableOpacity>
+        {userRank ? (
+          <>
+            <Text style={styles.rankLabel}>YOUR RANK</Text>
+            <Text style={styles.rankNum}>#{userRank.rank}</Text>
+            <Text style={styles.rankCity}>in {userRank.city}</Text>
+          </>
+        ) : (
+          <Text style={styles.rankLabel}>PAY TRIBUTES TO GET RANKED</Text>
+        )}
+      </View>
 
       {/* Edit name modal */}
       <Modal visible={editingName} transparent animationType="fade">
