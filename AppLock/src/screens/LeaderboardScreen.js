@@ -7,11 +7,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
+  TextInput,
+  Modal,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getPigWeight } from "../utils/pigWeight";
 import { C, T, NEU_RAISED } from "../utils/theme";
-import { getCityLeaderboard, getGlobalLeaderboard, getUserRank } from "../utils/leaderboard";
+import { getCityLeaderboard, getGlobalLeaderboard, getUserRank, setPigName, getPigName } from "../utils/leaderboard";
 import { ensureAuth } from "../utils/firebase";
 
 // ── DEMO MODE: set to false after taking screenshots ──
@@ -66,10 +72,14 @@ export default function LeaderboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [uid, setUid] = useState(null);
+  const [myName, setMyName] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
 
   const loadData = useCallback(async () => {
     if (DEMO_MODE) {
       setUid(DEMO_UID);
+      setMyName("Crusty Piglet #42");
       setCityData(DEMO_CITY_DATA);
       setGlobalData(DEMO_GLOBAL_DATA);
       setUserRank({ rank: 4, city: DEMO_CITY, pigName: "Crusty Piglet #42", totalCoinsSpent: 3150 });
@@ -80,6 +90,9 @@ export default function LeaderboardScreen() {
     try {
       const user = await ensureAuth();
       if (user) setUid(user.uid);
+
+      const pigName = await getPigName();
+      setMyName(pigName);
 
       const [city, global, rank] = await Promise.all([
         getCityLeaderboard(),
@@ -102,6 +115,17 @@ export default function LeaderboardScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadData();
+  };
+
+  const onSaveName = async () => {
+    const result = await setPigName(nameInput);
+    if (result.ok) {
+      setMyName(nameInput.trim());
+      setEditingName(false);
+      loadData(); // refresh leaderboard with new name
+    } else {
+      Alert.alert("Oink!", result.error);
+    }
   };
 
   const entries = tab === "city" ? cityData.entries : globalData;
@@ -152,11 +176,47 @@ export default function LeaderboardScreen() {
       {/* Your rank card */}
       {userRank && (
         <View style={[styles.rankCard, NEU_RAISED]}>
+          <TouchableOpacity style={styles.nameRow} onPress={() => { setNameInput(myName); setEditingName(true); }}>
+            <Text style={styles.myName} numberOfLines={1}>{myName}</Text>
+            <Text style={styles.editIcon}>✎</Text>
+          </TouchableOpacity>
           <Text style={styles.rankLabel}>YOUR RANK</Text>
           <Text style={styles.rankNum}>#{userRank.rank}</Text>
           <Text style={styles.rankCity}>in {userRank.city}</Text>
         </View>
       )}
+
+      {/* Edit name modal */}
+      <Modal visible={editingName} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setEditingName(false)}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>Edit Pig Name</Text>
+              <Text style={styles.modalSub}>Keep it clean or face the trough.</Text>
+              <TextInput
+                style={styles.nameInput}
+                value={nameInput}
+                onChangeText={setNameInput}
+                maxLength={24}
+                placeholder="Enter pig name..."
+                placeholderTextColor="#CCC"
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={onSaveName}
+              />
+              <Text style={styles.charCount}>{nameInput.length}/24</Text>
+              <View style={styles.modalBtns}>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditingName(false)}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveBtn} onPress={onSaveName}>
+                  <Text style={styles.saveBtnText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
 
       {/* Tabs */}
       <View style={styles.tabs}>
@@ -223,6 +283,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: "center",
   },
+  nameRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  myName: { fontSize: 16, fontWeight: "800", color: C.text, flexShrink: 1 },
+  editIcon: { fontSize: 16, color: C.pink, marginLeft: 8 },
   rankLabel: { ...T.label, marginBottom: 4 },
   rankNum: { fontSize: 40, fontWeight: "900", color: C.pink, letterSpacing: -2 },
   rankCity: { ...T.caption, marginTop: 4 },
@@ -279,6 +342,54 @@ const styles = StyleSheet.create({
   },
   coinP: { color: "#FFF", fontSize: 10, fontWeight: "900" },
   coinAmount: { fontSize: 18, fontWeight: "900", color: C.pink },
+
+  // Edit name modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  modalCard: {
+    backgroundColor: C.white,
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    alignItems: "center",
+  },
+  modalTitle: { fontSize: 20, fontWeight: "900", color: C.text, marginBottom: 4 },
+  modalSub: { ...T.caption, marginBottom: 16 },
+  nameInput: {
+    width: "100%",
+    borderWidth: 2,
+    borderColor: C.pinkPale,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontWeight: "700",
+    color: C.text,
+    textAlign: "center",
+  },
+  charCount: { ...T.caption, marginTop: 4, alignSelf: "flex-end" },
+  modalBtns: { flexDirection: "row", marginTop: 16, gap: 12 },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: C.pinkPale,
+    alignItems: "center",
+  },
+  cancelBtnText: { fontSize: 14, fontWeight: "700", color: C.pink },
+  saveBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: C.pink,
+    alignItems: "center",
+  },
+  saveBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
 
   // Empty
   emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 48 },

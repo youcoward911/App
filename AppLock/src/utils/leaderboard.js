@@ -50,6 +50,45 @@ async function getPigName() {
   return name;
 }
 
+// Profanity / inappropriate word filter
+const BLOCKED_WORDS = [
+  "fuck","shit","ass","bitch","dick","cock","pussy","cunt","nigger","nigga",
+  "fag","faggot","retard","whore","slut","bastard","damn","hell","penis",
+  "vagina","tits","boobs","anal","rape","nazi","hitler","kill","murder",
+  "suicide","porn","sex","nude","naked","molest","pedo","pedophile",
+];
+
+function isAppropriate(name) {
+  const lower = name.toLowerCase().replace(/[^a-z]/g, " ");
+  for (const word of BLOCKED_WORDS) {
+    if (lower.includes(word)) return false;
+  }
+  return true;
+}
+
+export async function setPigName(newName) {
+  const trimmed = newName.trim();
+  if (trimmed.length < 2 || trimmed.length > 24) {
+    return { ok: false, error: "Name must be 2-24 characters" };
+  }
+  if (!isAppropriate(trimmed)) {
+    return { ok: false, error: "That name isn't allowed. Keep it clean, piggy." };
+  }
+  try {
+    await AsyncStorage.setItem(PIG_NAMES_KEY, trimmed);
+    // Update Firestore too
+    const user = await ensureAuth();
+    if (user) {
+      await setDoc(doc(db, LEADERBOARD_COL, user.uid), { pigName: trimmed }, { merge: true });
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: "Failed to save name" };
+  }
+}
+
+export { getPigName };
+
 // Update user's leaderboard entry after a tribute
 export async function updateLeaderboard(totalCoinsSpent, totalUnlocks) {
   try {
