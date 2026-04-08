@@ -15,7 +15,7 @@ import { getCityLeaderboard, getGlobalLeaderboard, getUserRank } from "../utils/
 import { ensureAuth } from "../utils/firebase";
 
 // ── DEMO MODE: set to false after taking screenshots ──
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 const DEMO_CITY = "Los Angeles";
 const DEMO_UID = "demo-you";
