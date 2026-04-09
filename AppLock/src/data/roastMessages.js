@@ -220,7 +220,7 @@ export const MASTER_COMMANDS = [
   "Every tribute is you admitting I own you.",
   "You'll cave again. lol.",
   "You're literally about to pay an app to unlock your phone. Pathetic.",
-  "You exist to pay me coins and scroll.",
+  "Aw, someone need help putting down their phone again?",
   "Always pays.",
   "More coins. More obedience.",
   "What's the matter? Someone need to scroll?",
