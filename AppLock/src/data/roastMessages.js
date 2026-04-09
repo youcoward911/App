@@ -21,7 +21,7 @@ export const UNLOCK_ROASTS = [
   "Don't keep me waiting again, simp.",
   "\"Oink oink oink oink\" - you right now.",
   "Aw, what's wrong? Does someone need to scroll?",
-  "Aw, poor thing needs to look at some slop.",
+  "Aw, poor thing needs me to lock away his slop.",
   "Aw, does someone need to feed from the trough again?",
   "Aw, did someone miss staring at their phone? Poor baby.",
   "Look who came crawling back for more screen time.",
