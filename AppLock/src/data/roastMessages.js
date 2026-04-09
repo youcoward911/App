@@ -9,8 +9,8 @@
 export const UNLOCK_ROASTS = [
   "There you are. Crawling right back to me as usual.",
   "I was wondering when you'd come back.",
-  "Couldn't stay away, could you?",
-  "Back so soon? Your master missed you.",
+  "Well well well look who's back already.",
+  "Back so soon? I missed you, my little scroll pig.",
   "I own you. We both know it. Now pay your tribute.",
   "Look at you. Snout pressed against the glass, begging for scraps.",
   "Right on schedule. You never disappoint.",
