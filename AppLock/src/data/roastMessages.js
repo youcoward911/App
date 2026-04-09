@@ -18,7 +18,6 @@ export const UNLOCK_ROASTS = [
   "Someone's hungry for slop, aren't they?",
   "Another day, another tribute. Pay up.",
   "Do you actually want to stop scrolling or just like submitting yourself to me?",
-  "The trough always wins. Always.",
   "Don't keep me waiting again, simp.",
   "Oink oink. Translation: please let me scroll, master.",
   "Aw, what's wrong? Does someone need to scroll?",
