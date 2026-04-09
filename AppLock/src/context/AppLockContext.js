@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 import { updateLeaderboard } from "../utils/leaderboard";
@@ -7,6 +8,11 @@ import { updateLeaderboard } from "../utils/leaderboard";
 const AppLockContext = createContext();
 
 const STORAGE_KEY = "@paypig_state_v2";
+
+// Keychain key — persists across app reinstalls on iOS so the welcome bonus
+// is only ever given once per device.
+const WELCOME_BONUS_KEY = "scrollpig_welcome_bonus_claimed";
+const WELCOME_BONUS_COINS = 20;
 
 export const COIN_PACKAGES = [
   { id: "small", productId: "scrollpiggy.coins.50", coins: 50, price: 4.99, label: "50 Coins", bonus: null },
@@ -239,6 +245,13 @@ function reducer(state, action) {
       };
     }
 
+    case "WELCOME_BONUS": {
+      return {
+        ...state,
+        piggyCoins: state.piggyCoins + WELCOME_BONUS_COINS,
+      };
+    }
+
     case "UPDATE_SETTINGS": {
       const newSettings = { ...state.settings, ...action.payload };
       return { ...state, settings: newSettings };
@@ -270,6 +283,20 @@ export function AppLockProvider({ children }) {
           // Re-schedule based on last feed
           await refreshNotifications(parsed.lastTributeTime);
         }
+
+        // Welcome bonus — 20 coins on first install only.
+        // Flag is stored in iOS keychain via expo-secure-store which persists
+        // across app uninstall/reinstall, so users can't farm it.
+        try {
+          const alreadyClaimed = await SecureStore.getItemAsync(WELCOME_BONUS_KEY);
+          if (!alreadyClaimed) {
+            await SecureStore.setItemAsync(WELCOME_BONUS_KEY, "1");
+            dispatch({ type: "WELCOME_BONUS" });
+          }
+        } catch (e) {
+          console.warn("Welcome bonus check failed:", e);
+        }
+
         // Track app open
         await trackAppOpen();
       } catch (e) {
