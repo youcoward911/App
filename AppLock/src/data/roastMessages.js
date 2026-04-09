@@ -222,7 +222,7 @@ export const MASTER_COMMANDS = [
   "You're literally about to pay an app to unlock your phone. Pathetic.",
   "Aw, someone need help putting down their phone again?",
   "You're gonna cave again.",
-  "More coins. More obedience.",
+  "Yeah I'm sure you'll be real productive when you lock your phone.",
   "What's the matter? Someone need to scroll?",
   "One day you'll try to delete me. But you won't. Because I own you.",
   "Always pays. Every time.",
