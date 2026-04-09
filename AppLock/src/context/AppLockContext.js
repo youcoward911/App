@@ -285,12 +285,15 @@ export function AppLockProvider({ children }) {
           await refreshNotifications(parsed.lastTributeTime);
         }
 
-        // Welcome bonus — 20 coins on first install only. iOS only.
-        // Flag is stored in iOS keychain via expo-secure-store which persists
-        // across app uninstall/reinstall, so users can't farm it.
+        // Welcome bonus — 20 coins, once, on genuine first install. iOS only.
+        // Only granted when there is NO existing saved state AND no keychain
+        // flag. The keychain flag survives app reinstall on iOS, so users
+        // can't farm the bonus by deleting and redownloading. Existing users
+        // who already have a saved state don't get it either — the bonus is
+        // strictly for brand new accounts.
         // Android's SecureStore backend doesn't persist past uninstall, so we
         // skip the bonus there until we have server-side dedup.
-        if (Platform.OS === "ios") {
+        if (Platform.OS === "ios" && !stored) {
           try {
             const alreadyClaimed = await SecureStore.getItemAsync(WELCOME_BONUS_KEY);
             if (!alreadyClaimed) {
