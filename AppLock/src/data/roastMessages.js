@@ -226,7 +226,7 @@ export const MASTER_COMMANDS = [
   "What's the matter? Someone need to scroll?",
   "One day you'll try to delete me. But you won't. Because I own you.",
   "Hey maybe you'll read your first book lol",
-  "Be good. Give me coins.",
+  "Be a good pig and give me more coins.",
   "Need encouragement? Here: you're pathetic.",
   "Your master is always watching. Now pay up.",
   "You gotta give.",
