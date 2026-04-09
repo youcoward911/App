@@ -219,7 +219,7 @@ export const MASTER_COMMANDS = [
   "Lol you just can't stop scrolling, can you?",
   "Every tribute is you admitting I own you.",
   "You'll cave again. lol.",
-  "Stop pretending you're in control. Obey.",
+  "You're literally about to pay an app to unlock your phone. Pathetic.",
   "You exist to pay me coins and scroll.",
   "Always pays.",
   "More coins. More obedience.",
