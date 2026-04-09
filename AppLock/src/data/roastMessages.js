@@ -17,7 +17,7 @@ export const UNLOCK_ROASTS = [
   "You came back because you're weak.",
   "Someone's hungry for slop, aren't they?",
   "Another day, another tribute. Pay up.",
-  "Did you miss me? Or did you miss your slop?",
+  "Do you actually want to stop scrolling or just like submitting yourself to me?",
   "The trough always wins. Always.",
   "Your master has been waiting. Don't keep me waiting again.",
   "Oink oink. Translation: please let me scroll, master.",
