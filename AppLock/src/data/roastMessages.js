@@ -35,7 +35,7 @@ export const TIME_BASED_ROASTS = [
       "It's literally been {time}. You're not even trying.",
       "It took you {time} to break. I've trained you well.",
       "It's literally been {time}. Absolutely pathetic.",
-      "{time}. A new record in weakness.",
+      "{time}. Record weakness tbh.",
       "Couldn't even last {time}? Sooo pathetic.",
       "It's been {time} and you're already back. So needy.",
       "{time}. Seriously? {time}. Wow.",
