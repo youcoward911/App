@@ -14,7 +14,7 @@ export const UNLOCK_ROASTS = [
   "I own you. We both know it. Now pay your tribute.",
   "Look at you. Snout pressed against your phone, rotting away.",
   "Right on schedule. You never disappoint.",
-  "You came back because I told you to. Good.",
+  "You came back because you're weak.",
   "The trough is full. All you have to do is pay.",
   "Another day, another tribute. Pay up.",
   "Did you miss me? Or did you miss your slop?",
