@@ -13,7 +13,7 @@ import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
-import { initIAP, buyCoins, endIAP, iapAvailable } from "../utils/iap";
+import { initIAP, buyCoins, endIAP } from "../utils/iap";
 
 export default function CoinShopScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -39,18 +39,17 @@ export default function CoinShopScreen({ navigation }) {
           type: "BUY_COINS",
           payload: { coins: result.coins, price: result.price },
         });
-        const mockNote = result.mock ? "\n\n(Test purchase)" : "";
         const bought = [
-          { title: "Good.", body: `${result.coins} coins in your wallet.${mockNote}\n\nYour master is pleased. Now go spend them.`, btn: "Oink." },
-          { title: "There it is.", body: `${result.coins} coins. Bought and paid for.${mockNote}`, btn: "Yes master." },
-          { title: "Cha-ching.", body: `${result.coins} more coins to blow on scrolling. Pathetic.${mockNote}`, btn: "Thank you." },
-          { title: "Wallet opened.", body: `${result.coins} coins added. You didn't even hesitate. Disgusting.${mockNote}`, btn: "I know." },
-          { title: "Paid up.", body: `${result.coins} coins. Your master trained you well.${mockNote}`, btn: "Oink." },
-          { title: "How sad.", body: `Spending real money on scroll coins. ${result.coins} added to the trough.${mockNote}`, btn: "Worth it." },
-          { title: "Lol.", body: `${result.coins} coins. You just bought slop with real money. Let that sink in.${mockNote}`, btn: "..." },
-          { title: "Easy money.", body: `${result.coins} coins. Keep it coming.${mockNote}`, btn: "Yes master." },
-          { title: "Wow.", body: `You actually paid. ${result.coins} coins added. Your master is fed.${mockNote}`, btn: "Oink." },
-          { title: "Gross.", body: `${result.coins} coins bought without a second thought. Disgusting.${mockNote}`, btn: "I'm sorry." },
+          { title: "Good.", body: `${result.coins} coins in your wallet.\n\nYour master is pleased. Now go spend them.`, btn: "Oink." },
+          { title: "There it is.", body: `${result.coins} coins. Bought and paid for.`, btn: "Yes master." },
+          { title: "Cha-ching.", body: `${result.coins} more coins to blow on scrolling. Pathetic.`, btn: "Thank you." },
+          { title: "Wallet opened.", body: `${result.coins} coins added. You didn't even hesitate. Disgusting.`, btn: "I know." },
+          { title: "Paid up.", body: `${result.coins} coins. Your master trained you well.`, btn: "Oink." },
+          { title: "How sad.", body: `Spending real money on scroll coins. ${result.coins} added to the trough.`, btn: "Worth it." },
+          { title: "Lol.", body: `${result.coins} coins. You just bought slop with real money. Let that sink in.`, btn: "..." },
+          { title: "Easy money.", body: `${result.coins} coins. Keep it coming.`, btn: "Yes master." },
+          { title: "Wow.", body: `You actually paid. ${result.coins} coins added. Your master is fed.`, btn: "Oink." },
+          { title: "Gross.", body: `${result.coins} coins bought without a second thought. Disgusting.`, btn: "I'm sorry." },
         ];
         const pick = bought[Math.floor(Math.random() * bought.length)];
         Alert.alert(pick.title, pick.body, [{ text: pick.btn }]);

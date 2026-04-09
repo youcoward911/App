@@ -2,7 +2,7 @@
   "expo": {
     "name": "Scroll Pig",
     "slug": "PayPig",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.paypig.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your location to show you the local leaderboard for your city.",
+        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your approximate location to determine your city so it can rank you on a local leaderboard against other users in the same city. For example, if you are in Brooklyn, your stats will be compared against other pigs in Brooklyn. Your precise location is never stored or shared.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
