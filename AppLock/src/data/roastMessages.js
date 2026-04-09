@@ -7,7 +7,7 @@
 // WHEN THE USER COMES TO UNLOCK (the roast before payment)
 // ============================================================
 export const UNLOCK_ROASTS = [
-  "There you are. Crawling back to the trough.",
+  "There you are. Crawling right back to me as usual.",
   "I was wondering when you'd come back.",
   "Couldn't stay away, could you?",
   "Back so soon? Your master missed you.",
