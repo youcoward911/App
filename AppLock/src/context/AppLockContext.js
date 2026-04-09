@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification } from "../utils/notifications";
@@ -284,17 +285,21 @@ export function AppLockProvider({ children }) {
           await refreshNotifications(parsed.lastTributeTime);
         }
 
-        // Welcome bonus — 20 coins on first install only.
+        // Welcome bonus — 20 coins on first install only. iOS only.
         // Flag is stored in iOS keychain via expo-secure-store which persists
         // across app uninstall/reinstall, so users can't farm it.
-        try {
-          const alreadyClaimed = await SecureStore.getItemAsync(WELCOME_BONUS_KEY);
-          if (!alreadyClaimed) {
-            await SecureStore.setItemAsync(WELCOME_BONUS_KEY, "1");
-            dispatch({ type: "WELCOME_BONUS" });
+        // Android's SecureStore backend doesn't persist past uninstall, so we
+        // skip the bonus there until we have server-side dedup.
+        if (Platform.OS === "ios") {
+          try {
+            const alreadyClaimed = await SecureStore.getItemAsync(WELCOME_BONUS_KEY);
+            if (!alreadyClaimed) {
+              await SecureStore.setItemAsync(WELCOME_BONUS_KEY, "1");
+              dispatch({ type: "WELCOME_BONUS" });
+            }
+          } catch (e) {
+            console.warn("Welcome bonus check failed:", e);
           }
-        } catch (e) {
-          console.warn("Welcome bonus check failed:", e);
         }
 
         // Track app open
