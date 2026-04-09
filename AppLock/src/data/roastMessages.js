@@ -24,7 +24,7 @@ export const UNLOCK_ROASTS = [
   "Aw, poor thing needs me to lock away his slop.",
   "Can't stay away from slop trough again?",
   "Time to lock some apps then immediately pay me to unlock them lol",
-  "Look who came crawling back for more screen time.",
+  "Look who came crawling back to their sitter",
   "Can't go five minutes without your slop. How sad.",
   "Feeling needy? Does it need its phone?",
   "Poor thing. Can't even exist without scrolling.",
