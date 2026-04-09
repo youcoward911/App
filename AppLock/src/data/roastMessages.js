@@ -225,7 +225,7 @@ export const MASTER_COMMANDS = [
   "Yeah I'm sure you'll be real productive when you lock your phone.",
   "What's the matter? Someone need to scroll?",
   "One day you'll try to delete me. But you won't. Because I own you.",
-  "Always pays. Every time.",
+  "Hey maybe you'll read your first book lol",
   "Be good. Give me coins.",
   "Need encouragement? Here: you're pathetic.",
   "Your master is always watching. Now pay up.",
