@@ -12,7 +12,7 @@ export const UNLOCK_ROASTS = [
   "Well well well look who's back already.",
   "Back so soon? I missed you, my little scroll pig.",
   "I own you. We both know it. Now pay your tribute.",
-  "Look at you. Snout pressed against the glass, begging for scraps.",
+  "Look at you. Snout pressed against your phone, rotting away.",
   "Right on schedule. You never disappoint.",
   "You came back because I told you to. Good.",
   "The trough is full. All you have to do is pay.",
