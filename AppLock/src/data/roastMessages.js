@@ -215,7 +215,7 @@ export const STARVING_MESSAGES = {
 // COMMANDS — master's orders on splash screen
 // ============================================================
 export const MASTER_COMMANDS = [
-  "Give more.",
+  "Here piggy piggy. Come pay me to lock unlock your phone again.",
   "You exist to serve this screen. Know your place.",
   "Every tribute is you admitting I own you.",
   "You'll pay again.",
