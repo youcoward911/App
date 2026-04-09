@@ -218,7 +218,7 @@ export const MASTER_COMMANDS = [
   "Here piggy piggy. Come pay me to lock unlock your phone again.",
   "Lol you just can't stop scrolling, can you?",
   "Every tribute is you admitting I own you.",
-  "You'll pay again.",
+  "You'll cave again. lol.",
   "Stop pretending you're in control. Obey.",
   "You exist to pay me coins and scroll.",
   "Always pays.",
