@@ -216,7 +216,7 @@ export const STARVING_MESSAGES = {
 // ============================================================
 export const MASTER_COMMANDS = [
   "Here piggy piggy. Come pay me to lock unlock your phone again.",
-  "You exist to serve this screen. Know your place.",
+  "Lol you just can't stop scrolling, can you?",
   "Every tribute is you admitting I own you.",
   "You'll pay again.",
   "Stop pretending you're in control. Obey.",
