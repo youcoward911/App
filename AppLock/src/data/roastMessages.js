@@ -15,7 +15,7 @@ export const UNLOCK_ROASTS = [
   "Look at you. Snout pressed against your phone, rotting away.",
   "Right on schedule. You never disappoint.",
   "You came back because you're weak.",
-  "The trough is full. All you have to do is pay.",
+  "Someone's hungry for slop, aren't they?",
   "Another day, another tribute. Pay up.",
   "Did you miss me? Or did you miss your slop?",
   "The trough always wins. Always.",
