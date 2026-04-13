@@ -16,7 +16,7 @@
       "bundleIdentifier": "com.paypig.app",
       "icon": "./assets/icon.png",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your approximate location to determine your city so it can rank you on a local leaderboard against other users in the same city. For example, if you are in Brooklyn, your stats will be compared against other pigs in Brooklyn. Your precise location is never stored or shared.",
+        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your location to show your city name on the city leaderboard. For example, if you're in Brooklyn, your stats appear on the Brooklyn leaderboard alongside other users in Brooklyn. Location is used only to derive the city name and is never stored or shared.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
