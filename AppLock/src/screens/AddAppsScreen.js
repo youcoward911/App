@@ -14,6 +14,7 @@ import AppIcon from "../components/AppIcon";
 import SlideToLock from "../components/SwipeToLock";
 import LockConfigModal from "../components/LockConfigModal";
 import { C, T, NEU_RAISED } from "../utils/theme";
+import { ensureScreenTimeAuthorized, lockAppsWithScreenTime } from "../utils/screenTimeAuth";
 
 export default function AddAppsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -27,23 +28,28 @@ export default function AddAppsScreen({ navigation }) {
 
   const isLocked = (id) => id in state.lockedApps;
 
-  const handleSwipeComplete = (app) => {
+  const handleSwipeComplete = async (app) => {
+    const authorized = await ensureScreenTimeAuthorized();
+    if (!authorized) return;
     setConfigApp(app);
   };
 
-  const handleConfigConfirm = ({ durationMinutes, peekFee, fullFee }) => {
+  const handleConfigConfirm = async ({ durationMinutes }) => {
     if (!configApp) return;
-    if (state.piggyCoins < fullFee) {
-      Alert.alert(
-        "Not Enough Coins",
-        `You need at least ${fullFee} coins to lock this app. You currently have ${state.piggyCoins}.`,
-        [
-          { text: "Go to Coin Shop", onPress: () => { setConfigApp(null); navigation.navigate("CoinShop"); } },
-          { text: "Go Back", style: "cancel" },
-        ]
-      );
-      return;
+    const peekFee = state.settings.defaultPeekFee;
+    const fullFee = state.settings.defaultFullFee;
+
+    // Show Apple's native app picker to select the actual app to block
+    try {
+      const result = await lockAppsWithScreenTime();
+      if (result.selectedCount === 0) {
+        Alert.alert("No Apps Selected", "You need to select at least one app in Apple's picker to block it.");
+        return;
+      }
+    } catch (e) {
+      console.warn("Screen Time picker failed:", e);
     }
+
     dispatch({
       type: "LOCK_APP",
       payload: {

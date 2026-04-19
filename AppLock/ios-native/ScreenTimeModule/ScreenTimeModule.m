@@ -1,5 +1,3 @@
-// Objective-C bridge — exposes Swift methods to React Native's JavaScript runtime
-
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
 
@@ -25,6 +23,22 @@ RCT_EXTERN_METHOD(reblockAllApps:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(clearAllBlocks:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(startMonitoring:(int)durationMinutes
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(stopMonitoring:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(syncToAppGroup:(int)coins
+                  peekFee:(int)peekFee
+                  fullFee:(int)fullFee
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(syncFromAppGroup:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 @end

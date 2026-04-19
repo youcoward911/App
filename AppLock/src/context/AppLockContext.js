@@ -1,10 +1,21 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef } from "react";
-import { Platform } from "react-native";
+import { Platform, AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 import { updateLeaderboard } from "../utils/leaderboard";
+import {
+  syncToAppGroup,
+  syncFromAppGroup,
+  isScreenTimeAvailable,
+  requestAuthorization,
+  getAuthorizationStatus,
+  showAppPicker,
+  blockSelectedApps,
+  unblockApp,
+  clearAllBlocks,
+} from "../native/ScreenTime";
 
 const AppLockContext = createContext();
 
@@ -13,7 +24,7 @@ const STORAGE_KEY = "@paypig_state_v2";
 // Keychain key — persists across app reinstalls on iOS so the welcome bonus
 // is only ever given once per device.
 const WELCOME_BONUS_KEY = "scrollpig_welcome_bonus_claimed";
-const WELCOME_BONUS_COINS = 20;
+const WELCOME_BONUS_COINS = 50;
 
 export const COIN_PACKAGES = [
   { id: "small", productId: "scrollpiggy.coins.50", coins: 50, price: 4.99, label: "50 Coins", bonus: null },
@@ -31,10 +42,12 @@ export const FEE_TIERS = [
 
 // Duration presets in minutes
 export const DURATION_PRESETS = [
-  { label: "15 min", minutes: 15 },
-  { label: "30 min", minutes: 30 },
   { label: "1 hour", minutes: 60 },
-  { label: "90 min", minutes: 90 },
+  { label: "2 hours", minutes: 120 },
+  { label: "4 hours", minutes: 240 },
+  { label: "8 hours", minutes: 480 },
+  { label: "12 hours", minutes: 720 },
+  { label: "24 hours", minutes: 1440 },
 ];
 
 const initialState = {
@@ -51,10 +64,12 @@ const initialState = {
   lastTributeTime: null,
   ironSnoutStreak: 0,    // consecutive natural expirations without peek/unlock
   bestIronSnout: 0,      // all-time best streak
+  isProPig: false,
+  proPigSince: null,
   settings: {
     defaultPeekFee: 1,
     defaultFullFee: 10,
-    defaultDuration: 15,   // minutes
+    defaultDuration: 60,   // minutes
     currency: "USD",
     roastIntensity: "medium",
   },
@@ -96,8 +111,10 @@ function reducer(state, action) {
       if (!app) return state;
 
       const baseFee = app.peekFee || 1;
+      // Pro Pig: first peek per lock session is free
+      const isFreePeek = state.isProPig && app.peekCount === 0;
       // Escalating: doubles each peek (1, 2, 4, 8, 16...)
-      const cost = baseFee * Math.pow(2, app.peekCount);
+      const cost = isFreePeek ? 0 : baseFee * Math.pow(2, app.peekCount);
       const today = new Date().toDateString();
       const isTodaySame = state.tributesTodayDate === today;
 
@@ -117,7 +134,7 @@ function reducer(state, action) {
           [appId]: {
             ...app,
             peekCount: app.peekCount + 1,
-            peekExpiresAt: Date.now() + 60 * 1000, // 1 minute
+            peekExpiresAt: Date.now() + 3 * 60 * 1000, // 3 minutes
           },
         },
       };
@@ -258,6 +275,28 @@ function reducer(state, action) {
       return { ...state, settings: newSettings };
     }
 
+    case "ACTIVATE_PRO_PIG": {
+      return {
+        ...state,
+        isProPig: true,
+        proPigSince: Date.now(),
+      };
+    }
+
+    case "DEACTIVATE_PRO_PIG": {
+      return {
+        ...state,
+        isProPig: false,
+      };
+    }
+
+    case "SYNC_COINS_FROM_EXTENSION": {
+      return {
+        ...state,
+        piggyCoins: action.payload.piggyCoins,
+      };
+    }
+
     default:
       return state;
   }
@@ -305,6 +344,18 @@ export function AppLockProvider({ children }) {
           }
         }
 
+        // Request Screen Time authorization on first launch
+        if (isScreenTimeAvailable()) {
+          try {
+            const authStatus = await getAuthorizationStatus();
+            if (authStatus.status === "notDetermined") {
+              await requestAuthorization();
+            }
+          } catch (e) {
+            console.warn("Screen Time auth request failed:", e);
+          }
+        }
+
         // Track app open
         await trackAppOpen();
       } catch (e) {
@@ -319,15 +370,21 @@ export function AppLockProvider({ children }) {
     const interval = setInterval(() => {
       const now = Date.now();
       Object.entries(state.lockedApps).forEach(([appId, app]) => {
-        // Peek expired — close the peek window
+        // Peek expired — close the peek window and re-block
         if (app.peekExpiresAt && now >= app.peekExpiresAt) {
           dispatch({ type: "PEEK_EXPIRED", payload: { appId } });
+          if (isScreenTimeAvailable()) {
+            blockSelectedApps().catch(() => {});
+          }
         }
         // Lock timer expired naturally — only fire once per lock session
         if (app.lockedAt && app.lockExpiresAt && now >= app.lockExpiresAt && !app.peekExpiresAt) {
           if (!expiredLocksRef.current.has(appId)) {
             expiredLocksRef.current.add(appId);
             dispatch({ type: "LOCK_EXPIRED", payload: { appId } });
+            if (isScreenTimeAvailable()) {
+              clearAllBlocks().catch(() => {});
+            }
             scheduleLockExpiry(appId).catch(() => {});
           }
         }
@@ -370,6 +427,32 @@ export function AppLockProvider({ children }) {
       console.warn("Failed to save state:", e)
     );
   }, [state]);
+
+  // Sync coin balance + fee settings to App Group so Shield extensions can read them
+  useEffect(() => {
+    if (isScreenTimeAvailable()) {
+      syncToAppGroup(
+        state.piggyCoins,
+        state.settings.defaultPeekFee,
+        state.settings.defaultFullFee
+      ).catch(() => {});
+    }
+  }, [state.piggyCoins, state.settings.defaultPeekFee, state.settings.defaultFullFee]);
+
+  // On app foreground, pull latest state from App Group (extensions may have deducted coins)
+  useEffect(() => {
+    if (!isScreenTimeAvailable()) return;
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        syncFromAppGroup().then((data) => {
+          if (data && data.piggyCoins !== state.piggyCoins) {
+            dispatch({ type: "SYNC_COINS_FROM_EXTENSION", payload: { piggyCoins: data.piggyCoins } });
+          }
+        }).catch(() => {});
+      }
+    });
+    return () => sub.remove();
+  }, [state.piggyCoins]);
 
   return (
     <AppLockContext.Provider value={{ state, dispatch }}>

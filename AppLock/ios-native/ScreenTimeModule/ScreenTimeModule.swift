@@ -4,16 +4,12 @@ import FamilyControls
 import ManagedSettings
 import DeviceActivity
 
-// MARK: - Authorization Center
-// Handles requesting Screen Time permission from the user
-
 @objc(ScreenTimeModule)
 class ScreenTimeModule: RCTEventEmitter {
 
   private let center = AuthorizationCenter.shared
   private let store = ManagedSettingsStore()
-  private var selectedApps: Set<ApplicationToken> = []
-  private var selectedCategories: Set<ActivityCategoryToken> = []
+  private let shared = SharedDefaults.shared
 
   override static func moduleName() -> String! {
     return "ScreenTimeModule"
@@ -29,8 +25,6 @@ class ScreenTimeModule: RCTEventEmitter {
 
   // MARK: - Authorization
 
-  /// Request Screen Time authorization from the user
-  /// This shows Apple's native permission dialog
   @objc
   func requestAuthorization(_ resolve: @escaping RCTPromiseResolveBlock,
                             rejecter reject: @escaping RCTPromiseRejectBlock) {
@@ -44,7 +38,6 @@ class ScreenTimeModule: RCTEventEmitter {
     }
   }
 
-  /// Check current authorization status
   @objc
   func getAuthorizationStatus(_ resolve: RCTPromiseResolveBlock,
                                rejecter reject: RCTPromiseRejectBlock) {
@@ -64,14 +57,10 @@ class ScreenTimeModule: RCTEventEmitter {
 
   // MARK: - App Picker
 
-  /// Show the FamilyActivityPicker so user can select which apps to block
-  /// This uses Apple's native picker — we can't see app names, only tokens
   @objc
   func showAppPicker(_ resolve: @escaping RCTPromiseResolveBlock,
                      rejecter reject: @escaping RCTPromiseRejectBlock) {
     DispatchQueue.main.async {
-      // The FamilyActivityPicker is a SwiftUI view — we present it
-      // via a hosting controller from the root view controller
       guard let rootVC = UIApplication.shared.windows.first?.rootViewController else {
         reject("NO_ROOT_VC", "Could not find root view controller", nil)
         return
@@ -79,8 +68,10 @@ class ScreenTimeModule: RCTEventEmitter {
 
       let picker = AppPickerViewController { [weak self] selection in
         guard let self = self else { return }
-        self.selectedApps = selection.applicationTokens
-        self.selectedCategories = selection.categoryTokens
+
+        // Persist selection to App Group so extensions can read it
+        self.shared.saveSelection(selection)
+
         let count = selection.applicationTokens.count + selection.categoryTokens.count
         resolve(["selectedCount": count])
       }
@@ -91,52 +82,105 @@ class ScreenTimeModule: RCTEventEmitter {
 
   // MARK: - Blocking / Shielding
 
-  /// Block all currently selected apps by applying a shield overlay
-  /// Users will see a "restricted" screen when they try to open blocked apps
   @objc
   func blockSelectedApps(_ resolve: RCTPromiseResolveBlock,
                           rejecter reject: RCTPromiseRejectBlock) {
-    store.shield.applications = selectedApps.isEmpty ? nil : selectedApps
-    store.shield.applicationCategories = selectedCategories.isEmpty
-      ? nil
-      : ShieldSettings.ActivityCategoryPolicy.specific(selectedCategories)
+    let apps = shared.selectedAppTokens
+    let categories = shared.selectedCategoryTokens
 
-    let count = selectedApps.count + selectedCategories.count
+    store.shield.applications = apps.isEmpty ? nil : apps
+    store.shield.applicationCategories = categories.isEmpty
+      ? nil
+      : ShieldSettings.ActivityCategoryPolicy.specific(categories)
+
+    let count = apps.count + categories.count
     resolve(["blockedCount": count])
   }
 
-  /// Unblock a specific app (called when user pays coins to unlock)
-  /// We rebuild the shield set without the unblocked app token
   @objc
   func unblockApp(_ appTokenString: String,
                   resolve: RCTPromiseResolveBlock,
                   rejecter reject: RCTPromiseRejectBlock) {
-    // Remove from selected set
-    // Note: In practice you'd store tokens mapped to app identifiers
-    // For now, we unshield all apps temporarily
     store.shield.applications = nil
     store.shield.applicationCategories = nil
     resolve(["status": "unblocked"])
   }
 
-  /// Reblock all apps (called when user relocks)
   @objc
   func reblockAllApps(_ resolve: RCTPromiseResolveBlock,
                        rejecter reject: RCTPromiseRejectBlock) {
-    store.shield.applications = selectedApps.isEmpty ? nil : selectedApps
-    store.shield.applicationCategories = selectedCategories.isEmpty
+    let apps = shared.selectedAppTokens
+    let categories = shared.selectedCategoryTokens
+
+    store.shield.applications = apps.isEmpty ? nil : apps
+    store.shield.applicationCategories = categories.isEmpty
       ? nil
-      : ShieldSettings.ActivityCategoryPolicy.specific(selectedCategories)
+      : ShieldSettings.ActivityCategoryPolicy.specific(categories)
     resolve(["status": "blocked"])
   }
 
-  /// Clear all shields — unblock everything
   @objc
   func clearAllBlocks(_ resolve: RCTPromiseResolveBlock,
                        rejecter reject: RCTPromiseRejectBlock) {
     store.clearAllSettings()
-    selectedApps.removeAll()
-    selectedCategories.removeAll()
     resolve(["status": "cleared"])
+  }
+
+  // MARK: - Monitoring (schedule-based blocking)
+
+  @objc
+  func startMonitoring(_ durationMinutes: Int,
+                       resolve: @escaping RCTPromiseResolveBlock,
+                       rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let activityCenter = DeviceActivityCenter()
+    let now = Date()
+    guard let end = Calendar.current.date(byAdding: .minute, value: durationMinutes, to: now) else {
+      reject("SCHEDULE_ERROR", "Could not compute end time", nil)
+      return
+    }
+
+    let schedule = DeviceActivitySchedule(
+      intervalStart: Calendar.current.dateComponents([.hour, .minute, .second], from: now),
+      intervalEnd: Calendar.current.dateComponents([.hour, .minute, .second], from: end),
+      repeats: false
+    )
+
+    do {
+      try activityCenter.startMonitoring(.init("scrollpig.lock"), during: schedule)
+      resolve(["status": "monitoring", "durationMinutes": durationMinutes])
+    } catch {
+      reject("MONITOR_ERROR", error.localizedDescription, error)
+    }
+  }
+
+  @objc
+  func stopMonitoring(_ resolve: RCTPromiseResolveBlock,
+                       rejecter reject: RCTPromiseRejectBlock) {
+    let activityCenter = DeviceActivityCenter()
+    activityCenter.stopMonitoring([.init("scrollpig.lock")])
+    resolve(["status": "stopped"])
+  }
+
+  // MARK: - App Group Sync
+
+  @objc
+  func syncToAppGroup(_ coins: Int,
+                      peekFee: Int,
+                      fullFee: Int,
+                      resolve: RCTPromiseResolveBlock,
+                      rejecter reject: RCTPromiseRejectBlock) {
+    shared.syncState(coins: coins, peekFee: peekFee, fullFee: fullFee)
+    resolve(["status": "synced"])
+  }
+
+  @objc
+  func syncFromAppGroup(_ resolve: RCTPromiseResolveBlock,
+                         rejecter reject: RCTPromiseRejectBlock) {
+    resolve([
+      "piggyCoins": shared.piggyCoins,
+      "defaultPeekFee": shared.defaultPeekFee,
+      "defaultFullFee": shared.defaultFullFee,
+      "lastSyncTime": shared.lastSyncTime,
+    ])
   }
 }

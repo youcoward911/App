@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import { POPULAR_APPS } from "../data/defaultApps";
-import { getFullUsage, formatCaveTime } from "../utils/usageTracker";
+import { getFullUsage, formatCaveTime, getTopAppsBySpend, getWeeklyReport } from "../utils/usageTracker";
 import { getPigWeight, getWeightProgress, WEIGHT_TIERS } from "../utils/pigWeight";
 import { C, T, NEU_RAISED } from "../utils/theme";
 
@@ -23,10 +23,23 @@ function appName(appId) {
 export default function StatsScreen() {
   const { state } = useAppLock();
   const [usage, setUsage] = useState(null);
+  const [topAppsSpend, setTopAppsSpend] = useState([]);
+  const [spendPeriod, setSpendPeriod] = useState("today");
+  const [weeklyReport, setWeeklyReport] = useState(null);
 
   useEffect(() => {
     getFullUsage().then((data) => setUsage(data));
   }, [state.totalUnlocks]);
+
+  useEffect(() => {
+    getTopAppsBySpend(spendPeriod, 5).then(setTopAppsSpend);
+  }, [state.totalUnlocks, spendPeriod]);
+
+  useEffect(() => {
+    if (state.isProPig) {
+      getWeeklyReport().then(setWeeklyReport);
+    }
+  }, [state.totalUnlocks, state.isProPig]);
 
   const today = new Date().toDateString();
   const tribToday = state.tributesTodayDate === today ? (state.tributesToday || 0) : 0;
@@ -182,6 +195,118 @@ export default function StatsScreen() {
           </View>
         </View>
 
+        {/* Top Money Pits — per-app spend + unlock count */}
+        <View style={[styles.sectionCard, NEU_RAISED]}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>TOP MONEY PITS</Text>
+          </View>
+          <View style={styles.periodToggle}>
+            {["today", "week"].map((p) => (
+              <TouchableOpacity
+                key={p}
+                style={[styles.periodBtn, spendPeriod === p && styles.periodBtnActive]}
+                onPress={() => setSpendPeriod(p)}
+              >
+                <Text style={[styles.periodBtnText, spendPeriod === p && styles.periodBtnTextActive]}>
+                  {p === "today" ? "Today" : "This Week"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {topAppsSpend.length === 0 ? (
+            <Text style={styles.emptyText}>
+              No unlocks {spendPeriod === "today" ? "today" : "this week"} yet
+            </Text>
+          ) : (
+            topAppsSpend.map((app, i) => (
+              <View key={app.appId}>
+                {i > 0 && <View style={styles.divider} />}
+                <View style={styles.weakRow}>
+                  <Text style={styles.weakLabel}>
+                    #{i + 1} {appName(app.appId)}
+                  </Text>
+                  <View style={styles.spendRight}>
+                    <Text style={styles.spendCoins}>{app.spent} coins</Text>
+                    <Text style={styles.spendUnlocks}>{app.unlocks}x</Text>
+                  </View>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Weekly Report — Pro Pig only */}
+        {state.isProPig && weeklyReport && (
+          <View style={[styles.sectionCard, NEU_RAISED]}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>WEEKLY REPORT</Text>
+              <View style={styles.proBadgeSm}>
+                <Text style={styles.proBadgeSmText}>PRO</Text>
+              </View>
+            </View>
+            <View style={styles.weeklyGrid}>
+              <View style={styles.weeklyCell}>
+                <Text style={[styles.statVal, { fontSize: 26 }]}>{weeklyReport.totalUnlocks}</Text>
+                <Text style={styles.statLabel}>Unlocks</Text>
+              </View>
+              <View style={styles.weeklyCell}>
+                <Text style={[styles.statVal, { fontSize: 26, color: C.pink }]}>{weeklyReport.totalSpent}</Text>
+                <Text style={styles.statLabel}>Coins Spent</Text>
+              </View>
+              <View style={styles.weeklyCell}>
+                <Text style={[styles.statVal, { fontSize: 26 }]}>{weeklyReport.avgPerDay}</Text>
+                <Text style={styles.statLabel}>Avg/Day</Text>
+              </View>
+            </View>
+            {weeklyReport.peakHour && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.weakRow}>
+                  <Text style={styles.weakLabel}>Peak Hour</Text>
+                  <Text style={styles.weakVal}>{weeklyReport.peakHour} ({weeklyReport.peakHourCount}x)</Text>
+                </View>
+              </>
+            )}
+            {weeklyReport.topApp && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.weakRow}>
+                  <Text style={styles.weakLabel}>Biggest Money Pit</Text>
+                  <Text style={[styles.weakVal, { color: C.pink }]}>
+                    {appName(weeklyReport.topApp.appId)} ({weeklyReport.topApp.spent} coins)
+                  </Text>
+                </View>
+              </>
+            )}
+            {weeklyReport.days && Object.keys(weeklyReport.days).length > 0 && (
+              <>
+                <View style={styles.divider} />
+                <Text style={[styles.sectionTitle, { marginTop: 8, marginBottom: 8 }]}>BY DAY</Text>
+                {Object.entries(weeklyReport.days).map(([day, data]) => (
+                  <View key={day} style={styles.weakRow}>
+                    <Text style={styles.weakLabel}>{day}</Text>
+                    <Text style={styles.weakVal}>{data.unlocks}x / {data.spent} coins</Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </View>
+        )}
+
+        {!state.isProPig && (
+          <View style={[styles.sectionCard, NEU_RAISED, { opacity: 0.7 }]}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>WEEKLY REPORT</Text>
+              <View style={styles.proBadgeSm}>
+                <Text style={styles.proBadgeSmText}>PRO</Text>
+              </View>
+            </View>
+            <Text style={styles.proGateText}>
+              Subscribe to Pro Pig to unlock weekly usage reports with trends, peak hours, and spending breakdowns.
+            </Text>
+          </View>
+        )}
+
         {/* Top apps leaderboard */}
         {topApps.length > 1 && (
           <View style={[styles.sectionCard, NEU_RAISED]}>
@@ -249,6 +374,33 @@ const styles = StyleSheet.create({
   weightHero: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 },
   weightTier: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
   weightNext: { ...T.caption, textAlign: "center", marginTop: 8, fontWeight: "600" },
+
+  // Period toggle
+  periodToggle: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  periodBtn: {
+    paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 12, backgroundColor: C.pinkPale,
+  },
+  periodBtnActive: { backgroundColor: C.pink },
+  periodBtnText: { fontSize: 13, fontWeight: "700", color: C.pink },
+  periodBtnTextActive: { color: C.white },
+
+  // Spend details
+  spendRight: { alignItems: "flex-end" },
+  spendCoins: { ...T.bodyBold, fontSize: 15, color: C.pink },
+  spendUnlocks: { ...T.caption, fontSize: 12 },
+
+  emptyText: { ...T.caption, textAlign: "center", paddingVertical: 12 },
+
+  // Weekly report
+  weeklyGrid: { flexDirection: "row", justifyContent: "space-around", marginVertical: 12 },
+  weeklyCell: { alignItems: "center", flex: 1 },
+  proBadgeSm: {
+    backgroundColor: C.pink, borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 2,
+  },
+  proBadgeSmText: { color: "#FFF", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 },
+  proGateText: { ...T.caption, textAlign: "center", paddingVertical: 16, lineHeight: 18 },
 
   footer: {
     ...T.caption,

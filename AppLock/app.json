@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your location to show your city name on the city leaderboard. For example, if you're in Brooklyn, your stats appear on the Brooklyn leaderboard alongside other users in Brooklyn. Location is used only to derive the city name and is never stored or shared.",
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "6"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +35,8 @@
     },
     "plugins": [
       "./plugins/withScreenTime",
-      "./plugins/withAppIcon"
+      "./plugins/withAppIcon",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

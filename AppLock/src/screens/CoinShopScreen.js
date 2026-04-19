@@ -13,11 +13,12 @@ import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
-import { initIAP, buyCoins, endIAP } from "../utils/iap";
+import { initIAP, buyCoins, buySubscription, endIAP } from "../utils/iap";
 
 export default function CoinShopScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [buying, setBuying] = useState(null);
+  const [buyingSub, setBuyingSub] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [iapReady, setIapReady] = useState(false);
 
@@ -141,6 +142,66 @@ export default function CoinShopScreen({ navigation }) {
             </TouchableOpacity>
           );
         })}
+
+        {/* Pro Pig Subscription */}
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Pro Pig Subscription</Text>
+
+        {state.isProPig ? (
+          <View style={[styles.proCard, NEON_GLOW, styles.proCardActive]}>
+            <View style={styles.proBadge}>
+              <Text style={styles.proBadgeText}>ACTIVE</Text>
+            </View>
+            <Text style={styles.proTitle}>Pro Pig</Text>
+            <Text style={styles.proPrice}>$4.99/mo</Text>
+            <Text style={styles.proDesc}>Your master approves. Enjoy your perks.</Text>
+            <View style={styles.proFeatures}>
+              <Text style={styles.proFeature}>Peek Mode — scroll locked apps for 3 min</Text>
+              <Text style={styles.proFeature}>Schedule locks in advance</Text>
+              <Text style={styles.proFeature}>Weekly Usage Report</Text>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.proCard, NEON_GLOW]}
+            activeOpacity={0.85}
+            disabled={buyingSub}
+            onPress={async () => {
+              setBuyingSub(true);
+              try {
+                const result = await buySubscription();
+                if (result.success) {
+                  dispatch({ type: "ACTIVATE_PRO_PIG" });
+                  Alert.alert(
+                    "Welcome, Pro Pig",
+                    "Your master has granted you privileges. Don't waste them.",
+                    [{ text: "Oink." }]
+                  );
+                } else if (!result.cancelled) {
+                  Alert.alert("Failed", result.error || "Something went wrong.");
+                }
+              } catch (e) {
+                Alert.alert("Error", "Subscription failed.");
+              }
+              setBuyingSub(false);
+            }}
+          >
+            <Text style={styles.proTitle}>Pro Pig</Text>
+            <Text style={styles.proPrice}>$4.99/mo</Text>
+            <Text style={styles.proDesc}>Unlock premium features for the truly committed pig.</Text>
+            <View style={styles.proFeatures}>
+              <Text style={styles.proFeature}>Peek Mode — scroll locked apps for 3 min</Text>
+              <Text style={styles.proFeature}>Schedule locks in advance</Text>
+              <Text style={styles.proFeature}>Weekly Usage Report</Text>
+            </View>
+            {buyingSub ? (
+              <ActivityIndicator color={C.pink} style={{ marginTop: 14 }} />
+            ) : (
+              <View style={styles.proButton}>
+                <Text style={styles.proButtonText}>Subscribe</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Purchase history — collapsible */}
         <TouchableOpacity
@@ -281,6 +342,53 @@ const styles = StyleSheet.create({
   historyLabel: { ...T.body, fontSize: 14 },
   historyVal: { ...T.bodyBold, fontSize: 15 },
   divider: { height: 1, backgroundColor: C.divider, marginVertical: 10 },
+
+  // Pro Pig
+  proCard: {
+    backgroundColor: C.white,
+    marginHorizontal: 24,
+    borderRadius: 18,
+    padding: 24,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: C.pink,
+    alignItems: "center",
+  },
+  proCardActive: {
+    backgroundColor: "#FFF5F7",
+  },
+  proBadge: {
+    position: "absolute",
+    top: -10,
+    right: 16,
+    backgroundColor: "#4CAF50",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  proBadgeText: { color: "#FFF", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  proTitle: { fontSize: 24, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
+  proPrice: { fontSize: 18, fontWeight: "700", color: C.text, marginTop: 4 },
+  proDesc: { ...T.caption, textAlign: "center", marginTop: 8, lineHeight: 18 },
+  proFeatures: { marginTop: 14, alignSelf: "stretch" },
+  proFeature: {
+    ...T.body,
+    fontSize: 14,
+    color: C.text,
+    paddingVertical: 6,
+    paddingLeft: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: C.pink,
+    marginBottom: 4,
+  },
+  proButton: {
+    backgroundColor: C.pink,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    marginTop: 16,
+  },
+  proButtonText: { color: "#FFF", fontSize: 16, fontWeight: "800", letterSpacing: 0.5 },
 
   footer: {
     ...T.caption,

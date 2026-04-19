@@ -47,7 +47,7 @@ struct AppPickerView: View {
         .padding(.horizontal)
         .padding(.bottom)
       }
-      .navigationTitle("PayPig")
+      .navigationTitle("Scroll Pig")
       .navigationBarTitleDisplayMode(.inline)
     }
   }

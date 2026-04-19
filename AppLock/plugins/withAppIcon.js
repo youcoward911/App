@@ -1,6 +1,22 @@
 const { withDangerousMod } = require("@expo/config-plugins");
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+
+// Standard iPhone app icon sizes that Apple's App Store upload validator
+// expects to find as actual PNGs inside the bundle. The 120x120 entry in
+// particular is required ("iPhone / iPod Touch app icon 60pt @2x") — its
+// absence causes error 90022 during eas submit.
+const PHONE_ICONS = [
+  { size: "20x20", scale: "2x", px: 40 },
+  { size: "20x20", scale: "3x", px: 60 },
+  { size: "29x29", scale: "2x", px: 58 },
+  { size: "29x29", scale: "3x", px: 87 },
+  { size: "40x40", scale: "2x", px: 80 },
+  { size: "40x40", scale: "3x", px: 120 },
+  { size: "60x60", scale: "2x", px: 120 },
+  { size: "60x60", scale: "3x", px: 180 },
+];
 
 // Expo SDK 54 writes Contents.json in the Xcode 14+ single-size format
 // ({"idiom": "universal", "platform": "ios", "size": "1024x1024"}), but
@@ -46,25 +62,39 @@ function withAppIcon(config) {
       }
 
       // Copy the 1024x1024 source icon in as the marketing image
-      const iconDest = path.join(appiconset, "App-Icon-1024x1024@1x.png");
-      fs.copyFileSync(srcIcon, iconDest);
+      const marketingFile = "App-Icon-1024x1024@1x.png";
+      fs.copyFileSync(srcIcon, path.join(appiconset, marketingFile));
 
-      // Classic Xcode 13 / pre-Xcode-14 Contents.json with explicit
-      // ios-marketing idiom. actool has supported this format for years
-      // and will produce a proper marketing slot in Assets.car.
+      // Generate scaled iPhone icons via sips (available on macOS where
+      // EAS iOS builds run). Each scaled file is referenced as a "phone"
+      // idiom entry so actool emits real PNGs at the required pixel sizes
+      // — Apple's upload validator wants an actual 120x120 iPhone app
+      // icon in the bundle, which a single 1024 universal entry does not
+      // produce. The explicit ios-marketing entry then produces the App
+      // Store Connect listing icon slot.
+      const images = [];
+      for (const { size, scale, px } of PHONE_ICONS) {
+        const filename = `App-Icon-${size}@${scale}.png`;
+        execFileSync("sips", [
+          "-z",
+          String(px),
+          String(px),
+          srcIcon,
+          "--out",
+          path.join(appiconset, filename),
+        ]);
+        images.push({ size, idiom: "iphone", filename, scale });
+      }
+      images.push({
+        size: "1024x1024",
+        idiom: "ios-marketing",
+        filename: marketingFile,
+        scale: "1x",
+      });
+
       const contents = {
-        images: [
-          {
-            size: "1024x1024",
-            idiom: "ios-marketing",
-            filename: "App-Icon-1024x1024@1x.png",
-            scale: "1x",
-          },
-        ],
-        info: {
-          version: 1,
-          author: "xcode",
-        },
+        images,
+        info: { version: 1, author: "xcode" },
       };
       fs.writeFileSync(
         path.join(appiconset, "Contents.json"),

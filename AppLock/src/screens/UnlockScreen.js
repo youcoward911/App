@@ -28,6 +28,7 @@ import WalletSVG from "../components/art/WalletSVG";
 import CoinSVG from "../components/art/CoinSVG";
 import TroughSVG from "../components/art/TroughSVG";
 import GodHandSVG from "../components/art/GodHandSVG";
+import { unlockAppWithScreenTime } from "../utils/screenTimeAuth";
 import SlopSplashSVG from "../components/art/SlopSplashSVG";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
@@ -235,6 +236,7 @@ export default function UnlockScreen({ route, navigation }) {
   const handleConfirmPeek = () => {
     dispatch({ type: "PEEK_APP", payload: { appId } });
     trackUnlock(appId, peekCost, lockInfo?.lockedAt).catch(() => {});
+    unlockAppWithScreenTime(appId).catch(() => {});
     setPeekShame(pickRandom(PEEK_SHAMES));
     setPhase("peeking");
   };
@@ -242,6 +244,7 @@ export default function UnlockScreen({ route, navigation }) {
   const handleConfirmFull = () => {
     dispatch({ type: "UNLOCK_APP", payload: { appId } });
     trackUnlock(appId, fullFee, lockInfo?.lockedAt).catch(() => {});
+    unlockAppWithScreenTime(appId).catch(() => {});
     setPostShade(getPostUnlockDegradation());
     setFeastTitle(FEAST_TITLES[Math.floor(Math.random() * FEAST_TITLES.length)]);
     setPhase("unlocked");
@@ -597,16 +600,20 @@ export default function UnlockScreen({ route, navigation }) {
           <View style={styles.buttons}>
             {phase === "roast" && (
               <>
-                <GlowButton
-                  title={`Peek (1 min) \u2014 ${peekCost} coin${peekCost === 1 ? "" : "s"}`}
-                  onPress={handlePeek}
-                />
-                {peekCount > 0 && (
-                  <Text style={styles.escalationNote}>
-                    price doubled {peekCount} time{peekCount === 1 ? "" : "s"}
-                  </Text>
-                )}
-                <View style={{ height: 10 }} />
+                {state.isProPig ? (
+                  <>
+                    <GlowButton
+                      title={peekCount === 0 ? "Peek (3 min) \u2014 FREE" : `Peek (3 min) \u2014 ${peekCost} coin${peekCost === 1 ? "" : "s"}`}
+                      onPress={handlePeek}
+                    />
+                    {peekCount > 0 && (
+                      <Text style={styles.escalationNote}>
+                        price doubled {peekCount} time{peekCount === 1 ? "" : "s"}
+                      </Text>
+                    )}
+                    <View style={{ height: 10 }} />
+                  </>
+                ) : null}
                 <GlowButton
                   title={`Surrender \u2014 ${fullFee} coin${fullFee === 1 ? "" : "s"}`}
                   onPress={handleSurrender}

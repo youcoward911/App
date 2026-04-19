@@ -11,6 +11,7 @@ import StatsScreen from "./src/screens/StatsScreen";
 
 import CoinShopScreen from "./src/screens/CoinShopScreen";
 import LeaderboardScreen from "./src/screens/LeaderboardScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 import WeightLevelUpModal from "./src/components/WeightLevelUpModal";
 import { View, StyleSheet, Text, Animated, Dimensions } from "react-native";
 import { PigIcon } from "./src/components/PigMascot";
@@ -119,6 +120,16 @@ function HomeTabs() {
             <TabIcon type="leaderboard" focused={focused} />
           ),
           tabBarLabel: "Board",
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon type="settings" focused={focused} />
+          ),
+          tabBarLabel: "Settings",
         }}
       />
     </Tab.Navigator>

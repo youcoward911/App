@@ -8,14 +8,13 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
-  Alert,
 } from "react-native";
 import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
-import { DURATION_PRESETS, FEE_TIERS } from "../context/AppLockContext";
+import { DURATION_PRESETS } from "../context/AppLockContext";
 import GlowButton from "./GlowButton";
 
 const CUSTOM_MINUTES = [];
-for (let m = 15; m <= 480; m += 15) {
+for (let m = 60; m <= 1440; m += 15) {
   const h = Math.floor(m / 60);
   const r = m % 60;
   let label;
@@ -25,24 +24,15 @@ for (let m = 15; m <= 480; m += 15) {
   CUSTOM_MINUTES.push({ label, minutes: m });
 }
 
-const CUSTOM_FEES = [];
-for (let p = 5; p <= 100; p += 5) {
-  CUSTOM_FEES.push({ label: `${p} / ${p * 10}`, peek: p, full: p * 10 });
-}
-
 const ITEM_HEIGHT = 44;
 const VISIBLE_ITEMS = 3;
 const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
 export default function LockConfigModal({ visible, onClose, onConfirm, appName }) {
   const [durationIdx, setDurationIdx] = useState(0); // index into DURATION_PRESETS
-  const [feeIdx, setFeeIdx] = useState(0);
   const [showCustom, setShowCustom] = useState(false);
   const [customIdx, setCustomIdx] = useState(0);
-  const [showCustomFee, setShowCustomFee] = useState(false);
-  const [customFeeIdx, setCustomFeeIdx] = useState(0);
   const scrollRef = useRef(null);
-  const feeScrollRef = useRef(null);
 
   const handlePreset = (idx) => {
     setShowCustom(false);
@@ -55,14 +45,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
 
   const handleConfirm = () => {
     const dur = showCustom ? CUSTOM_MINUTES[customIdx].minutes : DURATION_PRESETS[durationIdx].minutes;
-    const fee = showCustomFee ? CUSTOM_FEES[customFeeIdx] : FEE_TIERS[feeIdx];
-    onConfirm({ durationMinutes: dur, peekFee: fee.peek, fullFee: fee.full });
-  };
-
-  const onFeeScrollEnd = (e) => {
-    const y = e.nativeEvent.contentOffset.y;
-    const idx = Math.round(y / ITEM_HEIGHT);
-    setCustomFeeIdx(Math.max(0, Math.min(idx, CUSTOM_FEES.length - 1)));
+    onConfirm({ durationMinutes: dur });
   };
 
   const onScrollEnd = (e) => {
@@ -124,67 +107,6 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
                 {CUSTOM_MINUTES.map((item, i) => (
                   <View key={item.minutes} style={styles.wheelItem}>
                     <Text style={[styles.wheelText, i === customIdx && styles.wheelTextActive]}>
-                      {item.label}
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Fee Section */}
-          <View style={styles.feeLabelRow}>
-            <Text style={[styles.sectionLabel, { marginTop: 20 }]}>SET PEEK / FULL UNLOCK COST</Text>
-            <TouchableOpacity
-              style={[styles.infoBtn, { marginTop: 20 }]}
-              onPress={() => Alert.alert(
-                "Peek vs Full Unlock",
-                "Peek lets you use an app for 1 minute before re-locking. Peeks double for each use during the same lock session.\n\nFull unlocks cost 10x your set peek price.",
-                [{ text: "Got it" }]
-              )}
-            >
-              <Text style={styles.infoBtnText}>?</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.presetRow}>
-            {FEE_TIERS.map((t, i) => (
-              <TouchableOpacity
-                key={t.label}
-                style={[styles.chip, !showCustomFee && feeIdx === i && styles.chipActive]}
-                onPress={() => { setShowCustomFee(false); setFeeIdx(i); }}
-              >
-                <Text style={[styles.chipText, !showCustomFee && feeIdx === i && styles.chipTextActive]}>
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={[styles.chip, showCustomFee && styles.chipActive]}
-              onPress={() => setShowCustomFee(true)}
-            >
-              <Text style={[styles.chipText, showCustomFee && styles.chipTextActive]}>Custom</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Custom fee scroll wheel */}
-          {showCustomFee && (
-            <View style={styles.wheelWrap}>
-              <View style={styles.wheelHighlight} />
-              <ScrollView
-                ref={feeScrollRef}
-                style={styles.wheel}
-                contentContainerStyle={{
-                  paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
-                }}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                showsVerticalScrollIndicator={false}
-                onMomentumScrollEnd={onFeeScrollEnd}
-                onScrollEndDrag={onFeeScrollEnd}
-              >
-                {CUSTOM_FEES.map((item, i) => (
-                  <View key={item.peek} style={styles.wheelItem}>
-                    <Text style={[styles.wheelText, i === customFeeIdx && styles.wheelTextActive]}>
                       {item.label}
                     </Text>
                   </View>

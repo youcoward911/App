@@ -17,5 +17,13 @@
     "production": {
       "autoIncrement": true
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "alexjfrydman@gmail.com",
+        "ascAppId": "6761701442"
+      }
+    }
   }
 }

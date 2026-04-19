@@ -18,6 +18,8 @@ export const PRODUCT_IDS = [
   "scrollpiggy.coins.250",
 ];
 
+export const SUBSCRIPTION_ID = "scrollpiggy.pro.monthly";
+
 // Map product IDs to coin amounts
 export const PRODUCT_COINS = {
   "scrollpiggy.coins.50": 50,
@@ -179,6 +181,48 @@ export async function buyCoins(productId) {
         cancelled,
         error: e?.message || "Purchase failed",
       });
+    });
+  });
+}
+
+export async function buySubscription() {
+  if (!connected) {
+    const ok = await initIAP();
+    if (!ok) return { success: false, error: "Store unavailable" };
+  }
+  if (pendingResolver) {
+    return { success: false, error: "Another purchase is in progress" };
+  }
+
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      if (pendingResolver) {
+        pendingResolver = null;
+        pendingProductId = null;
+        resolve({ success: false, error: "Purchase timed out" });
+      }
+    }, 180000);
+
+    pendingProductId = SUBSCRIPTION_ID;
+    pendingResolver = (result) => {
+      clearTimeout(timeout);
+      resolve({ ...result, isSubscription: true });
+    };
+
+    requestPurchase({
+      request: {
+        ios: { sku: SUBSCRIPTION_ID },
+        android: { skus: [SUBSCRIPTION_ID] },
+      },
+      type: "subs",
+    }).catch((e) => {
+      clearTimeout(timeout);
+      if (pendingResolver) {
+        pendingResolver = null;
+        pendingProductId = null;
+      }
+      const cancelled = /cancel/i.test(e?.code || e?.message || "");
+      resolve({ success: false, cancelled, error: e?.message || "Purchase failed" });
     });
   });
 }

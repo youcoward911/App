@@ -331,18 +331,6 @@ export default function HomeScreen({ navigation }) {
               title="Lock Me Back Up"
               onPress={() => {
                 if (deleteMode) { setDeleteMode(null); return; }
-                const relockFee = info?.fullFee || state.settings.defaultFullFee;
-                if (state.piggyCoins < relockFee) {
-                  Alert.alert(
-                    "Not Enough Coins",
-                    `You need at least ${relockFee} coins to lock this app. You currently have ${state.piggyCoins}.`,
-                    [
-                      { text: "Go to Coin Shop", onPress: () => navigation.navigate("CoinShop") },
-                      { text: "Go Back", style: "cancel" },
-                    ]
-                  );
-                  return;
-                }
                 dispatch({ type: "RELOCK_APP", payload: { appId: item.id } });
               }}
               textStyle={{ fontSize: 14, letterSpacing: 0.8 }}

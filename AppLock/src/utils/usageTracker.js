@@ -103,8 +103,8 @@ export async function trackUnlock(appId, fee, lockedAt) {
     fee,
     caveSeconds: lockedAt ? Math.floor((now - lockedAt) / 1000) : null,
   });
-  if (data.unlockLog.length > 50) {
-    data.unlockLog = data.unlockLog.slice(-50);
+  if (data.unlockLog.length > 200) {
+    data.unlockLog = data.unlockLog.slice(-200);
   }
 
   // Streak tracking
@@ -171,6 +171,100 @@ export async function getTodayStats() {
 // Get all usage data (for stats screen)
 export async function getFullUsage() {
   return await loadUsage();
+}
+
+// Get top N apps by coins spent over a time period
+// period: "today" or "week"
+export async function getTopAppsBySpend(period = "today", limit = 5) {
+  const data = await loadUsage();
+  const now = Date.now();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  let cutoff;
+  if (period === "week") {
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    cutoff = startOfWeek.getTime();
+  } else {
+    cutoff = startOfToday.getTime();
+  }
+
+  const appStats = {};
+  for (const entry of data.unlockLog) {
+    if (entry.time >= cutoff) {
+      if (!appStats[entry.appId]) {
+        appStats[entry.appId] = { unlocks: 0, spent: 0 };
+      }
+      appStats[entry.appId].unlocks++;
+      appStats[entry.appId].spent += entry.fee || 0;
+    }
+  }
+
+  return Object.entries(appStats)
+    .map(([appId, stats]) => ({ appId, ...stats }))
+    .sort((a, b) => b.spent - a.spent)
+    .slice(0, limit);
+}
+
+// Get weekly usage report data
+export async function getWeeklyReport() {
+  const data = await loadUsage();
+  const now = Date.now();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+  const weekLog = data.unlockLog.filter((e) => e.time >= weekAgo);
+  const totalUnlocks = weekLog.length;
+  const totalSpent = weekLog.reduce((sum, e) => sum + (e.fee || 0), 0);
+
+  // Per-day breakdown
+  const days = {};
+  for (const entry of weekLog) {
+    const day = new Date(entry.time).toLocaleDateString("en-US", { weekday: "short" });
+    if (!days[day]) days[day] = { unlocks: 0, spent: 0 };
+    days[day].unlocks++;
+    days[day].spent += entry.fee || 0;
+  }
+
+  // Top app
+  const appStats = {};
+  for (const entry of weekLog) {
+    if (!appStats[entry.appId]) appStats[entry.appId] = { unlocks: 0, spent: 0 };
+    appStats[entry.appId].unlocks++;
+    appStats[entry.appId].spent += entry.fee || 0;
+  }
+  const topApp = Object.entries(appStats)
+    .sort((a, b) => b[1].spent - a[1].spent)
+    .map(([appId, stats]) => ({ appId, ...stats }))[0] || null;
+
+  // Avg unlocks per day
+  const activeDays = Object.keys(days).length || 1;
+  const avgPerDay = Math.round(totalUnlocks / activeDays * 10) / 10;
+
+  // Peak hour this week
+  const hourCounts = {};
+  for (const entry of weekLog) {
+    const h = new Date(entry.time).getHours();
+    hourCounts[h] = (hourCounts[h] || 0) + 1;
+  }
+  const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+  let peakHourLabel = null;
+  if (peakHour) {
+    const h = parseInt(peakHour[0]);
+    const period = h >= 12 ? "PM" : "AM";
+    const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    peakHourLabel = `${display} ${period}`;
+  }
+
+  return {
+    totalUnlocks,
+    totalSpent,
+    days,
+    topApp,
+    avgPerDay,
+    peakHour: peakHourLabel,
+    peakHourCount: peakHour ? parseInt(peakHour[1]) : 0,
+  };
 }
 
 // Format seconds into readable string
