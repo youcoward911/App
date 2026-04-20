@@ -38,7 +38,7 @@ jobs:
         run: npx expo prebuild --platform ios --clean --no-install
       - run: cd ios && pod install
       - name: Archive
-        run: xcodebuild archive -workspace ios/ScrollPig.xcworkspace -scheme ScrollPig -configuration Release -archivePath $RUNNER_TEMP/ScrollPig.xcarchive -destination generic/platform=iOS CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=78KK2B4DTZ CODE_SIGN_IDENTITY="Apple Distribution" -allowProvisioningUpdates
+        run: xcodebuild archive -workspace ios/ScrollPig.xcworkspace -scheme ScrollPig -configuration Release -archivePath $RUNNER_TEMP/ScrollPig.xcarchive -destination generic/platform=iOS CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=78KK2B4DTZ CODE_SIGN_IDENTITY="Apple Distribution" PROVISIONING_PROFILE=a03548ef-9dc2-4242-bfeb-d2a2a67e54f2 -allowProvisioningUpdates
       - name: Export
         run: |
           printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>method</key>\n<string>ad-hoc</string>\n<key>teamID</key>\n<string>78KK2B4DTZ</string>\n<key>signingStyle</key>\n<string>manual</string>\n<key>provisioningProfiles</key>\n<dict>\n<key>com.paypig.app</key>\n<string>ScrollPig AdHoc</string>\n</dict>\n</dict>\n</plist>' > $RUNNER_TEMP/ExportOptions.plist
