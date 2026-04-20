@@ -20,6 +20,8 @@ function withScreenTime(config) {
   if (process.env.ENABLE_FAMILY_CONTROLS === "1") {
     config = withEntitlementsPlist(config, (mod) => {
       mod.modResults["com.apple.developer.family-controls.application"] = true;
+      // Remove push notification entitlement — profile doesn't include it
+      delete mod.modResults["aps-environment"];
       return mod;
     });
     console.log("[withScreenTime] Family Controls entitlement ENABLED");
