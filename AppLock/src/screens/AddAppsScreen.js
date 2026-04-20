@@ -29,8 +29,6 @@ export default function AddAppsScreen({ navigation }) {
   const isLocked = (id) => id in state.lockedApps;
 
   const handleSwipeComplete = async (app) => {
-    const authorized = await ensureScreenTimeAuthorized();
-    if (!authorized) return;
     setConfigApp(app);
   };
 
@@ -38,17 +36,6 @@ export default function AddAppsScreen({ navigation }) {
     if (!configApp) return;
     const peekFee = state.settings.defaultPeekFee;
     const fullFee = state.settings.defaultFullFee;
-
-    // Show Apple's native app picker to select the actual app to block
-    try {
-      const result = await lockAppsWithScreenTime();
-      if (result.selectedCount === 0) {
-        Alert.alert("No Apps Selected", "You need to select at least one app in Apple's picker to block it.");
-        return;
-      }
-    } catch (e) {
-      console.warn("Screen Time picker failed:", e);
-    }
 
     dispatch({
       type: "LOCK_APP",
@@ -60,6 +47,13 @@ export default function AddAppsScreen({ navigation }) {
       },
     });
     setConfigApp(null);
+
+    // Try Screen Time blocking after state update — non-blocking
+    ensureScreenTimeAuthorized().then((authorized) => {
+      if (authorized) {
+        lockAppsWithScreenTime().catch(() => {});
+      }
+    }).catch(() => {});
   };
 
   return (
