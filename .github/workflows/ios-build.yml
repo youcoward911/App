@@ -9,6 +9,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: claude/app-lock-service-3Zt33
       - uses: actions/setup-node@v4
         with:
           node-version: 22
