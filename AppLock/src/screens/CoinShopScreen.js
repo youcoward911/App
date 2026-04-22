@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
@@ -236,6 +237,17 @@ export default function CoinShopScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
+        {/* Legal links */}
+        <View style={styles.legalRow}>
+          <TouchableOpacity onPress={() => Linking.openURL("https://raw.githubusercontent.com/youcoward911/App/main/PRIVACY_POLICY.md")}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalDot}>·</Text>
+          <TouchableOpacity onPress={() => Linking.openURL("https://raw.githubusercontent.com/youcoward911/App/main/TERMS_OF_USE.md")}>
+            <Text style={styles.legalLink}>Terms of Use</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Footer taunt */}
         <Text style={styles.footer}>
           Non-refundable. Don't even ask.
@@ -390,6 +402,24 @@ const styles = StyleSheet.create({
   },
   proButtonText: { color: "#FFF", fontSize: 16, fontWeight: "800", letterSpacing: 0.5 },
 
+  legalRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  legalLink: {
+    ...T.caption,
+    color: C.pink,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  legalDot: {
+    ...T.caption,
+    color: C.textSecondary,
+    marginHorizontal: 8,
+  },
   footer: {
     ...T.caption,
     textAlign: "center",

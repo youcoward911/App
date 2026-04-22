@@ -173,6 +173,51 @@ export async function getFullUsage() {
   return await loadUsage();
 }
 
+// Get screen time data for chart
+export async function getScreenTimeData(period = "weekly") {
+  const data = await loadUsage();
+  const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  if (period === "weekly") {
+    const days = [];
+    const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(now - i * DAY_MS);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart.getTime() + DAY_MS);
+      const dayLog = data.unlockLog.filter(
+        (e) => e.time >= dayStart.getTime() && e.time < dayEnd.getTime()
+      );
+      const totalMins = dayLog.reduce((sum, e) => sum + (e.caveSeconds ? e.caveSeconds / 60 : 3), 0);
+      days.push({
+        label: dayLabels[dayStart.getDay()],
+        hours: Math.round(totalMins / 60 * 10) / 10,
+        unlocks: dayLog.length,
+      });
+    }
+    return days;
+  } else {
+    const weeks = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now - (i * 7 + 6) * DAY_MS);
+      weekStart.setHours(0, 0, 0, 0);
+      const weekEnd = new Date(weekStart.getTime() + 7 * DAY_MS);
+      const weekLog = data.unlockLog.filter(
+        (e) => e.time >= weekStart.getTime() && e.time < weekEnd.getTime()
+      );
+      const totalMins = weekLog.reduce((sum, e) => sum + (e.caveSeconds ? e.caveSeconds / 60 : 3), 0);
+      const monthDay = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
+      weeks.push({
+        label: `${monthDay}`,
+        hours: Math.round(totalMins / 60 * 10) / 10,
+        unlocks: weekLog.length,
+      });
+    }
+    return weeks;
+  }
+}
+
 // Get top N apps by coins spent over a time period
 // period: "today" or "week"
 export async function getTopAppsBySpend(period = "today", limit = 5) {

@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import { POPULAR_APPS } from "../data/defaultApps";
-import { getFullUsage, formatCaveTime, getTopAppsBySpend, getWeeklyReport } from "../utils/usageTracker";
+import { getFullUsage, formatCaveTime, getTopAppsBySpend, getWeeklyReport, getScreenTimeData } from "../utils/usageTracker";
 import { getPigWeight, getWeightProgress, WEIGHT_TIERS } from "../utils/pigWeight";
 import { C, T, NEU_RAISED } from "../utils/theme";
 
@@ -26,6 +26,8 @@ export default function StatsScreen() {
   const [topAppsSpend, setTopAppsSpend] = useState([]);
   const [spendPeriod, setSpendPeriod] = useState("today");
   const [weeklyReport, setWeeklyReport] = useState(null);
+  const [chartPeriod, setChartPeriod] = useState("weekly");
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     getFullUsage().then((data) => setUsage(data));
@@ -40,6 +42,12 @@ export default function StatsScreen() {
       getWeeklyReport().then(setWeeklyReport);
     }
   }, [state.totalUnlocks, state.isProPig]);
+
+  useEffect(() => {
+    if (state.isProPig) {
+      getScreenTimeData(chartPeriod).then(setChartData);
+    }
+  }, [state.totalUnlocks, chartPeriod, state.isProPig]);
 
   const today = new Date().toDateString();
   const tribToday = state.tributesTodayDate === today ? (state.tributesToday || 0) : 0;
@@ -307,21 +315,115 @@ export default function StatsScreen() {
           </View>
         )}
 
-        {/* Top apps leaderboard */}
-        {topApps.length > 1 && (
-          <View style={[styles.sectionCard, NEU_RAISED]}>
-            <Text style={styles.sectionTitle}>MOST UNLOCKED</Text>
-            {topApps.map(([id, count], i) => (
-              <View key={id}>
-                {i > 0 && <View style={styles.divider} />}
-                <View style={styles.weakRow}>
-                  <Text style={styles.weakLabel}>
-                    {i === 0 ? "#1" : i === 1 ? "#2" : "#3"} {appName(id)}
-                  </Text>
-                  <Text style={styles.weakVal}>{count}x</Text>
-                </View>
+        {/* Screen Time Chart — Pro Pig only */}
+        {!state.isProPig && (
+          <View style={[styles.chartCard, NEU_RAISED, { opacity: 0.7 }]}>
+            <View style={styles.chartHeader}>
+              <Text style={styles.sectionTitle}>SCREEN TIME</Text>
+              <View style={styles.proBadgeSm}>
+                <Text style={styles.proBadgeSmText}>PRO</Text>
               </View>
-            ))}
+            </View>
+            <Text style={styles.proGateText}>
+              Subscribe to Pro Pig to see your screen time trends with weekly and monthly breakdowns.
+            </Text>
+          </View>
+        )}
+        {state.isProPig && chartData.length > 0 && (
+          <View style={[styles.chartCard, NEU_RAISED]}>
+            <View style={styles.chartHeader}>
+              <Text style={styles.sectionTitle}>SCREEN TIME</Text>
+              <View style={styles.chartTabs}>
+                {["weekly", "monthly"].map((p) => (
+                  <TouchableOpacity
+                    key={p}
+                    style={[styles.chartTab, chartPeriod === p && styles.chartTabActive]}
+                    onPress={() => { lightTap(); setChartPeriod(p); }}
+                  >
+                    <Text style={[styles.chartTabText, chartPeriod === p && styles.chartTabTextActive]}>
+                      {p === "weekly" ? "Week" : "Month"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            {(() => {
+              const maxHours = Math.max(...chartData.map((d) => d.hours), 1);
+              const CHART_H = 140;
+              const avgHours = chartData.length > 0
+                ? Math.round(chartData.reduce((s, d) => s + d.hours, 0) / chartData.length * 10) / 10
+                : 0;
+              const avgY = CHART_H - (avgHours / maxHours) * CHART_H;
+              return (
+                <View style={styles.chartWrap}>
+                  <View style={styles.yAxis}>
+                    <Text style={styles.yLabel}>{maxHours}h</Text>
+                    <Text style={styles.yLabel}>{Math.round(maxHours / 2 * 10) / 10}h</Text>
+                    <Text style={styles.yLabel}>0</Text>
+                  </View>
+                  <View style={styles.chartArea}>
+                    <View style={[styles.gridLine, { top: 0 }]} />
+                    <View style={[styles.gridLine, { top: CHART_H / 2 }]} />
+                    <View style={[styles.gridLine, { top: CHART_H }]} />
+                    {avgHours > 0 && (
+                      <View style={[styles.avgLine, { top: avgY }]}>
+                        <Text style={styles.avgLabel}>avg {avgHours}h</Text>
+                      </View>
+                    )}
+                    <View style={[styles.barsRow, { height: CHART_H }]}>
+                      {chartData.map((d, i) => {
+                        const barH = maxHours > 0 ? (d.hours / maxHours) * CHART_H : 0;
+                        return (
+                          <View key={i} style={styles.barCol}>
+                            <View style={styles.barWrap}>
+                              <View
+                                style={[
+                                  styles.bar,
+                                  {
+                                    height: Math.max(barH, 2),
+                                    backgroundColor: d.hours > avgHours ? C.pink : C.pinkLight,
+                                    opacity: d.hours > 0 ? 1 : 0.3,
+                                  },
+                                ]}
+                              />
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                    <View style={styles.xAxis}>
+                      {chartData.map((d, i) => (
+                        <View key={i} style={styles.barCol}>
+                          <Text style={styles.xLabel}>{d.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              );
+            })()}
+            <View style={styles.chartSummary}>
+              <View style={styles.chartSumCell}>
+                <Text style={styles.chartSumValue}>
+                  {chartData.reduce((s, d) => s + d.unlocks, 0)}
+                </Text>
+                <Text style={styles.chartSumLabel}>Unlocks</Text>
+              </View>
+              <View style={styles.chartSumCell}>
+                <Text style={[styles.chartSumValue, { color: C.pink }]}>
+                  {Math.round(chartData.reduce((s, d) => s + d.hours, 0) * 10) / 10}h
+                </Text>
+                <Text style={styles.chartSumLabel}>Total</Text>
+              </View>
+              <View style={styles.chartSumCell}>
+                <Text style={styles.chartSumValue}>
+                  {chartData.length > 0
+                    ? Math.round(chartData.reduce((s, d) => s + d.hours, 0) / chartData.length * 10) / 10
+                    : 0}h
+                </Text>
+                <Text style={styles.chartSumLabel}>Avg/{chartPeriod === "weekly" ? "Day" : "Wk"}</Text>
+              </View>
+            </View>
           </View>
         )}
 
@@ -401,6 +503,32 @@ const styles = StyleSheet.create({
   },
   proBadgeSmText: { color: "#FFF", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 },
   proGateText: { ...T.caption, textAlign: "center", paddingVertical: 16, lineHeight: 18 },
+
+  // Screen Time Chart
+  chartCard: { backgroundColor: C.white, borderRadius: 20, padding: 20, marginBottom: 12 },
+  chartHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  chartTabs: { flexDirection: "row", gap: 4 },
+  chartTab: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10, backgroundColor: C.pinkPale },
+  chartTabActive: { backgroundColor: C.pink },
+  chartTabText: { fontSize: 12, fontWeight: "700", color: C.pink },
+  chartTabTextActive: { color: "#FFF" },
+  chartWrap: { flexDirection: "row", marginBottom: 16 },
+  yAxis: { width: 32, justifyContent: "space-between", alignItems: "flex-end", paddingRight: 6, height: 140 },
+  yLabel: { fontSize: 9, fontWeight: "600", color: C.textTertiary },
+  chartArea: { flex: 1, position: "relative" },
+  gridLine: { position: "absolute", left: 0, right: 0, height: 1, backgroundColor: C.divider },
+  avgLine: { position: "absolute", left: 0, right: 0, height: 1, backgroundColor: C.pink, opacity: 0.4, zIndex: 1 },
+  avgLabel: { position: "absolute", right: 0, top: -12, fontSize: 9, fontWeight: "700", color: C.pink, opacity: 0.6 },
+  barsRow: { flexDirection: "row", alignItems: "flex-end", gap: 4 },
+  barCol: { flex: 1, alignItems: "center" },
+  barWrap: { width: "100%", alignItems: "center" },
+  bar: { width: "65%", borderRadius: 6, minHeight: 2 },
+  xAxis: { flexDirection: "row", marginTop: 8 },
+  xLabel: { fontSize: 10, fontWeight: "600", color: C.textTertiary, textAlign: "center" },
+  chartSummary: { flexDirection: "row", justifyContent: "space-around", paddingTop: 12, borderTopWidth: 1, borderTopColor: C.divider },
+  chartSumCell: { alignItems: "center" },
+  chartSumValue: { fontSize: 20, fontWeight: "900", color: C.text, letterSpacing: -0.5 },
+  chartSumLabel: { fontSize: 10, fontWeight: "600", color: C.textTertiary, marginTop: 2 },
 
   footer: {
     ...T.caption,
