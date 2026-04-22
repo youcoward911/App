@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Scroll Pig",
+    "slug": "PayPig",
+    "version": "1.0.2",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF0F3"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.paypig.app",
+      "icon": "./assets/icon.png",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Scroll Pig uses your location to show your city name on the city leaderboard. For example, if you're in Brooklyn, your stats appear on the Brooklyn leaderboard alongside other users in Brooklyn. Location is used only to derive the city name and is never stored or shared.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "9"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF0F3",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.paypig.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "./plugins/withScreenTime",
+      "./plugins/withAppIcon",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fa4752e0-9878-4988-9def-e0111d9ab43f"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}
