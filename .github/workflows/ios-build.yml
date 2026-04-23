@@ -52,6 +52,16 @@ jobs:
           echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
           cp $RUNNER_TEMP/main.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
 
+      - name: Setup ASC API key for xcodebuild
+        working-directory: .
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          mkdir -p ~/private_keys
+          echo "$ASC_API_KEY" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+
       - name: Expo prebuild
         env:
           ENABLE_FAMILY_CONTROLS: "1"
@@ -61,6 +71,9 @@ jobs:
         run: cd ios && pod install
 
       - name: Build archive
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           xcodebuild archive \
             -workspace ios/ScrollPig.xcworkspace \
@@ -72,7 +85,10 @@ jobs:
             DEVELOPMENT_TEAM=78KK2B4DTZ \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE=${{ env.PROFILE_UUID }} \
-            -allowProvisioningUpdates
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID $ASC_KEY_ID \
+            -authenticationKeyIssuerID $ASC_ISSUER_ID
 
       - name: Export IPA
         run: |
