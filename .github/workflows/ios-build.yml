@@ -62,10 +62,23 @@ jobs:
           mkdir -p ~/private_keys
           echo "$ASC_API_KEY" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
 
+      - name: Debug profile entitlements
+        working-directory: .
+        run: |
+          echo "=== Profile Entitlements ==="
+          security cms -D -i $RUNNER_TEMP/main.mobileprovision | plutil -extract Entitlements xml1 -o - -
+          echo "=== Generated Entitlements File ==="
+
       - name: Expo prebuild
         env:
           ENABLE_FAMILY_CONTROLS: "1"
         run: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Debug app entitlements
+        run: |
+          echo "=== App Entitlements ==="
+          cat ios/ScrollPig/ScrollPig.entitlements 2>/dev/null || echo "No entitlements file found"
+          find ios -name "*.entitlements" -exec echo "Found: {}" \; -exec cat {} \;
 
       - name: Install CocoaPods
         run: cd ios && pod install
