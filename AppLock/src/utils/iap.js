@@ -227,6 +227,31 @@ export async function buySubscription() {
   });
 }
 
+export async function restorePurchases() {
+  if (!connected) {
+    const ok = await initIAP();
+    if (!ok) return { success: false, error: "Store unavailable" };
+  }
+
+  try {
+    // Fetch available subscriptions to check receipt
+    const result = await fetchProducts({
+      skus: [SUBSCRIPTION_ID],
+      type: "subs",
+    });
+    // On iOS, restoring triggers purchaseUpdatedListener for each owned item
+    // We use getAvailablePurchases from expo-iap
+    const { getAvailablePurchases } = require("expo-iap");
+    const purchases = await getAvailablePurchases();
+    const hasPro = purchases?.some(
+      (p) => p.productId === SUBSCRIPTION_ID || p.id === SUBSCRIPTION_ID
+    );
+    return { success: true, hasPro };
+  } catch (e) {
+    return { success: false, error: e?.message || "Restore failed" };
+  }
+}
+
 export function listenForPurchases() {
   return () => {};
 }

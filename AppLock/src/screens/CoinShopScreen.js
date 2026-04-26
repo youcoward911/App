@@ -14,12 +14,13 @@ import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
-import { initIAP, buyCoins, buySubscription, endIAP } from "../utils/iap";
+import { initIAP, buyCoins, buySubscription, restorePurchases, endIAP } from "../utils/iap";
 
 export default function CoinShopScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [buying, setBuying] = useState(null);
   const [buyingSub, setBuyingSub] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [iapReady, setIapReady] = useState(false);
 
@@ -203,6 +204,41 @@ export default function CoinShopScreen({ navigation }) {
             )}
           </TouchableOpacity>
         )}
+
+        {/* Subscription details (required by Apple) */}
+        <Text style={styles.subDetails}>
+          Pro Pig is an auto-renewable subscription at $4.99/month. Payment is charged to your Apple ID account at confirmation. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings → Apple ID → Subscriptions.
+        </Text>
+
+        {/* Restore Purchases */}
+        <TouchableOpacity
+          style={styles.restoreBtn}
+          activeOpacity={0.7}
+          disabled={restoring}
+          onPress={async () => {
+            setRestoring(true);
+            try {
+              const result = await restorePurchases();
+              if (result.success && result.hasPro) {
+                dispatch({ type: "ACTIVATE_PRO_PIG" });
+                Alert.alert("Restored", "Pro Pig has been restored. Welcome back.", [{ text: "Oink." }]);
+              } else if (result.success) {
+                Alert.alert("No Purchases Found", "No previous subscriptions to restore.");
+              } else {
+                Alert.alert("Restore Failed", result.error || "Something went wrong.");
+              }
+            } catch (e) {
+              Alert.alert("Error", "Could not restore purchases.");
+            }
+            setRestoring(false);
+          }}
+        >
+          {restoring ? (
+            <ActivityIndicator color={C.pink} />
+          ) : (
+            <Text style={styles.restoreText}>Restore Purchases</Text>
+          )}
+        </TouchableOpacity>
 
         {/* Purchase history — collapsible */}
         <TouchableOpacity
@@ -402,6 +438,28 @@ const styles = StyleSheet.create({
   },
   proButtonText: { color: "#FFF", fontSize: 16, fontWeight: "800", letterSpacing: 0.5 },
 
+  subDetails: {
+    ...T.caption,
+    fontSize: 11,
+    color: C.textSecondary,
+    textAlign: "center",
+    paddingHorizontal: 32,
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  restoreBtn: {
+    alignSelf: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 8,
+  },
+  restoreText: {
+    ...T.body,
+    fontSize: 14,
+    color: C.pink,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
   legalRow: {
     flexDirection: "row",
     justifyContent: "center",
