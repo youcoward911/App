@@ -112,14 +112,16 @@ export default function HomeScreen({ navigation }) {
       showAlert("No Apps Selected", "You need to add apps to your block list first.", [
         {
           text: "Add Apps",
-          onPress: async () => {
-            try {
-              const result = await showAppPicker();
-              if (result.selectedCount > 0) {
-                dispatch({ type: "SET_APP_COUNT", payload: { count: result.selectedCount } });
-                setShowConfig(true);
-              }
-            } catch (e) {}
+          onPress: () => {
+            setTimeout(async () => {
+              try {
+                const result = await showAppPickerForList("default");
+                if (result.selectedCount > 0) {
+                  dispatch({ type: "SET_APP_COUNT", payload: { listId: "default", count: result.selectedCount } });
+                  setShowConfig(true);
+                }
+              } catch (e) {}
+            }, 800);
           },
         },
         { text: "Cancel", style: "cancel" },
@@ -333,7 +335,7 @@ export default function HomeScreen({ navigation }) {
                   </View>
                   <TouchableOpacity
                     style={styles.editBtn}
-                    onPress={() => { setShowBlockList(false); setTimeout(() => handleEditApps(list.id), 400); }}
+                    onPress={() => { setShowBlockList(false); setTimeout(() => handleEditApps(list.id), 800); }}
                   >
                     <Text style={styles.editBtnText}>Edit</Text>
                   </TouchableOpacity>
@@ -349,7 +351,7 @@ export default function HomeScreen({ navigation }) {
                     const newId = `list_${Date.now()}`;
                     dispatch({ type: "ADD_BLOCK_LIST", payload: { id: newId, name: `Block List ${state.blockLists.length + 1}` } });
                     setShowBlockList(false);
-                    setTimeout(() => handleEditApps(newId), 400);
+                    setTimeout(() => handleEditApps(newId), 800);
                   } else {
                     setShowBlockList(false);
                     showAlert(
