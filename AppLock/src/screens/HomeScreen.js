@@ -8,6 +8,7 @@ import {
   Modal,
   Animated,
   ScrollView,
+  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
@@ -74,6 +75,14 @@ export default function HomeScreen({ navigation }) {
     const interval = setInterval(() => setNow(Date.now()), tickRate);
     return () => clearInterval(interval);
   }, [tickRate]);
+
+  // Force refresh when app comes back to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "active") setNow(Date.now());
+    });
+    return () => sub.remove();
+  }, []);
 
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);

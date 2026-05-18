@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
@@ -165,18 +166,19 @@ export default function UnlockScreen({ route, navigation }) {
   // Peek countdown timer
   useEffect(() => {
     if (phase !== "peeking") return;
-    setPeekCountdown(60);
-    const interval = setInterval(() => {
-      setPeekCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          navigation.goBack();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
+    const update = () => {
+      const remaining = lockInfo?.peekExpiresAt
+        ? Math.max(0, Math.ceil((lockInfo.peekExpiresAt - Date.now()) / 1000))
+        : 0;
+      setPeekCountdown(remaining);
+      if (remaining <= 0) navigation.goBack();
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "active") update();
+    });
+    return () => { clearInterval(interval); sub.remove(); };
   }, [phase]);
 
   useEffect(() => {
