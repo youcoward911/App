@@ -329,9 +329,20 @@ export default function HomeScreen({ navigation }) {
                   </TouchableOpacity>
                   <View style={styles.listInfo}>
                     <Text style={styles.listItemName}>{list.name}</Text>
-                    <Text style={styles.listItemCount}>
-                      {list.appCount > 0 ? `${list.appCount} apps` : "No apps yet"}
-                    </Text>
+                    <View style={styles.listPreviewRow}>
+                      {list.appCount > 0 ? (
+                        <>
+                          <View style={styles.appDot} />
+                          <View style={styles.appDot} />
+                          {list.appCount > 2 && <View style={styles.appDot} />}
+                          <Text style={styles.listItemCount}>
+                            {list.appCount} app{list.appCount !== 1 ? "s" : ""}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.listItemCount}>No apps yet</Text>
+                      )}
+                    </View>
                   </View>
                   <TouchableOpacity
                     style={styles.editBtn}
@@ -342,26 +353,29 @@ export default function HomeScreen({ navigation }) {
                 </View>
               ))}
 
-              {/* Add New List */}
+              {/* Add New List — stays on modal */}
               <TouchableOpacity
                 style={[styles.listItem, styles.listItemNew]}
                 activeOpacity={0.8}
                 onPress={() => {
+                  lightTap();
                   if (state.isProPig) {
+                    const listNum = state.blockLists.length + 1;
                     const newId = `list_${Date.now()}`;
-                    dispatch({ type: "ADD_BLOCK_LIST", payload: { id: newId, name: `Block List ${state.blockLists.length + 1}` } });
-                    setShowBlockList(false);
-                    setTimeout(() => handleEditApps(newId), 800);
+                    const name = `Slop List ${listNum}`;
+                    dispatch({ type: "ADD_BLOCK_LIST", payload: { id: newId, name } });
                   } else {
                     setShowBlockList(false);
-                    showAlert(
-                      "Pro Pig Required",
-                      "Upgrade to Pro Pig to create multiple block lists.",
-                      [
-                        { text: "Upgrade", onPress: () => navigation.navigate("Paywall") },
-                        { text: "Cancel", style: "cancel" },
-                      ]
-                    );
+                    setTimeout(() => {
+                      showAlert(
+                        "Pro Pig Required",
+                        "Upgrade to Pro Pig to create multiple block lists.",
+                        [
+                          { text: "Upgrade", onPress: () => navigation.navigate("Paywall") },
+                          { text: "Cancel", style: "cancel" },
+                        ]
+                      );
+                    }, 400);
                   }
                 }}
               >
@@ -614,11 +628,23 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: C.text,
   },
+  listPreviewRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    gap: 4,
+  },
+  appDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    backgroundColor: C.pinkPale,
+  },
   listItemCount: {
     fontSize: 12,
     fontWeight: "500",
     color: C.textSecondary,
-    marginTop: 2,
+    marginLeft: 4,
   },
   editBtn: {
     backgroundColor: C.pinkPale,
