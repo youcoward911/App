@@ -73,7 +73,13 @@ class ScreenTimeModule: RCTEventEmitter {
         self.shared.saveSelection(selection)
 
         let count = selection.applicationTokens.count + selection.categoryTokens.count
-        resolve(["selectedCount": count])
+
+        // Dismiss the picker first, then resolve
+        DispatchQueue.main.async {
+          rootVC.dismiss(animated: true) {
+            resolve(["selectedCount": count])
+          }
+        }
       }
 
       rootVC.present(picker, animated: true)
