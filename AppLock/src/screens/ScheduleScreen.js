@@ -114,8 +114,10 @@ export default function ScheduleScreen({ navigation }) {
       return;
     }
 
-    const startSlot = TIME_SLOTS[startIdx];
-    const endSlot = TIME_SLOTS[endIdx];
+    const safeStartIdx = Math.max(0, Math.min(startIdx, TIME_SLOTS.length - 1));
+    const safeEndIdx = Math.max(0, Math.min(endIdx, TIME_SLOTS.length - 1));
+    const startSlot = TIME_SLOTS[safeStartIdx];
+    const endSlot = TIME_SLOTS[safeEndIdx];
 
     // Ensure minimum 1 hour gap
     const startTotal = startSlot.hour * 60 + startSlot.minute;
@@ -310,7 +312,7 @@ export default function ScheduleScreen({ navigation }) {
                 </View>
               </View>
             </View>
-            <Text style={styles.timeHint}>{TIME_SLOTS[startIdx].label} — {TIME_SLOTS[endIdx].label}</Text>
+            <Text style={styles.timeHint}>{TIME_SLOTS[startIdx]?.label || ""} — {TIME_SLOTS[endIdx]?.label || ""}</Text>
 
             {/* Which lists */}
             <Text style={styles.sectionLabel}>BLOCK LISTS</Text>

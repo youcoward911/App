@@ -117,7 +117,7 @@ export default function HomeScreen({ navigation }) {
     ? (lock.peekFee || 1) * Math.pow(2, lock.peekCount || 0)
     : 0;
 
-  const totalActiveApps = state.blockLists.filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
+  const totalActiveApps = (state.blockLists || []).filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
 
   const handleSwipeLock = async () => {
     heavyTap();
@@ -153,7 +153,7 @@ export default function HomeScreen({ navigation }) {
     dispatch({ type: "LOCK_SLOP", payload: { durationMinutes } });
     setShowConfig(false);
     if (isScreenTimeAvailable()) {
-      const activeIds = state.blockLists.filter((l) => l.isActive).map((l) => l.id);
+      const activeIds = (state.blockLists || []).filter((l) => l.isActive).map((l) => l.id);
       try { await blockListsNative(activeIds); } catch (e) {}
     }
   };
