@@ -23,12 +23,13 @@ import {
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
 import { playPigSqueal } from "../utils/sounds";
 import { warningTap, heavyTap, successTap } from "../utils/haptics";
+import { schedulePeekExpiryNotification, notifySurrender } from "../utils/notifications";
 import GlowButton from "../components/GlowButton";
 import WalletSVG from "../components/art/WalletSVG";
 import CoinSVG from "../components/art/CoinSVG";
 import TroughSVG from "../components/art/TroughSVG";
 import GodHandSVG from "../components/art/GodHandSVG";
-import { unlockAppWithScreenTime } from "../utils/screenTimeAuth";
+import { clearAllBlocks } from "../native/ScreenTime";
 import SlopSplashSVG from "../components/art/SlopSplashSVG";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
@@ -241,7 +242,10 @@ export default function UnlockScreen({ route, navigation }) {
     successTap();
     dispatch({ type: "PEEK_SLOP" });
     trackUnlock(appId, peekCost, lockInfo?.lockedAt).catch(() => {});
-    unlockAppWithScreenTime(appId).catch(() => {});
+    clearAllBlocks().catch(() => {});
+    // Schedule "10 seconds left" warning notification
+    const peekEnd = Date.now() + 2 * 60 * 1000;
+    schedulePeekExpiryNotification(peekEnd).catch(() => {});
     setPeekShame(pickRandom(PEEK_SHAMES));
     setPhase("peeking");
   };
@@ -250,7 +254,8 @@ export default function UnlockScreen({ route, navigation }) {
     successTap();
     dispatch({ type: "UNLOCK_SLOP" });
     trackUnlock(appId, fullFee, lockInfo?.lockedAt).catch(() => {});
-    unlockAppWithScreenTime(appId).catch(() => {});
+    clearAllBlocks().catch(() => {});
+    notifySurrender().catch(() => {});
     setPostShade(getPostUnlockDegradation());
     setFeastTitle(FEAST_TITLES[Math.floor(Math.random() * FEAST_TITLES.length)]);
     setPhase("unlocked");

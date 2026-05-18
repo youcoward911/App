@@ -105,6 +105,56 @@ export async function scheduleLockExpiry(appId) {
   }
 }
 
+// Notification when peek window closes and apps re-lock
+export async function notifyPeekExpired() {
+  if (!Notifications) return;
+  const messages = [
+    { title: "Time's up, piggy.", body: "Your peek window is closed. Apps are locked again." },
+    { title: "Back in the pen.", body: "2 minutes flew by, huh? Locked again." },
+    { title: "Peek over.", body: "Hope you enjoyed those 2 minutes. Back to the slop lock." },
+  ];
+  const msg = pickRandom(messages);
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: { title: msg.title, body: msg.body, sound: true },
+      trigger: null,
+    });
+  } catch (e) {}
+}
+
+// Schedule a notification for when peek window will close
+export async function schedulePeekExpiryNotification(peekExpiresAt) {
+  if (!Notifications) return;
+  const delay = Math.max(1, Math.floor((peekExpiresAt - Date.now()) / 1000));
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "10 seconds left, pig.",
+        body: "Your peek window is about to close. Say goodbye.",
+        sound: true,
+      },
+      trigger: { type: "timeInterval", seconds: Math.max(1, delay - 10), repeats: false },
+    });
+  } catch (e) {}
+}
+
+// Notification when user surrenders
+export async function notifySurrender() {
+  if (!Notifications) return;
+  const messages = [
+    { title: "Full surrender.", body: "Apps unlocked. Your master is disappointed." },
+    { title: "Weak.", body: "Couldn't hold out. Apps are free. For now." },
+    { title: "Pathetic.", body: "You caved. Apps unlocked. Iron Snout broken." },
+  ];
+  const msg = pickRandom(messages);
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: { title: msg.title, body: msg.body, sound: true },
+      trigger: null,
+    });
+  } catch (e) {}
+}
+
 // Schedule escalating notifications based on minutes since last feed
 export async function scheduleEggingNotifications(minutesSinceLastFeed) {
   if (!Notifications) return;

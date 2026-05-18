@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useRef } from 
 import { Platform, AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification } from "../utils/notifications";
+import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification, notifyPeekExpired, schedulePeekExpiryNotification, notifySurrender } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 import { updateLeaderboard } from "../utils/leaderboard";
 import {
@@ -427,6 +427,7 @@ export function AppLockProvider({ children }) {
       // Peek expired — close peek window and re-block
       if (lock.peekExpiresAt && now >= lock.peekExpiresAt) {
         dispatch({ type: "SLOP_PEEK_EXPIRED" });
+        notifyPeekExpired().catch(() => {});
         if (isScreenTimeAvailable()) {
           const activeIds = lock.activeListIds || ["default"];
           blockListsNative(activeIds).catch(() => {});
