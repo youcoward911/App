@@ -3,8 +3,8 @@ import { Platform } from "react-native";
 // Palette #5: Piggy Pastel — soft lavender pink bg, hot pink accent
 export const C = {
   // Backgrounds
-  bg: "#FFF0F5",
-  bgSoft: "#FFECF2",
+  bg: "#FAE4E8",
+  bgSoft: "#F5D8DE",
   white: "#FFFFFF",
   card: "#FFFFFF",
 

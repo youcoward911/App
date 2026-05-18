@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   TextInput,
   Modal,
   Pressable,
@@ -17,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getPigWeight } from "../utils/pigWeight";
 import { C, T, NEU_RAISED } from "../utils/theme";
+import { showAlert } from "../components/CustomAlert";
 import { getCityLeaderboard, getGlobalLeaderboard, getUserRank, setPigName, getPigName } from "../utils/leaderboard";
 import { ensureAuth } from "../utils/firebase";
 
@@ -124,7 +124,7 @@ export default function LeaderboardScreen() {
       setEditingName(false);
       loadData(); // refresh leaderboard with new name
     } else {
-      Alert.alert("Oink!", result.error);
+      showAlert("Oink!", result.error);
     }
   };
 

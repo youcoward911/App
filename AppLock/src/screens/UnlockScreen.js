@@ -9,8 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
-import { POPULAR_APPS } from "../data/defaultApps";
-import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { trackUnlock } from "../utils/usageTracker";
@@ -23,6 +21,7 @@ import {
 } from "../data/roastMessages";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEON_GLOW } from "../utils/theme";
 import { playPigSqueal } from "../utils/sounds";
+import { warningTap, heavyTap, successTap } from "../utils/haptics";
 import GlowButton from "../components/GlowButton";
 import WalletSVG from "../components/art/WalletSVG";
 import CoinSVG from "../components/art/CoinSVG";
@@ -56,10 +55,9 @@ const SURRENDER_SHAMES = [
 ];
 
 export default function UnlockScreen({ route, navigation }) {
-  const { appId } = route.params;
   const { state, dispatch } = useAppLock();
-  const lockInfo = state.lockedApps[appId];
-  const appInfo = POPULAR_APPS.find((a) => a.id === appId);
+  const lockInfo = state.slopLock;
+  const appId = "sloplock"; // unified lock
 
   const [phase, setPhase] = useState("roast");
   const [roast, setRoast] = useState("");
@@ -109,8 +107,8 @@ export default function UnlockScreen({ route, navigation }) {
   const btnOpacity = useRef(new Animated.Value(0)).current;
 
   const peekCount = lockInfo?.peekCount || 0;
-  const basePeekFee = lockInfo?.peekFee || 0;
-  const fullFee = lockInfo?.fullFee || 0;
+  const basePeekFee = lockInfo?.peekFee || 1;
+  const fullFee = lockInfo?.fullFee || 10;
   const peekCost = basePeekFee * Math.pow(2, peekCount);
   const canAffordPeek = state.piggyCoins >= peekCost;
   const canAffordFull = state.piggyCoins >= fullFee;
@@ -182,12 +180,12 @@ export default function UnlockScreen({ route, navigation }) {
   }, [phase]);
 
   useEffect(() => {
-    if (!lockInfo?.lockedAt) {
+    if (!lockInfo?.isLocked) {
       setPhase("unlocked");
       setPostShade(getPostUnlockDegradation());
       return;
     }
-    const mins = (Date.now() - lockInfo.lockedAt) / 60000;
+    const mins = lockInfo.lockedAt ? (Date.now() - lockInfo.lockedAt) / 60000 : 0;
     setRoast(getSingleRoast(mins));
     setPreTaunt(getPrePaymentTaunt());
     setConfirmMsg(getConfirmMessage());
@@ -201,9 +199,11 @@ export default function UnlockScreen({ route, navigation }) {
 
   const handlePeek = () => {
     if (!canAffordPeek) {
+      warningTap();
       setPhase("broke");
       return;
     }
+    heavyTap();
     playPigSqueal();
     setCostLine(pickCostLine(peekCost));
     setPeekShame(pickRandom(PEEK_SHAMES));
@@ -218,9 +218,11 @@ export default function UnlockScreen({ route, navigation }) {
 
   const handleSurrender = () => {
     if (!canAffordFull) {
+      warningTap();
       setPhase("broke");
       return;
     }
+    heavyTap();
     playPigSqueal();
     setCostLine(pickCostLine(fullFee));
     setSurrenderShame(pickRandom(SURRENDER_SHAMES));
@@ -234,7 +236,8 @@ export default function UnlockScreen({ route, navigation }) {
   };
 
   const handleConfirmPeek = () => {
-    dispatch({ type: "PEEK_APP", payload: { appId } });
+    successTap();
+    dispatch({ type: "PEEK_SLOP" });
     trackUnlock(appId, peekCost, lockInfo?.lockedAt).catch(() => {});
     unlockAppWithScreenTime(appId).catch(() => {});
     setPeekShame(pickRandom(PEEK_SHAMES));
@@ -242,7 +245,8 @@ export default function UnlockScreen({ route, navigation }) {
   };
 
   const handleConfirmFull = () => {
-    dispatch({ type: "UNLOCK_APP", payload: { appId } });
+    successTap();
+    dispatch({ type: "UNLOCK_SLOP" });
     trackUnlock(appId, fullFee, lockInfo?.lockedAt).catch(() => {});
     unlockAppWithScreenTime(appId).catch(() => {});
     setPostShade(getPostUnlockDegradation());
@@ -418,16 +422,13 @@ export default function UnlockScreen({ route, navigation }) {
   ];
 
   const handleRelock = () => {
-    dispatch({ type: "RELOCK_APP", payload: { appId } });
+    dispatch({ type: "LOCK_SLOP", payload: { durationMinutes: state.slopLock.durationMinutes } });
     navigation.goBack();
   };
 
-  if (!appInfo || !lockInfo) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <Text style={{ ...T.body, textAlign: "center", marginTop: 100 }}>App not found</Text>
-      </SafeAreaView>
-    );
+  if (!lockInfo || !lockInfo.isLocked) {
+    navigation.goBack();
+    return null;
   }
 
   return (
@@ -438,10 +439,9 @@ export default function UnlockScreen({ route, navigation }) {
 
       <Animated.View style={[styles.contentWrap, { transform: [{ translateX: screenShake }] }]}>
         <View style={styles.content}>
-          {/* App icon + name — always at top */}
+          {/* Lock header */}
           <View style={styles.topRow}>
-            <AppIcon app={appInfo} size={52} />
-            <Text style={styles.appName}>{appInfo.name}</Text>
+            <Text style={styles.lockTitle}>SLOP LOCK</Text>
           </View>
 
           {/* ROAST phase */}
@@ -462,13 +462,8 @@ export default function UnlockScreen({ route, navigation }) {
               )}
 
               <Animated.View style={[styles.feeCard, NEON_GLOW, { transform: [{ translateX: shake }] }]}>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>YOUR COINS:</Text>
-                  <CoinBadge amount={state.piggyCoins} size="small" />
-                </View>
+                <CoinBadge amount={state.piggyCoins} size="small" />
               </Animated.View>
-
-              <Text style={styles.taunt} numberOfLines={2}>{preTaunt}</Text>
             </View>
           )}
 
@@ -603,7 +598,7 @@ export default function UnlockScreen({ route, navigation }) {
                 {state.isProPig ? (
                   <>
                     <GlowButton
-                      title={peekCount === 0 ? "Peek (3 min) \u2014 FREE" : `Peek (3 min) \u2014 ${peekCost} coin${peekCost === 1 ? "" : "s"}`}
+                      title={peekCount === 0 ? "Peek (2 min) \u2014 FREE" : `Peek (2 min) \u2014 ${peekCost} coin${peekCost === 1 ? "" : "s"}`}
                       onPress={handlePeek}
                     />
                     {peekCount > 0 && (
@@ -667,17 +662,15 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingTop: 60, paddingHorizontal: 24, paddingBottom: 20 },
 
   // Top — icon + name
-  topRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  appName: { ...T.h1, marginLeft: 14 },
+  topRow: { alignItems: "center", marginBottom: 16 },
+  lockTitle: { fontSize: 28, fontWeight: "900", color: C.pink, letterSpacing: 4 },
 
   // Middle — flex grows to fill space
   middle: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   roast: {
-    fontSize: 20, fontWeight: "900", color: C.pink, fontStyle: "italic",
-    textAlign: "center", lineHeight: 28, letterSpacing: -0.5, marginBottom: 16,
+    fontSize: 20, fontWeight: "900", color: C.pink,     textAlign: "center", lineHeight: 28, letterSpacing: -0.5, marginBottom: 16,
   },
-  taunt: { ...T.caption, textAlign: "center", fontStyle: "italic", marginTop: 12 },
 
   // Lock timer card
   timerCard: {
@@ -693,8 +686,8 @@ const styles = StyleSheet.create({
   },
 
   feeCard: {
-    backgroundColor: C.white, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16,
-    alignItems: "center",
+    backgroundColor: C.white, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20,
+    alignItems: "center", justifyContent: "center",
   },
   feeLabel: { ...T.label, marginBottom: 6 },
   feeCoinRow: { flexDirection: "row", alignItems: "center" },
@@ -737,13 +730,11 @@ const styles = StyleSheet.create({
     letterSpacing: 2, textTransform: "uppercase", marginBottom: 16,
   },
   peekShameText: {
-    fontSize: 18, fontWeight: "900", color: C.pink, fontStyle: "italic",
-    textAlign: "center", lineHeight: 26, marginBottom: 8,
+    fontSize: 18, fontWeight: "900", color: C.pink,     textAlign: "center", lineHeight: 26, marginBottom: 8,
   },
   peekSubText: {
     fontSize: 14, fontWeight: "600", color: C.textSecondary,
-    textAlign: "center", fontStyle: "italic",
-  },
+    textAlign: "center",   },
 
   // === FEEDING ANIMATION ===
   overlay: {
@@ -771,8 +762,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   shade: {
-    fontSize: 16, fontWeight: "700", color: "#FFF", fontStyle: "italic",
-    textAlign: "center", lineHeight: 24, position: "absolute", bottom: 10, zIndex: 10,
+    fontSize: 16, fontWeight: "700", color: "#FFF",     textAlign: "center", lineHeight: 24, position: "absolute", bottom: 10, zIndex: 10,
     textShadowColor: "rgba(255,105,180,0.8)", textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 16,
   },

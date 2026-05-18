@@ -14,7 +14,6 @@ import AppIcon from "../components/AppIcon";
 import SlideToLock from "../components/SwipeToLock";
 import LockConfigModal from "../components/LockConfigModal";
 import { C, T, NEU_RAISED } from "../utils/theme";
-import { ensureScreenTimeAuthorized, lockAppsWithScreenTime } from "../utils/screenTimeAuth";
 
 export default function AddAppsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -47,13 +46,6 @@ export default function AddAppsScreen({ navigation }) {
       },
     });
     setConfigApp(null);
-
-    // Try Screen Time blocking after state update — non-blocking
-    ensureScreenTimeAuthorized().then((authorized) => {
-      if (authorized) {
-        lockAppsWithScreenTime().catch(() => {});
-      }
-    }).catch(() => {});
   };
 
   return (

@@ -1,25 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { showAlert } from "../components/CustomAlert";
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import { initIAP, buyCoins, buySubscription, restorePurchases, endIAP } from "../utils/iap";
 
-export default function CoinShopScreen({ navigation }) {
+export default function CoinShopScreen({ navigation, route }) {
   const { state, dispatch } = useAppLock();
   const [buying, setBuying] = useState(null);
   const [buyingSub, setBuyingSub] = useState(false);
+  const scrollRef = useRef(null);
+  const proSectionY = useRef(0);
+  const shouldScrollToPro = useRef(route?.params?.scrollToPro || false);
   const [restoring, setRestoring] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [iapReady, setIapReady] = useState(false);
@@ -28,6 +31,8 @@ export default function CoinShopScreen({ navigation }) {
     initIAP().then((ok) => setIapReady(ok));
     return () => { endIAP(); };
   }, []);
+
+  // Auto-scroll handled in onLayout
 
   const isEmpty = state.piggyCoins === 0;
 
@@ -55,14 +60,14 @@ export default function CoinShopScreen({ navigation }) {
           { title: "Gross.", body: `${result.coins} coins bought without a second thought. Disgusting.`, btn: "I'm sorry." },
         ];
         const pick = bought[Math.floor(Math.random() * bought.length)];
-        Alert.alert(pick.title, pick.body, [{ text: pick.btn }]);
+        showAlert(pick.title, pick.body, [{ text: pick.btn }]);
       } else if (result.cancelled) {
         // User cancelled — no alert needed
       } else {
-        Alert.alert("Purchase Failed", result.error || "Something went wrong. Try again.");
+        showAlert("Purchase Failed", result.error || "Something went wrong. Try again.");
       }
     } catch (e) {
-      Alert.alert("Error", "Purchase failed. Your master is displeased.");
+      showAlert("Error", "Purchase failed. Your master is displeased.");
     }
 
     setBuying(null);
@@ -71,6 +76,7 @@ export default function CoinShopScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -146,7 +152,17 @@ export default function CoinShopScreen({ navigation }) {
         })}
 
         {/* Pro Pig Subscription */}
-        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Pro Pig Subscription</Text>
+        <View onLayout={(e) => {
+          proSectionY.current = e.nativeEvent.layout.y;
+          if (shouldScrollToPro.current) {
+            shouldScrollToPro.current = false;
+            setTimeout(() => {
+              scrollRef.current?.scrollTo({ y: proSectionY.current, animated: true });
+            }, 100);
+          }
+        }}>
+          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Pro Pig Subscription</Text>
+        </View>
 
         {state.isProPig ? (
           <View style={[styles.proCard, NEON_GLOW, styles.proCardActive]}>
@@ -157,9 +173,10 @@ export default function CoinShopScreen({ navigation }) {
             <Text style={styles.proPrice}>$4.99/mo</Text>
             <Text style={styles.proDesc}>Your master approves. Enjoy your perks.</Text>
             <View style={styles.proFeatures}>
-              <Text style={styles.proFeature}>Peek Mode — scroll locked apps for 3 min</Text>
-              <Text style={styles.proFeature}>Schedule locks in advance</Text>
-              <Text style={styles.proFeature}>Weekly Usage Report</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Peek Mode — peek at locked apps for 2 min</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Schedule locks in advance</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Build multiple block lists</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Weekly Usage Report</Text>
             </View>
           </View>
         ) : (
@@ -167,39 +184,22 @@ export default function CoinShopScreen({ navigation }) {
             style={[styles.proCard, NEON_GLOW]}
             activeOpacity={0.85}
             disabled={buyingSub}
-            onPress={async () => {
-              setBuyingSub(true);
-              try {
-                const result = await buySubscription();
-                if (result.success) {
-                  dispatch({ type: "ACTIVATE_PRO_PIG" });
-                  Alert.alert(
-                    "Welcome, Pro Pig",
-                    "Your master has granted you privileges. Don't waste them.",
-                    [{ text: "Oink." }]
-                  );
-                } else if (!result.cancelled) {
-                  Alert.alert("Failed", result.error || "Something went wrong.");
-                }
-              } catch (e) {
-                Alert.alert("Error", "Subscription failed.");
-              }
-              setBuyingSub(false);
-            }}
+            onPress={() => navigation.navigate("Paywall")}
           >
             <Text style={styles.proTitle}>Pro Pig</Text>
             <Text style={styles.proPrice}>$4.99/mo</Text>
-            <Text style={styles.proDesc}>Unlock premium features for the truly committed pig.</Text>
+            <Text style={styles.proDesc}>Unlock premium features for the full slop-stopping experience.</Text>
             <View style={styles.proFeatures}>
-              <Text style={styles.proFeature}>Peek Mode — scroll locked apps for 3 min</Text>
-              <Text style={styles.proFeature}>Schedule locks in advance</Text>
-              <Text style={styles.proFeature}>Weekly Usage Report</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Peek Mode — peek at locked apps for 2 min</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Schedule locks in advance</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Build multiple block lists</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Weekly Usage Report</Text>
             </View>
             {buyingSub ? (
               <ActivityIndicator color={C.pink} style={{ marginTop: 14 }} />
             ) : (
               <View style={styles.proButton}>
-                <Text style={styles.proButtonText}>Subscribe</Text>
+                <Text style={styles.proButtonText}>Try 1 Week Free</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -221,14 +221,14 @@ export default function CoinShopScreen({ navigation }) {
               const result = await restorePurchases();
               if (result.success && result.hasPro) {
                 dispatch({ type: "ACTIVATE_PRO_PIG" });
-                Alert.alert("Restored", "Pro Pig has been restored. Welcome back.", [{ text: "Oink." }]);
+                showAlert("Restored", "Pro Pig has been restored. Welcome back.", [{ text: "Oink." }]);
               } else if (result.success) {
-                Alert.alert("No Purchases Found", "No previous subscriptions to restore.");
+                showAlert("No Purchases Found", "No previous subscriptions to restore.");
               } else {
-                Alert.alert("Restore Failed", result.error || "Something went wrong.");
+                showAlert("Restore Failed", result.error || "Something went wrong.");
               }
             } catch (e) {
-              Alert.alert("Error", "Could not restore purchases.");
+              showAlert("Error", "Could not restore purchases.");
             }
             setRestoring(false);
           }}
@@ -418,16 +418,13 @@ const styles = StyleSheet.create({
   proTitle: { fontSize: 24, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
   proPrice: { fontSize: 18, fontWeight: "700", color: C.text, marginTop: 4 },
   proDesc: { ...T.caption, textAlign: "center", marginTop: 8, lineHeight: 18 },
-  proFeatures: { marginTop: 14, alignSelf: "stretch" },
+  proFeatures: { marginTop: 16, alignSelf: "stretch", gap: 8 },
   proFeature: {
-    ...T.body,
     fontSize: 14,
+    fontWeight: "600",
     color: C.text,
-    paddingVertical: 6,
-    paddingLeft: 12,
-    borderLeftWidth: 2,
-    borderLeftColor: C.pink,
-    marginBottom: 4,
+    lineHeight: 20,
+    paddingLeft: 4,
   },
   proButton: {
     backgroundColor: C.pink,
@@ -482,7 +479,6 @@ const styles = StyleSheet.create({
     ...T.caption,
     textAlign: "center",
     paddingHorizontal: 40,
-    fontStyle: "italic",
-    lineHeight: 18,
+        lineHeight: 18,
   },
 });

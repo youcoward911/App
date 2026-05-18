@@ -3,69 +3,27 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
-  Pressable,
   Dimensions,
-  Alert,
-  PanResponder,
+  Modal,
   Animated,
-  Easing,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
-import { POPULAR_APPS } from "../data/defaultApps";
-import AppIcon from "../components/AppIcon";
 import PigMascot from "../components/PigMascot";
 import CoinBadge from "../components/CoinBadge";
+import SlideToLock from "../components/SwipeToLock";
+import LockConfigModal from "../components/LockConfigModal";
 import { getStarvingMessage } from "../data/roastMessages";
-import { getPigWeight, getWeightProgress } from "../utils/pigWeight";
-import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
+import { getPigWeight } from "../utils/pigWeight";
+import { C, T, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
-let Haptics = null;
-try { Haptics = require("expo-haptics"); } catch (e) {}
+import { showAlert } from "../components/CustomAlert";
+import { isScreenTimeAvailable, showAppPicker, blockSelectedApps } from "../native/ScreenTime";
+import { heavyTap, successTap, lightTap } from "../utils/haptics";
 
 const { width: SCREEN_W } = Dimensions.get("window");
-
-function WiggleWrap({ wiggle, children, style }) {
-  const rotate = useRef(new Animated.Value(0)).current;
-  const animRef = useRef(null);
-
-  useEffect(() => {
-    if (wiggle) {
-      const anim = Animated.loop(
-        Animated.sequence([
-          Animated.timing(rotate, { toValue: 1, duration: 80, easing: Easing.linear, useNativeDriver: true }),
-          Animated.timing(rotate, { toValue: -1, duration: 80, easing: Easing.linear, useNativeDriver: true }),
-          Animated.timing(rotate, { toValue: 0.5, duration: 70, easing: Easing.linear, useNativeDriver: true }),
-          Animated.timing(rotate, { toValue: -0.5, duration: 70, easing: Easing.linear, useNativeDriver: true }),
-          Animated.timing(rotate, { toValue: 0, duration: 60, easing: Easing.linear, useNativeDriver: true }),
-          Animated.delay(400),
-        ])
-      );
-      animRef.current = anim;
-      anim.start();
-    } else {
-      if (animRef.current) animRef.current.stop();
-      rotate.setValue(0);
-    }
-    return () => { if (animRef.current) animRef.current.stop(); };
-  }, [wiggle]);
-
-  const spin = rotate.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ["-1.5deg", "1.5deg"],
-  });
-
-  return (
-    <Animated.View style={[style, { transform: [{ rotate: spin }] }]}>
-      {children}
-    </Animated.View>
-  );
-}
-const CARD_W = SCREEN_W - 64;
-const CARD_SPACING = 12;
-const SNAP_INTERVAL = CARD_W + CARD_SPACING;
 
 function getTributeClock(lastTributeTime) {
   if (!lastTributeTime) return { text: "Never", minutes: Infinity };
@@ -80,93 +38,38 @@ function getTributeClock(lastTributeTime) {
 }
 
 function getPigMood(minutes) {
-  // After feeding the pig is dirty/ashamed, then slowly cleans up over time
-  if (minutes < 5) return "dirty";       // Just fed — covered in slop, ashamed
-  if (minutes < 30) return "messy";      // Still messy, recovering
-  if (minutes < 120) return "restless";  // Getting cleaner, starting to itch
-  if (minutes < 360) return "clean";     // Clean but tempted
-  return "feral";                        // Too long — feral, master is angry
+  if (minutes < 5) return "dirty";
+  if (minutes < 30) return "messy";
+  if (minutes < 120) return "restless";
+  if (minutes < 360) return "clean";
+  return "feral";
+}
+
+function formatCountdown(expiresAt) {
+  const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+  if (remaining <= 0) return null;
+  const h = Math.floor(remaining / 3600);
+  const m = Math.floor((remaining % 3600) / 60);
+  const s = remaining % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 export default function HomeScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
-  const lockedAppIds = Object.keys(state.lockedApps);
-  const allTrackedApps = POPULAR_APPS.filter((a) => lockedAppIds.includes(a.id));
-  // Sort: locked apps first, unlocked apps at the end
-  const lockedApps = [...allTrackedApps].sort((a, b) => {
-    const aLocked = !!state.lockedApps[a.id]?.lockedAt;
-    const bLocked = !!state.lockedApps[b.id]?.lockedAt;
-    if (aLocked === bLocked) return 0;
-    return aLocked ? -1 : 1;
-  });
+  const lock = state.slopLock;
   const [now, setNow] = useState(Date.now());
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [deleteMode, setDeleteMode] = useState(null); // appId being deleted or null
-  const carouselRef = useRef(null);
-  const activeIndexRef = useRef(0);
+  const [showConfig, setShowConfig] = useState(false);
+  const [showBlockList, setShowBlockList] = useState(false);
 
-  const lockedCountRef = useRef(0);
-  lockedCountRef.current = lockedApps.length;
-
-  const scrollToPage = (index) => {
-    const clamped = Math.max(0, Math.min(index, lockedCountRef.current - 1));
-    try {
-      carouselRef.current?.scrollToIndex({ index: clamped, animated: true });
-    } catch (e) {}
-    setActiveIndex(clamped);
-    activeIndexRef.current = clamped;
-  };
-
-  const dotSwipeStart = useRef(0);
-  const dotTapX = useRef(0);
-  const dotsMoved = useRef(false);
-  const dotsLayoutRef = useRef({ x: 0, width: 0 });
-
-  const dotPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 8,
-      onPanResponderGrant: (e) => {
-        dotSwipeStart.current = activeIndexRef.current;
-        dotTapX.current = e.nativeEvent.locationX;
-        dotsMoved.current = false;
-      },
-      onPanResponderMove: (_, g) => {
-        if (Math.abs(g.dx) < 8) return;
-        dotsMoved.current = true;
-        const pageDelta = Math.round(g.dx / -40);
-        const target = dotSwipeStart.current + pageDelta;
-        const clamped = Math.max(0, Math.min(target, lockedCountRef.current - 1));
-        if (clamped !== activeIndexRef.current) {
-          try {
-            carouselRef.current?.scrollToIndex({ index: clamped, animated: true });
-          } catch (e) {}
-          activeIndexRef.current = clamped;
-          setActiveIndex(clamped);
-        }
-      },
-      onPanResponderRelease: () => {
-        if (!dotsMoved.current && lockedCountRef.current > 0) {
-          // It was a tap — figure out which dot based on tap position
-          const totalDotsWidth = lockedCountRef.current * 16; // 8px dot + 8px margin
-          const startX = (dotsLayoutRef.current.width - totalDotsWidth) / 2;
-          const tapIdx = Math.floor((dotTapX.current - startX) / 16);
-          const clamped = Math.max(0, Math.min(tapIdx, lockedCountRef.current - 1));
-          scrollToPage(clamped);
-        }
-      },
-    })
-  ).current;
-
-  // Pick one phrase per app session — useRef so it doesn't change on re-render
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
-  // Tick every second when any active lock/peek timers exist, otherwise every 30s
-  const hasActiveTimers = Object.values(state.lockedApps).some(
-    (a) => (a.lockedAt && a.lockExpiresAt) || a.peekExpiresAt
-  );
+
+  const hasActiveTimer = lock.isLocked && lock.lockExpiresAt;
+  const isPeeking = lock.peekExpiresAt && Date.now() < lock.peekExpiresAt;
   const tributeSecs = state.lastTributeTime ? Math.floor((Date.now() - state.lastTributeTime) / 1000) : Infinity;
-  const tickRate = hasActiveTimers || tributeSecs < 60 ? 1000 : 30000;
+  const tickRate = hasActiveTimer || isPeeking || tributeSecs < 60 ? 1000 : 30000;
+
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), tickRate);
     return () => clearInterval(interval);
@@ -175,177 +78,89 @@ export default function HomeScreen({ navigation }) {
   const tribute = getTributeClock(state.lastTributeTime);
   const pigMood = getPigMood(tribute.minutes);
 
-  // Only pick a new message if mood category changed or first render
   if (moodKey.current !== pigMood) {
     moodKey.current = pigMood;
     moodMessageRef.current = getStarvingMessage(pigMood);
   }
   const moodMessage = moodMessageRef.current;
 
-  const getTimeSince = (appId) => {
-    const app = state.lockedApps[appId];
-    if (!app?.lockedAt) return "";
-    const mins = Math.floor((Date.now() - app.lockedAt) / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m`;
-    const h = Math.floor(mins / 60);
-    if (h < 24) return `${h}h`;
-    return `${Math.floor(h / 24)}d`;
+  const lockCountdown = lock.lockExpiresAt ? formatCountdown(lock.lockExpiresAt) : null;
+  const peekCountdown = lock.peekExpiresAt ? formatCountdown(lock.peekExpiresAt) : null;
+
+  const peekCost = lock.isLocked
+    ? (lock.peekFee || 1) * Math.pow(2, lock.peekCount || 0)
+    : 0;
+
+  const handleSwipeLock = async () => {
+    heavyTap();
+    if (lock.appCount === 0) {
+      if (!isScreenTimeAvailable()) {
+        showAlert("No Apps Selected", "You need to select apps to lock first. This requires the full build (TestFlight or App Store).");
+        return;
+      }
+      showAlert("No Apps Selected", "You need to add apps to your block list first.", [
+        {
+          text: "Add Apps",
+          onPress: async () => {
+            try {
+              const result = await showAppPicker();
+              if (result.selectedCount > 0) {
+                dispatch({ type: "SET_APP_COUNT", payload: { count: result.selectedCount } });
+                setShowConfig(true);
+              }
+            } catch (e) {}
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]);
+      return;
+    }
+    setShowConfig(true);
   };
 
-  const isLocked = (appId) => {
-    const app = state.lockedApps[appId];
-    if (!app) return false;
-    // Locked if lockedAt is set AND not currently peeking
-    if (app.lockedAt && (!app.peekExpiresAt || Date.now() >= app.peekExpiresAt)) return true;
-    return false;
+  const handleConfigConfirm = async ({ durationMinutes }) => {
+    successTap();
+    dispatch({ type: "LOCK_SLOP", payload: { durationMinutes } });
+    setShowConfig(false);
+    if (isScreenTimeAvailable()) {
+      try { await blockSelectedApps(); } catch (e) {}
+    }
   };
 
-  const isPeeking = (appId) => {
-    const app = state.lockedApps[appId];
-    return app?.peekExpiresAt && Date.now() < app.peekExpiresAt;
+  const handleEditApps = async () => {
+    if (!isScreenTimeAvailable()) {
+      showAlert("Not Available", "App selection requires the full build. Use TestFlight or the App Store version.");
+      return;
+    }
+    try {
+      const result = await showAppPicker();
+      if (result.selectedCount > 0) {
+        dispatch({ type: "SET_APP_COUNT", payload: { count: result.selectedCount } });
+      }
+    } catch (e) {
+      showAlert("Error", "Something went wrong opening the app picker.");
+    }
   };
 
-  const getLockCountdown = (appId) => {
-    const app = state.lockedApps[appId];
-    if (!app?.lockExpiresAt || !app.lockedAt) return null;
-    const remaining = Math.max(0, Math.floor((app.lockExpiresAt - Date.now()) / 1000));
-    if (remaining <= 0) return null;
-    const h = Math.floor(remaining / 3600);
-    const m = Math.floor((remaining % 3600) / 60);
-    const s = remaining % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-    return `${m}:${String(s).padStart(2, "0")}`;
-  };
-
-  const getPeekCountdown = (appId) => {
-    const app = state.lockedApps[appId];
-    if (!app?.peekExpiresAt) return null;
-    const remaining = Math.max(0, Math.floor((app.peekExpiresAt - Date.now()) / 1000));
-    if (remaining <= 0) return null;
-    return `${remaining}s`;
-  };
-
-  const onScrollEnd = (e) => {
-    const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
-    setActiveIndex(idx);
-    activeIndexRef.current = idx;
-  };
-
-  const renderCarouselCard = ({ item }) => {
-    const locked = isLocked(item.id);
-    const peeking = isPeeking(item.id);
-    const info = state.lockedApps[item.id];
-    const lockTimer = getLockCountdown(item.id);
-    const peekTimer = getPeekCountdown(item.id);
-    const showX = deleteMode === item.id && !locked && !peeking;
-
-    const peekCost = info ? (info.peekFee || 1) * Math.pow(2, info.peekCount || 0) : 0;
-
-    let statusText = "Unlocked";
-    if (peeking) statusText = "Peeking...";
-    else if (locked) statusText = `Locked ${getTimeSince(item.id)}`;
-
-    return (
-      <WiggleWrap wiggle={showX} style={{ width: CARD_W + CARD_SPACING }}>
-      <TouchableOpacity
-        style={[styles.carouselCard, NEU_RAISED]}
-        activeOpacity={0.9}
-        onPress={() => {
-          if (deleteMode) {
-            setDeleteMode(null);
-          } else if (locked) {
-            navigation.navigate("Unlock", { appId: item.id });
-          }
-        }}
-        onLongPress={() => {
-          if (!locked && !peeking) {
-            setDeleteMode(item.id);
-            try { Haptics?.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch (e) {}
-          }
-        }}
-        delayLongPress={500}
-      >
-        {showX && (
-          <TouchableOpacity
-            style={styles.deleteX}
-            activeOpacity={0.7}
-            onPress={() => {
-              dispatch({ type: "REMOVE_APP", payload: { appId: item.id } });
-              setDeleteMode(null);
-            }}
-          >
-            <Text style={styles.deleteXText}>✕</Text>
-          </TouchableOpacity>
-        )}
-        <AppIcon app={item} size={90} />
-        <Text style={styles.cardAppName}>{item.name}</Text>
-        <Text style={[styles.cardStatus, peeking && { color: C.gold }]}>
-          {statusText}
-        </Text>
-
-        {/* Timer slot — always takes space */}
-        <View style={styles.timerSlot}>
-          {locked && lockTimer ? (
-            <View style={styles.countdownRow}>
-              <Text style={styles.countdownText}>{lockTimer}</Text>
-            </View>
-          ) : peeking && peekTimer ? (
-            <View style={styles.countdownRow}>
-              <Text style={[styles.countdownText, { color: C.gold }]}>{peekTimer}</Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Fee info slot — always takes space */}
-        <View style={styles.feeSlot}>
-          {locked && info ? (
-            <View style={styles.feeInfoWrap}>
-              <View style={styles.feeInfoRow}>
-                <Text style={styles.feeInfoLabel}>Peek:</Text>
-                <Text style={styles.feeInfoValue}>{peekCost}</Text>
-                <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
-              </View>
-              <View style={styles.feeInfoRow}>
-                <Text style={styles.feeInfoLabel}>Full:</Text>
-                <Text style={styles.feeInfoValue}>{info.fullFee}</Text>
-                <View style={styles.feeInfoCoin}><Text style={styles.feeInfoCoinP}>P</Text></View>
-              </View>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Button slot — always takes space */}
-        <View style={styles.btnSlot}>
-          {locked ? (
-            <GlowButton
-              title="Pay Tribute"
-              onPress={() => {
-                if (deleteMode) { setDeleteMode(null); return; }
-                navigation.navigate("Unlock", { appId: item.id });
-              }}
-              textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
-            />
-          ) : !peeking ? (
-            <GlowButton
-              title="Lock Me Back Up"
-              onPress={() => {
-                if (deleteMode) { setDeleteMode(null); return; }
-                dispatch({ type: "RELOCK_APP", payload: { appId: item.id } });
-              }}
-              textStyle={{ fontSize: 14, letterSpacing: 0.8 }}
-            />
-          ) : null}
-        </View>
-      </TouchableOpacity>
-      </WiggleWrap>
-    );
+  const handleScheduleLock = () => {
+    if (state.isProPig) {
+      showAlert("Coming Soon", "Scheduled locks are coming in a future update.");
+    } else {
+      showAlert(
+        "Pro Pig Required",
+        "Upgrade to Pro Pig to schedule automatic locks.",
+        [
+          { text: "Upgrade", onPress: () => navigation.navigate("Paywall") },
+          { text: "Cancel", style: "cancel" },
+        ]
+      );
+    }
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <Pressable style={styles.container} onPress={() => deleteMode && setDeleteMode(null)}>
-        {/* Coin badge */}
+      <View style={styles.container}>
+        {/* Header with coin badge */}
         <View style={styles.header}>
           <View />
           <TouchableOpacity
@@ -356,7 +171,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Pig mascot + tribute clock — compact horizontal */}
+        {/* Pig mascot + tribute clock */}
         <View style={[styles.pigCard, NEU_RAISED]}>
           <View style={styles.pigMascotWrap}>
             <PigMascot size={70} mood={pigMood} weight={getPigWeight(state.totalCoinsSpent).key} showSpeech />
@@ -369,14 +184,15 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.weightLabel}>{getPigWeight(state.totalCoinsSpent).label}</Text>
               </View>
             )}
-            {tribute.text !== "Never" && (
-              <Text style={styles.moodMsg}>{moodMessage}</Text>
-            )}
-            {tribute.text === "Never" && (
-              <Text style={styles.moodMsg}>Aw, what's wrong? Does little piggy need to scroll?</Text>
-            )}
+            <Text style={styles.moodMsg}>
+              {tribute.text === "Never"
+                ? "Aw, what's wrong? Does little piggy need to scroll?"
+                : moodMessage}
+            </Text>
           </View>
         </View>
+
+        {/* Iron Snout streak */}
         {(state.ironSnoutStreak > 0 || state.bestIronSnout > 0) && (
           <View style={[styles.streakCard, NEU_RAISED]}>
             <View style={styles.streakBadge}><Text style={styles.streakBadgeText}>IS</Text></View>
@@ -391,72 +207,147 @@ export default function HomeScreen({ navigation }) {
             )}
           </View>
         )}
-        {lockedApps.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No apps locked</Text>
-            <Text style={styles.emptyBody}>
-              Your master has nothing to hold over you.{"\n"}That changes now.
-            </Text>
+
+        {/* Slop Lock Card — takes up remaining space */}
+        <View style={[styles.slopCard, NEON_GLOW, lock.isLocked && styles.slopCardActive]}>
+          {lock.isLocked ? (
+            <>
+              <Text style={styles.slopLabel}>SLOP LOCK</Text>
+              <Text style={[styles.slopStatus, isPeeking && { color: C.gold }]}>
+                {isPeeking ? "PEEKING" : "LOCKED"}
+              </Text>
+
+              {isPeeking && peekCountdown ? (
+                <Text style={[styles.slopTimer, { color: C.gold }]}>{peekCountdown}</Text>
+              ) : lockCountdown ? (
+                <Text style={styles.slopTimer}>{lockCountdown}</Text>
+              ) : null}
+
+              {lock.appCount > 0 && (
+                <Text style={styles.slopAppCount}>
+                  {lock.appCount} app{lock.appCount !== 1 ? "s" : ""} blocked
+                </Text>
+              )}
+
+              <View style={styles.feeRow}>
+                {state.isProPig && (
+                  <View style={styles.feeChip}>
+                    <Text style={styles.feeChipLabel}>Peek</Text>
+                    <Text style={styles.feeChipValue}>{peekCost}</Text>
+                  </View>
+                )}
+                <View style={styles.feeChip}>
+                  <Text style={styles.feeChipLabel}>Unlock</Text>
+                  <Text style={styles.feeChipValue}>{lock.fullFee || 10}</Text>
+                </View>
+              </View>
+
+              <GlowButton
+                title="Surrender"
+                onPress={() => navigation.navigate("Unlock")}
+                textStyle={{ fontSize: 16, letterSpacing: 1 }}
+              />
+            </>
+          ) : (
+            <>
+              <Text style={styles.slopLabel}>SLOP LOCK</Text>
+              {lock.appCount > 0 ? (
+                <Text style={styles.slopReady}>
+                  {lock.appCount} app{lock.appCount !== 1 ? "s" : ""} ready to lock
+                </Text>
+              ) : (
+                <Text style={styles.slopReady}>No apps selected yet</Text>
+              )}
+
+              <View style={styles.swipeWrap}>
+                <SlideToLock onLock={handleSwipeLock} locked={false} />
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* Bottom action buttons */}
+        <View style={styles.bottomActions}>
+          <TouchableOpacity
+            style={[styles.bottomBtn, NEU_RAISED]}
+            activeOpacity={0.8}
+            onPress={() => { lightTap(); setShowBlockList(true); }}
+          >
+            <Text style={styles.bottomBtnIcon}>BLOCK LIST</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bottomBtn, NEU_RAISED]}
+            activeOpacity={0.8}
+            onPress={() => { lightTap(); handleScheduleLock(); }}
+          >
+            <View style={styles.proBadgeSm}><Text style={styles.proBadgeSmText}>PRO</Text></View>
+            <Text style={styles.bottomBtnIcon}>SCHEDULE</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Lock Config Modal */}
+      <LockConfigModal
+        visible={showConfig}
+        appName="Your Slop"
+        onClose={() => setShowConfig(false)}
+        onConfirm={handleConfigConfirm}
+      />
+
+      {/* Block List Modal */}
+      <Modal visible={showBlockList} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>BLOCK LIST</Text>
+
             <TouchableOpacity
-              style={styles.primaryBtn}
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate("AddApps")}
+              style={[styles.listItem, NEU_RAISED]}
+              activeOpacity={0.8}
+              onPress={() => { setShowBlockList(false); handleEditApps(); }}
             >
-              <Text style={styles.primaryBtnText}>Lock Some Slop</Text>
+              <Text style={styles.listItemName}>Slop Lock</Text>
+              <Text style={styles.listItemCount}>
+                {lock.appCount > 0 ? `${lock.appCount} apps` : "Tap to edit"}
+              </Text>
             </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.carouselWrap}>
-            <FlatList
-              ref={carouselRef}
-              data={lockedApps}
-              keyExtractor={(i) => i.id}
-              horizontal
-              pagingEnabled={false}
-              snapToInterval={SNAP_INTERVAL}
-              snapToAlignment="start"
-              decelerationRate="fast"
-              showsHorizontalScrollIndicator={false}
-              style={{ overflow: "visible" }}
-              contentContainerStyle={styles.carouselContent}
-              onMomentumScrollEnd={onScrollEnd}
-              onScrollEndDrag={onScrollEnd}
-              renderItem={renderCarouselCard}
-              getItemLayout={(_, index) => ({
-                length: SNAP_INTERVAL,
-                offset: SNAP_INTERVAL * index,
-                index,
-              })}
+
+            {/* Add New List — paywalled */}
+            <TouchableOpacity
+              style={[styles.listItem, styles.listItemNew]}
+              activeOpacity={0.8}
+              onPress={() => {
+                setShowBlockList(false);
+                if (state.isProPig) {
+                  showAlert("Coming Soon", "Multiple lock lists are coming in a future update.");
+                } else {
+                  showAlert(
+                    "Pro Pig Required",
+                    "Upgrade to Pro Pig to create multiple lock lists.",
+                    [
+                      { text: "Upgrade", onPress: () => navigation.navigate("Paywall") },
+                      { text: "Cancel", style: "cancel" },
+                    ]
+                  );
+                }
+              }}
+            >
+              <View style={styles.newListRow}>
+                <View style={styles.proBadge}><Text style={styles.proBadgeText}>PRO</Text></View>
+                <Text style={styles.listItemNewText}>+ Add New List</Text>
+              </View>
+            </TouchableOpacity>
+
+            <GlowButton
+              title="Done"
+              ghost
+              onPress={() => setShowBlockList(false)}
+              style={{ marginTop: 16 }}
             />
-            {/* Dots — swipeable like iPhone home screen */}
-            {lockedApps.length > 1 && (
-              <View
-                style={styles.dots}
-                {...dotPanResponder.panHandlers}
-                onLayout={(e) => { dotsLayoutRef.current = e.nativeEvent.layout; }}
-              >
-                {lockedApps.map((_, i) => (
-                  <View
-                    key={i}
-                    style={[styles.dot, i === activeIndex && styles.dotActive]}
-                  />
-                ))}
-              </View>
-            )}
-            {/* Add more */}
-            <TouchableOpacity
-              style={styles.addRow}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate("AddApps")}
-            >
-              <View style={styles.addCircle}>
-                <Text style={styles.addPlus}>+</Text>
-              </View>
-              <Text style={styles.addText}>Lock More Slop</Text>
-            </TouchableOpacity>
           </View>
-        )}
-      </Pressable>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -470,9 +361,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: 12,
   },
 
+  // Pig card
   pigCard: {
     backgroundColor: C.white,
     borderRadius: 20,
@@ -481,10 +373,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
     overflow: "visible",
     zIndex: 10,
-    minHeight: 110,
+    minHeight: 100,
   },
   pigMascotWrap: { width: 100, alignItems: "center", justifyContent: "flex-end", overflow: "visible", zIndex: 10 },
   tributeClockWrap: { flex: 1, marginLeft: 16 },
@@ -492,79 +384,9 @@ const styles = StyleSheet.create({
   tributeTime: { fontSize: 18, fontWeight: "900", color: C.pink, letterSpacing: -0.5, textTransform: "uppercase" },
   weightRow: { flexDirection: "row", alignItems: "center", marginTop: 3 },
   weightLabel: { fontSize: 12, fontWeight: "800", color: C.pink, textTransform: "uppercase", letterSpacing: 0.5 },
-  moodMsg: { ...T.caption, fontStyle: "italic", marginTop: 3, flexShrink: 1 },
+  moodMsg: { ...T.caption, marginTop: 3, flexShrink: 1 },
 
-  // Carousel
-  carouselWrap: { flex: 1 },
-  carouselContent: { paddingLeft: 32, paddingRight: 32 },
-  carouselCard: {
-    width: CARD_W,
-    backgroundColor: C.white,
-    borderRadius: 24,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    marginRight: CARD_SPACING,
-    marginTop: 14,
-    marginBottom: 2,
-    alignItems: "center",
-    justifyContent: "center",
-    height: 340,
-  },
-  deleteX: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: C.pink,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  deleteXText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  cardAppName: { ...T.h1, marginTop: 14, textAlign: "center" },
-  cardStatus: { ...T.caption, marginTop: 4 },
-  timerSlot: { height: 40, justifyContent: "center", alignItems: "center" },
-  feeSlot: { height: 36, justifyContent: "center", alignItems: "center" },
-  btnSlot: { height: 52, width: "100%", justifyContent: "center", marginTop: 6 },
-  countdownRow: { flexDirection: "row", alignItems: "center" },
-  countdownIcon: { fontSize: 12, fontWeight: "900", color: C.pink, marginRight: 6, width: 20, height: 20, lineHeight: 20, textAlign: "center", backgroundColor: C.pinkPale, borderRadius: 10, overflow: "hidden" },
-  countdownText: { fontSize: 22, fontWeight: "900", color: C.pink, letterSpacing: 1, fontVariant: ["tabular-nums"] },
-  cardFeeRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
-  cardFeeCoin: {
-    width: 22, height: 22, borderRadius: 11, backgroundColor: C.pink,
-    alignItems: "center", justifyContent: "center", marginRight: 6,
-  },
-  cardFeeCoinP: { color: "#FFF", fontSize: 12, fontWeight: "900" },
-  cardFeeAmount: { fontSize: 26, fontWeight: "900", color: C.pink, letterSpacing: -0.5 },
-
-  // Fee info (peek/full) on locked cards
-  feeInfoWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    gap: 16,
-  },
-  feeInfoRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  feeInfoLabel: { ...T.caption, fontWeight: "600" },
-  feeInfoValue: { fontSize: 16, fontWeight: "900", color: C.pink, marginRight: 2 },
-  feeInfoCoin: {
-    width: 16, height: 16, borderRadius: 8, backgroundColor: C.pink,
-    alignItems: "center", justifyContent: "center",
-  },
-  feeInfoCoinP: { color: "#FFF", fontSize: 9, fontWeight: "900" },
-
-  // Iron Snout streak card
+  // Iron Snout streak
   streakCard: {
     backgroundColor: C.white,
     borderRadius: 16,
@@ -582,25 +404,193 @@ const styles = StyleSheet.create({
   streakValue: { fontSize: 16, fontWeight: "900", color: C.text, letterSpacing: -0.5 },
   streakBest: { ...T.caption, fontWeight: "600", color: C.textTertiary },
 
-  // Dots
-  dots: { flexDirection: "row", justifyContent: "center", marginTop: 4, marginBottom: 12, paddingHorizontal: 20 },
-  dot: {
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: C.pinkPale, marginHorizontal: 4,
+  // Slop Lock card — fills remaining space
+  slopCard: {
+    flex: 1,
+    backgroundColor: C.white,
+    borderRadius: 24,
+    marginHorizontal: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: C.pink,
+    marginBottom: 12,
   },
-  dotActive: { backgroundColor: C.pink, width: 20 },
-
-  addRow: { flexDirection: "row", alignItems: "center", paddingVertical: 4, justifyContent: "center" },
-  addCircle: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: C.pinkPale,
-    alignItems: "center", justifyContent: "center", marginRight: 10,
+  slopCardActive: {
+    backgroundColor: "#FFF5F7",
   },
-  addPlus: { fontSize: 18, color: C.pink, fontWeight: "600" },
-  addText: { ...T.body, color: C.pink, fontWeight: "600" },
+  slopLabel: {
+    ...T.label,
+    color: C.pink,
+    fontSize: 12,
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  slopStatus: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: C.pink,
+    letterSpacing: 2,
+  },
+  slopTimer: {
+    fontSize: 40,
+    fontWeight: "900",
+    color: C.pink,
+    letterSpacing: 2,
+    fontVariant: ["tabular-nums"],
+    marginTop: 6,
+  },
+  slopAppCount: {
+    ...T.caption,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  slopReady: {
+    ...T.body,
+    color: C.textSecondary,
+    textAlign: "center",
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  feeRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+  },
+  feeChip: {
+    backgroundColor: C.pinkPale,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    alignItems: "center",
+  },
+  feeChipLabel: {
+    ...T.caption,
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  feeChipValue: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: C.pink,
+  },
+  swipeWrap: {
+    alignItems: "center",
+    marginTop: 8,
+  },
 
-  empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 48 },
-  emptyTitle: { ...T.h1, textAlign: "center", marginBottom: 8 },
-  emptyBody: { ...T.body, textAlign: "center", lineHeight: 22 },
-  primaryBtn: { backgroundColor: C.pink, borderRadius: 14, paddingHorizontal: 32, paddingVertical: 16, marginTop: 24 },
-  primaryBtnText: { ...T.button },
+  // Bottom action buttons
+  bottomActions: {
+    flexDirection: "row",
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+  },
+  bottomBtn: {
+    flex: 1,
+    backgroundColor: C.white,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  bottomBtnIcon: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: C.pink,
+    letterSpacing: 1,
+  },
+  proBadgeSm: {
+    backgroundColor: C.pink,
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  proBadgeSmText: {
+    color: "#FFF",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+
+  // Block List Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    backgroundColor: C.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: C.pinkPale,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: C.text,
+    letterSpacing: 2,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  listItem: {
+    backgroundColor: C.white,
+    borderRadius: 16,
+    padding: 18,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  listItemName: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: C.text,
+  },
+  listItemCount: {
+    ...T.caption,
+    color: C.pink,
+    fontWeight: "600",
+  },
+  listItemNew: {
+    backgroundColor: C.pinkPale,
+    borderStyle: "dashed",
+    borderWidth: 1.5,
+    borderColor: C.pink,
+  },
+  newListRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  listItemNewText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: C.textSecondary,
+  },
+  proBadge: {
+    backgroundColor: C.pink,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: 10,
+  },
+  proBadgeText: {
+    color: "#FFF",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
 });

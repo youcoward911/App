@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Animated, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { C, T, NEON_GLOW } from "../utils/theme";
+import { mediumTap, lightTap } from "../utils/haptics";
 
 export default function GlowButton({ title, onPress, style, textStyle, ghost = false }) {
   const glow = useRef(new Animated.Value(0)).current;
@@ -11,6 +12,7 @@ export default function GlowButton({ title, onPress, style, textStyle, ghost = f
       Animated.timing(glow, { toValue: 1, duration: 150, useNativeDriver: false }),
       Animated.timing(glow, { toValue: 0, duration: 400, useNativeDriver: false }),
     ]).start();
+    mediumTap();
     if (onPress) onPress();
   };
 
@@ -26,7 +28,7 @@ export default function GlowButton({ title, onPress, style, textStyle, ghost = f
 
   if (ghost) {
     return (
-      <TouchableOpacity style={[styles.ghost, style]} activeOpacity={0.7} onPress={onPress}>
+      <TouchableOpacity style={[styles.ghost, style]} activeOpacity={0.7} onPress={() => { lightTap(); if (onPress) onPress(); }}>
         <Text style={[styles.ghostText, textStyle]}>{title}</Text>
       </TouchableOpacity>
     );

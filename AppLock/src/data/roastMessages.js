@@ -33,7 +33,7 @@ export const TIME_BASED_ROASTS = [
     maxMinutes: 5,
     messages: [
       "It's literally been {time}. You're not even trying.",
-      "It took you {time} to break. I've trained you well.",
+      "It took you {time} to break. How embarrassing.",
       "It's literally been {time}. Absolutely pathetic.",
       "{time}. Record weakness tbh.",
       "Couldn't even last five minutes? Sooo pathetic.",

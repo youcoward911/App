@@ -8,9 +8,10 @@ import {
   Easing,
 } from "react-native";
 import { C } from "../utils/theme";
+import { heavyTap } from "../utils/haptics";
 
-const TRACK_W = 150;
-const THUMB_SIZE = 46;
+const TRACK_W = 260;
+const THUMB_SIZE = 56;
 const MAX_SLIDE = TRACK_W - THUMB_SIZE - 8;
 
 export default function SlideToLock({ onLock, locked }) {
@@ -49,6 +50,7 @@ export default function SlideToLock({ onLock, locked }) {
       duration: 100,
       useNativeDriver: true,
     }).start(() => {
+      heavyTap();
       if (onLock) onLock();
       setTimeout(() => {
         triggered.current = false;

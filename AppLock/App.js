@@ -3,9 +3,13 @@ import { NavigationContainer, useNavigationContainerRef } from "@react-navigatio
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { StatusBar } from "expo-status-bar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppLockProvider, useAppLock } from "./src/context/AppLockContext";
+import OnboardingScreen from "./src/screens/OnboardingScreen";
+import PaywallScreen from "./src/screens/PaywallScreen";
+import CustomAlert from "./src/components/CustomAlert";
+// AddAppsScreen removed — replaced by FamilyActivityPicker in onboarding
 import HomeScreen from "./src/screens/HomeScreen";
-import AddAppsScreen from "./src/screens/AddAppsScreen";
 import UnlockScreen from "./src/screens/UnlockScreen";
 import StatsScreen from "./src/screens/StatsScreen";
 
@@ -13,7 +17,8 @@ import CoinShopScreen from "./src/screens/CoinShopScreen";
 import LeaderboardScreen from "./src/screens/LeaderboardScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import WeightLevelUpModal from "./src/components/WeightLevelUpModal";
-import { View, StyleSheet, Text, Animated, Dimensions } from "react-native";
+import { View, StyleSheet, Text, Animated, Dimensions, TouchableOpacity } from "react-native";
+import { lightTap } from "./src/utils/haptics";
 import { PigIcon } from "./src/components/PigMascot";
 import { getMasterCommand } from "./src/data/roastMessages";
 import { getPigWeight } from "./src/utils/pigWeight";
@@ -90,6 +95,9 @@ function HomeTabs() {
           marginTop: 4,
           textTransform: "uppercase",
         },
+        tabBarButton: (props) => (
+          <TouchableOpacity {...props} onPress={(e) => { lightTap(); props.onPress?.(e); }} />
+        ),
       }}
     >
       <Tab.Screen
@@ -194,13 +202,29 @@ function WeightWatcher({ children, navigationRef }) {
   );
 }
 
+const ONBOARDED_KEY = "@scrollpig_onboarded";
+
 export default function App() {
   const navigationRef = useNavigationContainerRef();
   const [showSplash, setShowSplash] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
   const splashBgOpacity = useRef(new Animated.Value(1)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
   const textTranslateY = useRef(new Animated.Value(30)).current;
   const command = useRef(getMasterCommand()).current;
+
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDED_KEY).then((val) => {
+      if (!val) setShowOnboarding(true);
+      setOnboardingChecked(true);
+    });
+  }, []);
+
+  const handleOnboardingComplete = async () => {
+    await AsyncStorage.setItem(ONBOARDED_KEY, "1");
+    setShowOnboarding(false);
+  };
 
   useEffect(() => {
     // Fade up and in
@@ -229,18 +253,18 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  if (!onboardingChecked) return null;
+
   return (
     <AppLockProvider>
+      {showOnboarding ? (
+        <OnboardingScreen onComplete={handleOnboardingComplete} />
+      ) : (
       <WeightWatcher navigationRef={navigationRef}>
       <NavigationContainer ref={navigationRef}>
         <StatusBar style="dark" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Main" component={HomeTabs} />
-          <Stack.Screen
-            name="AddApps"
-            component={AddAppsScreen}
-            options={{ presentation: "modal" }}
-          />
           <Stack.Screen
             name="Unlock"
             component={UnlockScreen}
@@ -249,6 +273,11 @@ export default function App() {
           <Stack.Screen
             name="CoinShop"
             component={CoinShopScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="Paywall"
+            component={PaywallScreen}
             options={{ presentation: "modal" }}
           />
         </Stack.Navigator>
@@ -271,6 +300,8 @@ export default function App() {
         )}
       </NavigationContainer>
       </WeightWatcher>
+      )}
+      <CustomAlert />
     </AppLockProvider>
   );
 }
@@ -292,7 +323,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 28,
     fontWeight: "900",
-    fontStyle: "italic",
     textAlign: "center",
     lineHeight: 40,
     letterSpacing: -0.5,

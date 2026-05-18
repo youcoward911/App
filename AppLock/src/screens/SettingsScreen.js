@@ -6,12 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock, FEE_TIERS } from "../context/AppLockContext";
 import PigMascot from "../components/PigMascot";
 import GlowButton from "../components/GlowButton";
+import { showAlert } from "../components/CustomAlert";
 import { C, T, CARD_SHADOW } from "../utils/theme";
 
 export default function SettingsScreen() {
@@ -37,12 +37,12 @@ export default function SettingsScreen() {
   const saveCustom = () => {
     const val = parseInt(customFee, 10);
     if (isNaN(val) || val < 1) {
-      Alert.alert("Nice Try", "Enter a real number.");
+      showAlert("Nice Try", "Enter a real number.");
       return;
     }
-    dispatch({ type: "UPDATE_SETTINGS", payload: { defaultPeekFee: val, defaultFullFee: val * 10 } });
+    dispatch({ type: "UPDATE_SETTINGS", payload: { defaultPeekFee: val, defaultFullFee: val } });
     const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
-    Alert.alert(`${val} peek / ${val * 10} full unlock`, taunt);
+    showAlert(`${val} coins to unlock`, taunt);
     setCustomFee("");
   };
 
@@ -52,28 +52,16 @@ export default function SettingsScreen() {
         <Text style={styles.title}>Settings</Text>
         <Text style={styles.sub}>Your master allows adjustments</Text>
 
-        {/* Peek / Unlock Fee */}
+        {/* Unlock Fee */}
         <View style={[styles.card, CARD_SHADOW]}>
-          <View style={styles.feeTitleRow}>
-            <Text style={styles.cardTitle}>Peek / Unlock Cost</Text>
-            <TouchableOpacity
-              style={styles.feeInfoBtn}
-              onPress={() => Alert.alert(
-                "Peek vs Full Unlock",
-                "Peek lets you use an app for 3 minutes before re-locking. Peeks double for each use during the same lock session.\n\nFull unlocks cost 10x your set peek price.",
-                [{ text: "Got it" }]
-              )}
-            >
-              <Text style={styles.feeInfoBtnText}>?</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.cardTitle}>Unlock Cost</Text>
           <Text style={styles.cardDesc}>
-            Current: {state.settings.defaultPeekFee} peek / {state.settings.defaultFullFee} full unlock
+            Current: {state.settings.defaultFullFee} coins to unlock
           </Text>
 
           <View style={styles.presets}>
             {FEE_TIERS.map((t) => {
-              const isActive = state.settings.defaultPeekFee === t.peek && state.settings.defaultFullFee === t.full;
+              const isActive = state.settings.defaultFullFee === t.full;
               return (
                 <TouchableOpacity
                   key={t.label}
@@ -81,11 +69,11 @@ export default function SettingsScreen() {
                   onPress={() => {
                     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultPeekFee: t.peek, defaultFullFee: t.full } });
                     const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
-                    Alert.alert(`${t.peek} peek / ${t.full} full`, taunt);
+                    showAlert(`${t.full} coins to unlock`, taunt);
                   }}
                 >
                   <Text style={[styles.presetText, isActive && styles.presetTextActive]}>
-                    {t.label}
+                    {t.full}
                   </Text>
                 </TouchableOpacity>
               );
@@ -93,7 +81,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.customRow}>
-            <Text style={styles.customLabel}>Custom peek:</Text>
+            <Text style={styles.customLabel}>Custom:</Text>
             <View style={styles.feeInputWrap}>
               <View style={styles.feeCoinIcon}>
                 <Text style={styles.feeCoinP}>P</Text>
@@ -103,13 +91,12 @@ export default function SettingsScreen() {
                 value={customFee}
                 onChangeText={setCustomFee}
                 keyboardType="number-pad"
-                placeholder="Peek cost"
+                placeholder="Unlock cost"
                 placeholderTextColor={C.textTertiary}
                 onSubmitEditing={saveCustom}
               />
             </View>
           </View>
-          <Text style={styles.feeHint}>Full unlock = 10x peek cost</Text>
           <GlowButton
             title="Set Custom Fee"
             onPress={saveCustom}

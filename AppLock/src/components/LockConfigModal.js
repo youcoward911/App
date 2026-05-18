@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,16 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  PanResponder,
+  Animated,
 } from "react-native";
 import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
 import { DURATION_PRESETS } from "../context/AppLockContext";
 import GlowButton from "./GlowButton";
+import { lightTap, mediumTap } from "../utils/haptics";
 
 const CUSTOM_MINUTES = [];
-for (let m = 60; m <= 1440; m += 15) {
+function addMinute(m) {
   const h = Math.floor(m / 60);
   const r = m % 60;
   let label;
@@ -23,23 +26,51 @@ for (let m = 60; m <= 1440; m += 15) {
   else label = `${h}h ${r}m`;
   CUSTOM_MINUTES.push({ label, minutes: m });
 }
+// 60-240 min (1-4 hrs): 15 min intervals
+for (let m = 60; m <= 240; m += 15) addMinute(m);
+// 270-600 min (4.5-10 hrs): 30 min intervals
+for (let m = 270; m <= 600; m += 30) addMinute(m);
+// 660-1440 min (11-24 hrs): 60 min intervals
+for (let m = 660; m <= 1440; m += 60) addMinute(m);
 
 const ITEM_HEIGHT = 44;
 const VISIBLE_ITEMS = 3;
 const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
 export default function LockConfigModal({ visible, onClose, onConfirm, appName }) {
-  const [durationIdx, setDurationIdx] = useState(0); // index into DURATION_PRESETS
+  const [durationIdx, setDurationIdx] = useState(0);
   const [showCustom, setShowCustom] = useState(false);
   const [customIdx, setCustomIdx] = useState(0);
+  const lastNotchRef = useRef(0);
+  const swipeY = useRef(new Animated.Value(0)).current;
+
+  const handlePanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 8,
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) swipeY.setValue(g.dy);
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 80) {
+          onClose();
+          setTimeout(() => swipeY.setValue(0), 300);
+        } else {
+          Animated.spring(swipeY, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
   const scrollRef = useRef(null);
 
   const handlePreset = (idx) => {
+    lightTap();
     setShowCustom(false);
     setDurationIdx(idx);
   };
 
   const handleCustom = () => {
+    lightTap();
     setShowCustom(true);
   };
 
@@ -48,10 +79,20 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
     onConfirm({ durationMinutes: dur });
   };
 
+  const onWheelScroll = useCallback((e) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const notch = Math.round(y / ITEM_HEIGHT);
+    if (notch !== lastNotchRef.current && notch >= 0 && notch < CUSTOM_MINUTES.length) {
+      lastNotchRef.current = notch;
+      mediumTap();
+    }
+  }, []);
+
   const onScrollEnd = (e) => {
     const y = e.nativeEvent.contentOffset.y;
     const idx = Math.round(y / ITEM_HEIGHT);
-    setCustomIdx(Math.max(0, Math.min(idx, CUSTOM_MINUTES.length - 1)));
+    const newIdx = Math.max(0, Math.min(idx, CUSTOM_MINUTES.length - 1));
+    setCustomIdx(newIdx);
   };
 
   const selectedDuration = showCustom
@@ -61,8 +102,10 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          <View style={styles.handle} />
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: swipeY }] }]}>
+          <View {...handlePanResponder.panHandlers} style={styles.handleZone}>
+            <View style={styles.handle} />
+          </View>
           <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <Text style={styles.title}>Lock {appName}</Text>
 
@@ -101,6 +144,8 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
                 snapToInterval={ITEM_HEIGHT}
                 decelerationRate="fast"
                 showsVerticalScrollIndicator={false}
+                onScroll={onWheelScroll}
+                scrollEventThrottle={16}
                 onMomentumScrollEnd={onScrollEnd}
                 onScrollEndDrag={onScrollEnd}
               >
@@ -132,7 +177,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
             <GlowButton title="Nevermind" ghost onPress={onClose} />
           </View>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -153,13 +198,16 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     maxHeight: "85%",
   },
+  handleZone: {
+    paddingTop: 12,
+    paddingBottom: 8,
+    alignItems: "center",
+  },
   handle: {
     width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: C.pinkPale,
-    alignSelf: "center",
-    marginBottom: 16,
   },
   title: {
     ...T.h2,

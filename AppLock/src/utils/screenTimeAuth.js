@@ -1,4 +1,5 @@
-import { Alert, Linking } from "react-native";
+import { Linking } from "react-native";
+import { showAlert } from "../components/CustomAlert";
 import {
   isScreenTimeAvailable,
   requestAuthorization,
@@ -11,7 +12,7 @@ import {
 
 export async function ensureScreenTimeAuthorized() {
   if (!isScreenTimeAvailable()) {
-    Alert.alert(
+    showAlert(
       "Not Available",
       "Screen Time blocking is only available in the full app build, not Expo Go.",
     );
@@ -23,7 +24,7 @@ export async function ensureScreenTimeAuthorized() {
   if (status.status === "approved") return true;
 
   if (status.status === "denied") {
-    Alert.alert(
+    showAlert(
       "Screen Time Access Required",
       "You previously denied Screen Time access. To lock apps for real, go to Settings > Screen Time > Scroll Pig and enable access.",
       [
@@ -42,7 +43,7 @@ export async function ensureScreenTimeAuthorized() {
     // User denied or error
   }
 
-  Alert.alert(
+  showAlert(
     "Access Denied",
     "Scroll Pig needs Screen Time access to actually block your apps. Without it, locks are just for show.",
     [{ text: "OK" }]

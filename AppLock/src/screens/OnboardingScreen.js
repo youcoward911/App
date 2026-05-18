@@ -1,76 +1,81 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { C } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import PigMascot from "../components/PigMascot";
-import { requestAuthorization, isScreenTimeAvailable } from "../native/ScreenTime";
-
-const { width: SCREEN_W } = Dimensions.get("window");
+import { requestAuthorization, isScreenTimeAvailable, showAppPicker } from "../native/ScreenTime";
+import { useAppLock } from "../context/AppLockContext";
 
 export default function OnboardingScreen({ onComplete }) {
-  const handleContinue = async () => {
+  const [step, setStep] = useState(1);
+  const { dispatch } = useAppLock();
+
+  const handleGrant = async () => {
     if (isScreenTimeAvailable()) {
       try {
         await requestAuthorization();
       } catch (e) {}
     }
+    setStep(2);
+  };
+
+  const handleAddSlop = async () => {
+    if (isScreenTimeAvailable()) {
+      try {
+        const result = await showAppPicker();
+        if (result.selectedCount > 0) {
+          dispatch({ type: "SET_APP_COUNT", payload: { count: result.selectedCount } });
+          onComplete();
+          return;
+        }
+      } catch (e) {}
+    }
+    // If not available (Expo Go) or no apps selected, complete anyway
     onComplete();
   };
 
-  const handleSkip = () => {
-    onComplete();
-  };
+  if (step === 1) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.content}>
+          <View style={styles.spacer} />
+          <PigMascot size={120} />
+          <Text style={styles.title}>Hi Piggy!</Text>
+          <Text style={styles.message}>
+            Grant me access to your{"\n"}screen time controls.
+          </Text>
+          <Text style={styles.warning}>
+            I'm not gonna ask twice.
+          </Text>
+          <View style={styles.spacer} />
+          <View style={styles.buttons}>
+            <GlowButton title="Grant Access" onPress={handleGrant} />
+            <Text style={styles.privacy}>
+              Your data stays on your device. Always.
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <PigMascot size={80} />
-          <Text style={styles.title}>
-            Connect Scroll Pig{"\n"}to Screen Time.
-          </Text>
-          <Text style={styles.subtitle}>
-            To actually block your apps, Scroll Pig needs Screen Time access on this iPhone.
-          </Text>
-        </View>
-
-        {/* Permission preview card */}
-        <View style={styles.previewCard}>
-          <View style={styles.previewInner}>
-            <Text style={styles.previewTitle}>
-              "Scroll Pig" Would Like to{"\n"}Access Screen Time
-            </Text>
-            <Text style={styles.previewBody}>
-              Providing "Scroll Pig" access to Screen Time may allow it to see your activity data, restrict content, and limit the usage of apps and websites.
-            </Text>
-            <View style={styles.previewBtns}>
-              <View style={styles.previewBtn}>
-                <Text style={styles.previewBtnText}>Continue</Text>
-              </View>
-              <View style={styles.previewBtn}>
-                <Text style={styles.previewBtnText}>Don't Allow</Text>
-              </View>
-            </View>
-          </View>
-          {/* Arrow */}
-          <Text style={styles.arrow}>↑</Text>
-          <Text style={styles.arrowHint}>Tap "Continue" when this appears</Text>
-        </View>
-
-        {/* Buttons */}
+        <View style={styles.spacer} />
+        <PigMascot size={120} />
+        <Text style={styles.title}>Very good.</Text>
+        <Text style={styles.message}>
+          Already following directions. Now let me know which apps you'd like to add to your Slop Lock.
+        </Text>
+        <View style={styles.spacer} />
         <View style={styles.buttons}>
-          <GlowButton title="Connect Screen Time" onPress={handleContinue} />
-          <GlowButton title="Skip for Now" ghost onPress={handleSkip} />
-          <Text style={styles.privacy}>
-            Your data is processed on-device and never leaves your phone.
-          </Text>
+          <GlowButton title="Add Slop" onPress={handleAddSlop} />
         </View>
       </View>
     </SafeAreaView>
@@ -79,95 +84,46 @@ export default function OnboardingScreen({ onComplete }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { flex: 1, paddingHorizontal: 28, paddingTop: 20, paddingBottom: 40 },
-
-  header: { alignItems: "center", marginBottom: 28, marginTop: 40 },
+  content: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingBottom: 40,
+    alignItems: "center",
+  },
+  spacer: { flex: 1 },
   title: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: "900",
     color: "#000",
     textAlign: "center",
     letterSpacing: -1,
-    marginTop: 20,
-    lineHeight: 34,
+    marginTop: 28,
   },
-  subtitle: {
-    fontSize: 15,
-    fontWeight: "400",
-    color: C.textSecondary,
+  message: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: C.text,
     textAlign: "center",
-    lineHeight: 22,
-    marginTop: 12,
-    paddingHorizontal: 10,
+    lineHeight: 28,
+    marginTop: 16,
   },
-
-  // Permission preview
-  previewCard: {
-    alignItems: "center",
-    marginTop: 8,
-  },
-  previewInner: {
-    width: SCREEN_W - 80,
-    backgroundColor: "#2C2C2E",
-    borderRadius: 16,
-    padding: 22,
-    borderWidth: 1.5,
-    borderColor: C.pink,
-    shadowColor: C.pink,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-  },
-  previewTitle: {
+  warning: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#FFF",
-    marginBottom: 10,
-    lineHeight: 22,
-  },
-  previewBody: {
-    fontSize: 12,
-    fontWeight: "400",
-    color: "rgba(255,255,255,0.6)",
-    lineHeight: 18,
-    marginBottom: 18,
-  },
-  previewBtns: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  previewBtn: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  previewBtnText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFF",
-  },
-  arrow: {
-    fontSize: 28,
+    fontWeight: "800",
     color: C.pink,
+    textAlign: "center",
     marginTop: 12,
-    fontWeight: "300",
   },
-  arrowHint: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: C.pink,
-    marginTop: 4,
+  buttons: {
+    width: "100%",
+    marginBottom: 12,
   },
-
-  buttons: { marginTop: 28, marginBottom: 12 },
-
   privacy: {
     fontSize: 12,
     fontWeight: "400",
     color: C.textTertiary,
     textAlign: "center",
     lineHeight: 18,
+    marginTop: 8,
   },
 });

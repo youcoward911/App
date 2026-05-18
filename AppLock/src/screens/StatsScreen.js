@@ -5,10 +5,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
+import { showAlert } from "../components/CustomAlert";
 import PigMascot from "../components/PigMascot";
 import { POPULAR_APPS } from "../data/defaultApps";
 import { getFullUsage, formatCaveTime, getTopAppsBySpend, getWeeklyReport, getScreenTimeData } from "../utils/usageTracker";
@@ -75,7 +75,7 @@ export default function StatsScreen() {
                 <Text style={styles.heroLabel}>WEIGHT CLASS</Text>
                 <TouchableOpacity
                   style={styles.infoBtn}
-                  onPress={() => Alert.alert(
+                  onPress={() => showAlert(
                     "Weight Class",
                     "Your pig gets fatter every time you eat your slop. The more coins you spend on unlocks, the bigger and rounder your pig grows. Feed it well.",
                     [{ text: "Got it" }]
@@ -130,7 +130,7 @@ export default function StatsScreen() {
               <Text style={styles.sectionTitle}>AVERAGE CAVE TIME</Text>
               <TouchableOpacity
                 style={styles.infoBtn}
-                onPress={() => Alert.alert(
+                onPress={() => showAlert(
                   "Average Cave Time",
                   "How long you resist before caving in and paying tribute. Measured from when you lock an app to when you unlock it. Lower is weaker.",
                   [{ text: "Got it" }]
@@ -154,7 +154,7 @@ export default function StatsScreen() {
                 <Text style={styles.statLabel}>Day Streak</Text>
                 <TouchableOpacity
                   style={styles.infoBtn}
-                  onPress={() => Alert.alert(
+                  onPress={() => showAlert(
                     "Day Streak",
                     "How many days in a row you've opened the app and paid at least one tribute. Miss a day and it resets to zero.",
                     [{ text: "Got it" }]
@@ -180,7 +180,7 @@ export default function StatsScreen() {
               <Text style={styles.statLabel}>Iron Snout</Text>
               <TouchableOpacity
                 style={styles.infoBtn}
-                onPress={() => Alert.alert(
+                onPress={() => showAlert(
                   "Iron Snout",
                   "Every time a lock timer expires naturally without you peeking or surrendering, your Iron Snout streak goes up. Any peek or full unlock resets it. How disciplined are you?",
                   [{ text: "Oink" }]
