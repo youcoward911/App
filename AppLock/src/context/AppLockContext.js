@@ -246,19 +246,19 @@ function reducer(state, action) {
     }
 
     case "SET_APP_COUNT": {
-      const { listId, count } = action.payload;
+      const targetId = action.payload.listId || "default";
+      const count = action.payload.count;
+      const updatedLists = (state.blockLists || []).map((l) =>
+        l.id === targetId ? { ...l, appCount: count } : l
+      );
+      const totalActive = updatedLists.filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
       return {
         ...state,
         slopLock: {
           ...state.slopLock,
-          appCount: state.blockLists.filter((l) => l.isActive).reduce((sum, l) => {
-            if (listId && l.id === listId) return sum + count;
-            return sum + l.appCount;
-          }, 0),
+          appCount: totalActive,
         },
-        blockLists: state.blockLists.map((l) =>
-          l.id === (listId || "default") ? { ...l, appCount: count } : l
-        ),
+        blockLists: updatedLists,
       };
     }
 
