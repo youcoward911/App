@@ -348,20 +348,18 @@ export default function HomeScreen({ navigation }) {
                   </TouchableOpacity>
                   <View style={styles.listInfo}>
                     <Text style={styles.listItemName}>{list.name}</Text>
-                    <View style={styles.listPreviewRow}>
-                      {list.appCount > 0 ? (
-                        <>
-                          <View style={styles.appDot} />
-                          <View style={styles.appDot} />
-                          {list.appCount > 2 && <View style={styles.appDot} />}
-                          <Text style={styles.listItemCount}>
-                            {list.appCount} app{list.appCount !== 1 ? "s" : ""}
-                          </Text>
-                        </>
-                      ) : (
-                        <Text style={styles.listItemCount}>No apps yet</Text>
-                      )}
-                    </View>
+                    {list.appCount > 0 ? (
+                      <View style={styles.listPreviewRow}>
+                        <View style={styles.appCountBadge}>
+                          <Text style={styles.appCountBadgeText}>{list.appCount}</Text>
+                        </View>
+                        <Text style={styles.listItemCount}>
+                          app{list.appCount !== 1 ? "s" : ""} blocked
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.listItemCountEmpty}>No apps yet — tap Edit</Text>
+                    )}
                   </View>
                   <TouchableOpacity
                     style={styles.editBtn}
@@ -654,19 +652,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
-    gap: 4,
+    gap: 6,
   },
-  appDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    backgroundColor: C.pinkPale,
+  appCountBadge: {
+    backgroundColor: C.pink,
+    borderRadius: 10,
+    minWidth: 22,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+  appCountBadgeText: {
+    color: "#FFF",
+    fontSize: 11,
+    fontWeight: "900",
   },
   listItemCount: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
     color: C.textSecondary,
-    marginLeft: 4,
+  },
+  listItemCountEmpty: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: C.textTertiary,
+    marginTop: 4,
   },
   editBtn: {
     backgroundColor: C.pinkPale,
