@@ -305,7 +305,7 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity
               style={[styles.listItem, NEU_RAISED]}
               activeOpacity={0.8}
-              onPress={() => { setShowBlockList(false); handleEditApps(); }}
+              onPress={() => { setShowBlockList(false); setTimeout(handleEditApps, 400); }}
             >
               <Text style={styles.listItemName}>Slop Lock</Text>
               <Text style={styles.listItemCount}>
