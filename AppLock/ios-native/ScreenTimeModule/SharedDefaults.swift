@@ -54,12 +54,21 @@ class SharedDefaults {
     func saveSelection(_ selection: FamilyActivitySelection, forKey key: String) {
         if let data = try? JSONEncoder().encode(selection) {
             defaults.set(data, forKey: key)
+            defaults.synchronize()
+            NSLog("[ScrollPig] saveSelection to key '\(key)': apps=\(selection.applicationTokens.count), categories=\(selection.categoryTokens.count), bytes=\(data.count)")
+        } else {
+            NSLog("[ScrollPig] saveSelection FAILED to encode for key '\(key)'")
         }
     }
 
     func loadSelection(forKey key: String) -> FamilyActivitySelection? {
-        guard let data = defaults.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(FamilyActivitySelection.self, from: data)
+        guard let data = defaults.data(forKey: key) else {
+            NSLog("[ScrollPig] loadSelection: no data for key '\(key)'")
+            return nil
+        }
+        let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data)
+        NSLog("[ScrollPig] loadSelection key '\(key)': apps=\(selection?.applicationTokens.count ?? -1), categories=\(selection?.categoryTokens.count ?? -1)")
+        return selection
     }
 
     func deleteSelection(forKey key: String) {

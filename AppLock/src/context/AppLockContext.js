@@ -430,7 +430,9 @@ export function AppLockProvider({ children }) {
         notifyPeekExpired().catch(() => {});
         if (isScreenTimeAvailable()) {
           const activeIds = lock.activeListIds || ["default"];
-          blockListsNative(activeIds).catch(() => {});
+          blockListsNative(activeIds).then((r) => {
+            if (!r || r.blockedCount === 0) blockSelectedApps().catch(() => {});
+          }).catch(() => blockSelectedApps().catch(() => {}));
         }
       }
       // Lock timer expired naturally

@@ -154,7 +154,19 @@ export default function HomeScreen({ navigation }) {
     setShowConfig(false);
     if (isScreenTimeAvailable()) {
       const activeIds = (state.blockLists || []).filter((l) => l.isActive).map((l) => l.id);
-      try { await blockListsNative(activeIds); } catch (e) {}
+      try {
+        const result = await blockListsNative(activeIds);
+        console.log("[LOCK] blockLists result:", JSON.stringify(result), "listIds:", activeIds);
+        if (!result || result.blockedCount === 0) {
+          // Fallback: try blocking with default list directly
+          const fallback = await blockSelectedApps();
+          console.log("[LOCK] fallback blockSelectedApps result:", JSON.stringify(fallback));
+        }
+      } catch (e) {
+        console.warn("[LOCK] blockLists failed:", e);
+        // Fallback
+        try { await blockSelectedApps(); } catch (e2) {}
+      }
     }
   };
 

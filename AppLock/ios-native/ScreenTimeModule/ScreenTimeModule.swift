@@ -124,7 +124,10 @@ class ScreenTimeModule: RCTEventEmitter {
                   resolve: RCTPromiseResolveBlock,
                   rejecter reject: RCTPromiseRejectBlock) {
     let keys = listIds.map { $0.hasPrefix("blocklist_") ? $0 : "blocklist_\($0)" }
+    NSLog("[ScrollPig] blockLists called with keys: \(keys)")
+
     let merged = shared.mergedTokens(forKeys: keys)
+    NSLog("[ScrollPig] merged apps: \(merged.apps.count), categories: \(merged.categories.count)")
 
     store.shield.applications = merged.apps.isEmpty ? nil : merged.apps
     store.shield.applicationCategories = merged.categories.isEmpty
@@ -132,6 +135,7 @@ class ScreenTimeModule: RCTEventEmitter {
       : ShieldSettings.ActivityCategoryPolicy.specific(merged.categories)
 
     let count = merged.apps.count + merged.categories.count
+    NSLog("[ScrollPig] shield applied, total blocked: \(count)")
     resolve(["blockedCount": count])
   }
 
