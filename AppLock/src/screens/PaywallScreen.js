@@ -67,7 +67,7 @@ export default function PaywallScreen({ navigation }) {
   const handleSubscribe = async () => {
     setBuying(true);
     try {
-      const result = await buySubscription();
+      const result = await buySubscription(selectedPlan);
       if (result.success) {
         successTap();
         dispatch({ type: "ACTIVATE_PRO_PIG" });

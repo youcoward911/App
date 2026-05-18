@@ -71,7 +71,7 @@ export default function UnlockScreen({ route, navigation }) {
   const [showSlop, setShowSlop] = useState(false);
   const [peekShame, setPeekShame] = useState("");
   const [surrenderShame, setSurrenderShame] = useState("");
-  const [peekCountdown, setPeekCountdown] = useState(60);
+  const [peekCountdown, setPeekCountdown] = useState(120);
   const [lockTimeLeft, setLockTimeLeft] = useState("");
 
   const fade = useRef(new Animated.Value(0)).current;

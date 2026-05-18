@@ -19,6 +19,7 @@ export const PRODUCT_IDS = [
 ];
 
 export const SUBSCRIPTION_ID = "scrollpiggy.pro.monthly";
+export const SUBSCRIPTION_YEARLY_ID = "scrollpiggy.pro.yearly";
 
 // Map product IDs to coin amounts
 export const PRODUCT_COINS = {
@@ -185,7 +186,8 @@ export async function buyCoins(productId) {
   });
 }
 
-export async function buySubscription() {
+export async function buySubscription(plan = "monthly") {
+  const sku = plan === "yearly" ? SUBSCRIPTION_YEARLY_ID : SUBSCRIPTION_ID;
   if (!connected) {
     const ok = await initIAP();
     if (!ok) return { success: false, error: "Store unavailable" };
@@ -203,7 +205,7 @@ export async function buySubscription() {
       }
     }, 180000);
 
-    pendingProductId = SUBSCRIPTION_ID;
+    pendingProductId = sku;
     pendingResolver = (result) => {
       clearTimeout(timeout);
       resolve({ ...result, isSubscription: true });
@@ -211,8 +213,8 @@ export async function buySubscription() {
 
     requestPurchase({
       request: {
-        ios: { sku: SUBSCRIPTION_ID },
-        android: { skus: [SUBSCRIPTION_ID] },
+        ios: { sku },
+        android: { skus: [sku] },
       },
       type: "subs",
     }).catch((e) => {
@@ -236,15 +238,13 @@ export async function restorePurchases() {
   try {
     // Fetch available subscriptions to check receipt
     const result = await fetchProducts({
-      skus: [SUBSCRIPTION_ID],
+      skus: [SUBSCRIPTION_ID, SUBSCRIPTION_YEARLY_ID],
       type: "subs",
     });
-    // On iOS, restoring triggers purchaseUpdatedListener for each owned item
-    // We use getAvailablePurchases from expo-iap
     const { getAvailablePurchases } = require("expo-iap");
     const purchases = await getAvailablePurchases();
     const hasPro = purchases?.some(
-      (p) => p.productId === SUBSCRIPTION_ID || p.id === SUBSCRIPTION_ID
+      (p) => [SUBSCRIPTION_ID, SUBSCRIPTION_YEARLY_ID].includes(p.productId || p.id)
     );
     return { success: true, hasPro };
   } catch (e) {
