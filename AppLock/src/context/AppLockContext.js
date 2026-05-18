@@ -13,6 +13,7 @@ import {
   getAuthorizationStatus,
   showAppPicker,
   blockSelectedApps,
+  blockLists as blockListsNative,
   unblockApp,
   clearAllBlocks,
 } from "../native/ScreenTime";
@@ -57,7 +58,12 @@ const initialState = {
     peekCount: 0,
     peekExpiresAt: null,
     appCount: 0,
+    activeListIds: ["default"],
   },
+  blockLists: [
+    { id: "default", name: "Slop Lock", appCount: 0, isActive: true },
+  ],
+  schedules: [],
   piggyCoins: 50,
   totalCoinsSpent: 0,
   totalCoinsPurchased: 0,
@@ -82,11 +88,12 @@ const initialState = {
 };
 
 function migrateState(payload) {
-  // Migrate old per-app lockedApps to new slopLock
-  if (payload.lockedApps && !payload.slopLock) {
-    const apps = Object.values(payload.lockedApps);
+  const migrated = { ...payload };
+
+  // Migrate old per-app lockedApps to slopLock
+  if (migrated.lockedApps && !migrated.slopLock) {
+    const apps = Object.values(migrated.lockedApps);
     const activeLock = apps.find((a) => a.lockedAt && a.lockExpiresAt && a.lockExpiresAt > Date.now());
-    const migrated = { ...payload };
     delete migrated.lockedApps;
     if (activeLock) {
       migrated.slopLock = {
@@ -99,11 +106,25 @@ function migrateState(payload) {
         peekCount: activeLock.peekCount || 0,
         peekExpiresAt: activeLock.peekExpiresAt || null,
         appCount: Object.keys(payload.lockedApps).length,
+        activeListIds: ["default"],
       };
     }
-    return migrated;
   }
-  return payload;
+
+  // Ensure blockLists exists
+  if (!migrated.blockLists) {
+    const appCount = migrated.slopLock?.appCount || 0;
+    migrated.blockLists = [
+      { id: "default", name: "Slop Lock", appCount, isActive: true },
+    ];
+  }
+
+  // Ensure schedules exists
+  if (!migrated.schedules) {
+    migrated.schedules = [];
+  }
+
+  return migrated;
 }
 
 function reducer(state, action) {
@@ -116,6 +137,8 @@ function reducer(state, action) {
     case "LOCK_SLOP": {
       const { durationMinutes } = action.payload;
       const dur = durationMinutes ?? state.settings.defaultDuration;
+      const activeIds = state.blockLists.filter((l) => l.isActive).map((l) => l.id);
+      const totalApps = state.blockLists.filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
       return {
         ...state,
         slopLock: {
@@ -128,6 +151,8 @@ function reducer(state, action) {
           fullFee: state.settings.defaultFullFee,
           peekCount: 0,
           peekExpiresAt: null,
+          activeListIds: activeIds,
+          appCount: totalApps,
         },
       };
     }
@@ -221,12 +246,85 @@ function reducer(state, action) {
     }
 
     case "SET_APP_COUNT": {
+      const { listId, count } = action.payload;
       return {
         ...state,
         slopLock: {
           ...state.slopLock,
-          appCount: action.payload.count,
+          appCount: state.blockLists.filter((l) => l.isActive).reduce((sum, l) => {
+            if (listId && l.id === listId) return sum + count;
+            return sum + l.appCount;
+          }, 0),
         },
+        blockLists: state.blockLists.map((l) =>
+          l.id === (listId || "default") ? { ...l, appCount: count } : l
+        ),
+      };
+    }
+
+    case "ADD_BLOCK_LIST": {
+      const { id, name } = action.payload;
+      return {
+        ...state,
+        blockLists: [...state.blockLists, { id, name, appCount: 0, isActive: true }],
+      };
+    }
+
+    case "UPDATE_BLOCK_LIST": {
+      return {
+        ...state,
+        blockLists: state.blockLists.map((l) =>
+          l.id === action.payload.id ? { ...l, ...action.payload } : l
+        ),
+      };
+    }
+
+    case "DELETE_BLOCK_LIST": {
+      if (state.blockLists.length <= 1) return state;
+      return {
+        ...state,
+        blockLists: state.blockLists.filter((l) => l.id !== action.payload.id),
+      };
+    }
+
+    case "TOGGLE_BLOCK_LIST": {
+      return {
+        ...state,
+        blockLists: state.blockLists.map((l) =>
+          l.id === action.payload.id ? { ...l, isActive: !l.isActive } : l
+        ),
+      };
+    }
+
+    case "ADD_SCHEDULE": {
+      return {
+        ...state,
+        schedules: [...state.schedules, action.payload],
+      };
+    }
+
+    case "UPDATE_SCHEDULE": {
+      return {
+        ...state,
+        schedules: state.schedules.map((s) =>
+          s.id === action.payload.id ? { ...s, ...action.payload } : s
+        ),
+      };
+    }
+
+    case "DELETE_SCHEDULE": {
+      return {
+        ...state,
+        schedules: state.schedules.filter((s) => s.id !== action.payload.id),
+      };
+    }
+
+    case "TOGGLE_SCHEDULE": {
+      return {
+        ...state,
+        schedules: state.schedules.map((s) =>
+          s.id === action.payload.id ? { ...s, isEnabled: !s.isEnabled } : s
+        ),
       };
     }
 
@@ -330,7 +428,8 @@ export function AppLockProvider({ children }) {
       if (lock.peekExpiresAt && now >= lock.peekExpiresAt) {
         dispatch({ type: "SLOP_PEEK_EXPIRED" });
         if (isScreenTimeAvailable()) {
-          blockSelectedApps().catch(() => {});
+          const activeIds = lock.activeListIds || ["default"];
+          blockListsNative(activeIds).catch(() => {});
         }
       }
       // Lock timer expired naturally

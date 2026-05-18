@@ -19,9 +19,19 @@ export async function showAppPicker() {
   return ScreenTimeModule.showAppPicker();
 }
 
+export async function showAppPickerForList(listId) {
+  if (!isAvailable) return { selectedCount: 0 };
+  return ScreenTimeModule.showAppPickerForList(listId);
+}
+
 export async function blockSelectedApps() {
   if (!isAvailable) return { blockedCount: 0 };
   return ScreenTimeModule.blockSelectedApps();
+}
+
+export async function blockLists(listIds) {
+  if (!isAvailable) return { blockedCount: 0 };
+  return ScreenTimeModule.blockLists(listIds);
 }
 
 export async function unblockApp(appTokenString) {
@@ -37,6 +47,21 @@ export async function reblockAllApps() {
 export async function clearAllBlocks() {
   if (!isAvailable) return { status: "unavailable" };
   return ScreenTimeModule.clearAllBlocks();
+}
+
+export async function deleteBlockList(listId) {
+  if (!isAvailable) return { status: "unavailable" };
+  return ScreenTimeModule.deleteBlockList(listId);
+}
+
+export async function createSchedule(scheduleId, startHour, startMinute, endHour, endMinute) {
+  if (!isAvailable) return { status: "unavailable" };
+  return ScreenTimeModule.createSchedule(scheduleId, startHour, startMinute, endHour, endMinute);
+}
+
+export async function deleteSchedule(scheduleId) {
+  if (!isAvailable) return { status: "unavailable" };
+  return ScreenTimeModule.deleteSchedule(scheduleId);
 }
 
 export async function startMonitoring(durationMinutes) {

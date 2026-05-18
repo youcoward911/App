@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppLockProvider, useAppLock } from "./src/context/AppLockContext";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import PaywallScreen from "./src/screens/PaywallScreen";
+import ScheduleScreen from "./src/screens/ScheduleScreen";
 import CustomAlert from "./src/components/CustomAlert";
 // AddAppsScreen removed — replaced by FamilyActivityPicker in onboarding
 import HomeScreen from "./src/screens/HomeScreen";
@@ -278,6 +279,11 @@ export default function App() {
           <Stack.Screen
             name="Paywall"
             component={PaywallScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="Schedules"
+            component={ScheduleScreen}
             options={{ presentation: "modal" }}
           />
         </Stack.Navigator>

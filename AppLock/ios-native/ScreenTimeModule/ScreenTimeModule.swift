@@ -55,34 +55,49 @@ class ScreenTimeModule: RCTEventEmitter {
     resolve(["status": status])
   }
 
-  // MARK: - App Picker
+  // MARK: - App Picker (default list)
 
   @objc
   func showAppPicker(_ resolve: @escaping RCTPromiseResolveBlock,
                      rejecter reject: @escaping RCTPromiseRejectBlock) {
-    DispatchQueue.main.async {
+    showAppPickerForList("blocklist_default", resolve: resolve, rejecter: reject)
+  }
+
+  // MARK: - App Picker (specific list)
+
+  @objc
+  func showAppPickerForList(_ listId: String,
+                            resolve: @escaping RCTPromiseResolveBlock,
+                            rejecter reject: @escaping RCTPromiseRejectBlock) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
       guard let rootVC = UIApplication.shared.windows.first?.rootViewController else {
         reject("NO_ROOT_VC", "Could not find root view controller", nil)
         return
       }
 
+      // Find the topmost presented VC
+      var topVC = rootVC
+      while let presented = topVC.presentedViewController {
+        topVC = presented
+      }
+
       let picker = AppPickerViewController { [weak self] selection in
         guard let self = self else { return }
 
-        // Persist selection to App Group so extensions can read it
-        self.shared.saveSelection(selection)
+        let key = listId.hasPrefix("blocklist_") ? listId : "blocklist_\(listId)"
+        self.shared.saveSelection(selection, forKey: key)
 
         let count = selection.applicationTokens.count + selection.categoryTokens.count
 
-        // Dismiss the picker first, then resolve
         DispatchQueue.main.async {
-          rootVC.dismiss(animated: true) {
+          topVC.dismiss(animated: true) {
             resolve(["selectedCount": count])
           }
         }
       }
 
-      rootVC.present(picker, animated: true)
+      topVC.present(picker, animated: true)
     }
   }
 
@@ -100,6 +115,23 @@ class ScreenTimeModule: RCTEventEmitter {
       : ShieldSettings.ActivityCategoryPolicy.specific(categories)
 
     let count = apps.count + categories.count
+    resolve(["blockedCount": count])
+  }
+
+  // Block multiple lists merged together
+  @objc
+  func blockLists(_ listIds: [String],
+                  resolve: RCTPromiseResolveBlock,
+                  rejecter reject: RCTPromiseRejectBlock) {
+    let keys = listIds.map { $0.hasPrefix("blocklist_") ? $0 : "blocklist_\($0)" }
+    let merged = shared.mergedTokens(forKeys: keys)
+
+    store.shield.applications = merged.apps.isEmpty ? nil : merged.apps
+    store.shield.applicationCategories = merged.categories.isEmpty
+      ? nil
+      : ShieldSettings.ActivityCategoryPolicy.specific(merged.categories)
+
+    let count = merged.apps.count + merged.categories.count
     resolve(["blockedCount": count])
   }
 
@@ -132,7 +164,63 @@ class ScreenTimeModule: RCTEventEmitter {
     resolve(["status": "cleared"])
   }
 
-  // MARK: - Monitoring (schedule-based blocking)
+  // MARK: - Delete a block list
+
+  @objc
+  func deleteBlockList(_ listId: String,
+                       resolve: RCTPromiseResolveBlock,
+                       rejecter reject: RCTPromiseRejectBlock) {
+    let key = listId.hasPrefix("blocklist_") ? listId : "blocklist_\(listId)"
+    shared.deleteSelection(forKey: key)
+    resolve(["status": "deleted"])
+  }
+
+  // MARK: - Scheduled Locks
+
+  @objc
+  func createSchedule(_ scheduleId: String,
+                      startHour: Int,
+                      startMinute: Int,
+                      endHour: Int,
+                      endMinute: Int,
+                      resolve: @escaping RCTPromiseResolveBlock,
+                      rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let activityCenter = DeviceActivityCenter()
+
+    var startComponents = DateComponents()
+    startComponents.hour = startHour
+    startComponents.minute = startMinute
+
+    var endComponents = DateComponents()
+    endComponents.hour = endHour
+    endComponents.minute = endMinute
+
+    let schedule = DeviceActivitySchedule(
+      intervalStart: startComponents,
+      intervalEnd: endComponents,
+      repeats: true
+    )
+
+    do {
+      let activityName = DeviceActivityName("scrollpig.schedule.\(scheduleId)")
+      try activityCenter.startMonitoring(activityName, during: schedule)
+      resolve(["status": "scheduled", "scheduleId": scheduleId])
+    } catch {
+      reject("SCHEDULE_ERROR", error.localizedDescription, error)
+    }
+  }
+
+  @objc
+  func deleteSchedule(_ scheduleId: String,
+                      resolve: RCTPromiseResolveBlock,
+                      rejecter reject: RCTPromiseRejectBlock) {
+    let activityCenter = DeviceActivityCenter()
+    let activityName = DeviceActivityName("scrollpig.schedule.\(scheduleId)")
+    activityCenter.stopMonitoring([activityName])
+    resolve(["status": "deleted"])
+  }
+
+  // MARK: - Legacy Monitoring
 
   @objc
   func startMonitoring(_ durationMinutes: Int,

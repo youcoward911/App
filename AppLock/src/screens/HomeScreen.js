@@ -21,7 +21,7 @@ import { getPigWeight } from "../utils/pigWeight";
 import { C, T, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
-import { isScreenTimeAvailable, showAppPicker, blockSelectedApps } from "../native/ScreenTime";
+import { isScreenTimeAvailable, showAppPicker, showAppPickerForList, blockSelectedApps, blockLists as blockListsNative, deleteBlockList as deleteBlockListNative } from "../native/ScreenTime";
 import { heavyTap, successTap, lightTap } from "../utils/haptics";
 
 const { width: SCREEN_W } = Dimensions.get("window");
@@ -100,9 +100,11 @@ export default function HomeScreen({ navigation }) {
     ? (lock.peekFee || 1) * Math.pow(2, lock.peekCount || 0)
     : 0;
 
+  const totalActiveApps = state.blockLists.filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
+
   const handleSwipeLock = async () => {
     heavyTap();
-    if (lock.appCount === 0) {
+    if (totalActiveApps === 0) {
       if (!isScreenTimeAvailable()) {
         showAlert("No Apps Selected", "You need to select apps to lock first. This requires the full build (TestFlight or App Store).");
         return;
@@ -132,19 +134,20 @@ export default function HomeScreen({ navigation }) {
     dispatch({ type: "LOCK_SLOP", payload: { durationMinutes } });
     setShowConfig(false);
     if (isScreenTimeAvailable()) {
-      try { await blockSelectedApps(); } catch (e) {}
+      const activeIds = state.blockLists.filter((l) => l.isActive).map((l) => l.id);
+      try { await blockListsNative(activeIds); } catch (e) {}
     }
   };
 
-  const handleEditApps = async () => {
+  const handleEditApps = async (listId = "default") => {
     if (!isScreenTimeAvailable()) {
       showAlert("Not Available", "App selection requires the full build. Use TestFlight or the App Store version.");
       return;
     }
     try {
-      const result = await showAppPicker();
+      const result = await showAppPickerForList(listId);
       if (result.selectedCount > 0) {
-        dispatch({ type: "SET_APP_COUNT", payload: { count: result.selectedCount } });
+        dispatch({ type: "SET_APP_COUNT", payload: { listId, count: result.selectedCount } });
       }
     } catch (e) {
       showAlert("Error", "Something went wrong opening the app picker.");
@@ -153,7 +156,7 @@ export default function HomeScreen({ navigation }) {
 
   const handleScheduleLock = () => {
     if (state.isProPig) {
-      showAlert("Coming Soon", "Scheduled locks are coming in a future update.");
+      navigation.navigate("Schedules");
     } else {
       showAlert(
         "Pro Pig Required",
@@ -260,9 +263,9 @@ export default function HomeScreen({ navigation }) {
           ) : (
             <>
               <Text style={styles.slopLabel}>SLOP LOCK</Text>
-              {lock.appCount > 0 ? (
+              {totalActiveApps > 0 ? (
                 <Text style={styles.slopReady}>
-                  {lock.appCount} app{lock.appCount !== 1 ? "s" : ""} ready to lock
+                  {totalActiveApps} app{totalActiveApps !== 1 ? "s" : ""} ready to lock
                 </Text>
               ) : (
                 <Text style={styles.slopReady}>No apps selected yet</Text>
@@ -309,44 +312,61 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>BLOCK LIST</Text>
+            <Text style={styles.modalTitle}>BLOCK LISTS</Text>
 
-            <TouchableOpacity
-              style={[styles.listItem, NEU_RAISED]}
-              activeOpacity={0.8}
-              onPress={() => { setShowBlockList(false); setTimeout(handleEditApps, 400); }}
-            >
-              <Text style={styles.listItemName}>Slop Lock</Text>
-              <Text style={styles.listItemCount}>
-                {lock.appCount > 0 ? `${lock.appCount} apps` : "Tap to edit"}
-              </Text>
-            </TouchableOpacity>
+            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+              {state.blockLists.map((list) => (
+                <View key={list.id} style={[styles.listItem, NEU_RAISED]}>
+                  <TouchableOpacity
+                    style={styles.listCheckbox}
+                    onPress={() => { lightTap(); dispatch({ type: "TOGGLE_BLOCK_LIST", payload: { id: list.id } }); }}
+                  >
+                    <View style={[styles.checkbox, list.isActive && styles.checkboxActive]}>
+                      {list.isActive && <Text style={styles.checkmark}>{"\u2713"}</Text>}
+                    </View>
+                  </TouchableOpacity>
+                  <View style={styles.listInfo}>
+                    <Text style={styles.listItemName}>{list.name}</Text>
+                    <Text style={styles.listItemCount}>
+                      {list.appCount > 0 ? `${list.appCount} apps` : "No apps yet"}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.editBtn}
+                    onPress={() => { setShowBlockList(false); setTimeout(() => handleEditApps(list.id), 400); }}
+                  >
+                    <Text style={styles.editBtnText}>Edit</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
 
-            {/* Add New List — paywalled */}
-            <TouchableOpacity
-              style={[styles.listItem, styles.listItemNew]}
-              activeOpacity={0.8}
-              onPress={() => {
-                setShowBlockList(false);
-                if (state.isProPig) {
-                  showAlert("Coming Soon", "Multiple lock lists are coming in a future update.");
-                } else {
-                  showAlert(
-                    "Pro Pig Required",
-                    "Upgrade to Pro Pig to create multiple lock lists.",
-                    [
-                      { text: "Upgrade", onPress: () => navigation.navigate("Paywall") },
-                      { text: "Cancel", style: "cancel" },
-                    ]
-                  );
-                }
-              }}
-            >
-              <View style={styles.newListRow}>
-                <View style={styles.proBadge}><Text style={styles.proBadgeText}>PRO</Text></View>
-                <Text style={styles.listItemNewText}>+ Add New List</Text>
-              </View>
-            </TouchableOpacity>
+              {/* Add New List */}
+              <TouchableOpacity
+                style={[styles.listItem, styles.listItemNew]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (state.isProPig) {
+                    const newId = `list_${Date.now()}`;
+                    dispatch({ type: "ADD_BLOCK_LIST", payload: { id: newId, name: `Block List ${state.blockLists.length + 1}` } });
+                    setShowBlockList(false);
+                    setTimeout(() => handleEditApps(newId), 400);
+                  } else {
+                    setShowBlockList(false);
+                    showAlert(
+                      "Pro Pig Required",
+                      "Upgrade to Pro Pig to create multiple block lists.",
+                      [
+                        { text: "Upgrade", onPress: () => navigation.navigate("Paywall") },
+                        { text: "Cancel", style: "cancel" },
+                      ]
+                    );
+                  }
+                }}
+              >
+                {!state.isProPig && <View style={styles.proBadge}><Text style={styles.proBadgeText}>PRO</Text></View>}
+                <Text style={styles.listItemNewText}>+ New Block List</Text>
+              </TouchableOpacity>
+            </ScrollView>
 
             <GlowButton
               title="Done"
@@ -558,11 +578,34 @@ const styles = StyleSheet.create({
   listItem: {
     backgroundColor: C.white,
     borderRadius: 16,
-    padding: 18,
+    padding: 14,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
+  },
+  listCheckbox: {
+    marginRight: 12,
+  },
+  checkbox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: C.pinkPale,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxActive: {
+    backgroundColor: C.pink,
+    borderColor: C.pink,
+  },
+  checkmark: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  listInfo: {
+    flex: 1,
   },
   listItemName: {
     fontSize: 16,
@@ -570,19 +613,29 @@ const styles = StyleSheet.create({
     color: C.text,
   },
   listItemCount: {
-    ...T.caption,
+    fontSize: 12,
+    fontWeight: "500",
+    color: C.textSecondary,
+    marginTop: 2,
+  },
+  editBtn: {
+    backgroundColor: C.pinkPale,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  editBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
     color: C.pink,
-    fontWeight: "600",
   },
   listItemNew: {
     backgroundColor: C.pinkPale,
     borderStyle: "dashed",
     borderWidth: 1.5,
     borderColor: C.pink,
-  },
-  newListRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
   },
   listItemNewText: {
     fontSize: 14,
