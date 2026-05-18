@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,25 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { C } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import PigMascot from "../components/PigMascot";
-import { requestAuthorization, isScreenTimeAvailable, showAppPicker } from "../native/ScreenTime";
+import { requestAuthorization, getAuthorizationStatus, isScreenTimeAvailable, showAppPicker } from "../native/ScreenTime";
 import { useAppLock } from "../context/AppLockContext";
 
 export default function OnboardingScreen({ onComplete }) {
   const [step, setStep] = useState(1);
+  const [checking, setChecking] = useState(true);
   const { dispatch } = useAppLock();
+
+  // Skip step 1 if already authorized
+  useEffect(() => {
+    if (isScreenTimeAvailable()) {
+      getAuthorizationStatus().then((s) => {
+        if (s.status === "approved") setStep(2);
+        setChecking(false);
+      }).catch(() => setChecking(false));
+    } else {
+      setChecking(false);
+    }
+  }, []);
 
   const handleGrant = async () => {
     if (isScreenTimeAvailable()) {
@@ -38,6 +51,8 @@ export default function OnboardingScreen({ onComplete }) {
     // If not available (Expo Go) or no apps selected, complete anyway
     onComplete();
   };
+
+  if (checking) return null;
 
   if (step === 1) {
     return (
