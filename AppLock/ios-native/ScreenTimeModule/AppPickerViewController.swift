@@ -25,7 +25,7 @@ struct AppPickerView: View {
   var body: some View {
     NavigationView {
       VStack {
-        Text("Choose apps to lock")
+        Text("Choose apps for your block list")
           .font(.headline)
           .padding(.top)
 
@@ -36,7 +36,7 @@ struct AppPickerView: View {
           onSelection(selection)
           // Dismiss happens automatically
         }) {
-          Text("Lock Selected Apps")
+          Text("Save Selection")
             .font(.headline)
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
