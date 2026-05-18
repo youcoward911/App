@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Switch,
   Modal,
+  PanResponder,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
@@ -18,6 +20,25 @@ import { lightTap, successTap } from "../utils/haptics";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+// Build time slots in 15-min increments (96 slots: 12:00 AM to 11:45 PM)
+const TIME_SLOTS = [];
+for (let i = 0; i < 96; i++) {
+  const totalMin = i * 15;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  const period = h >= 12 ? "PM" : "AM";
+  const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  TIME_SLOTS.push({
+    label: `${display}:${String(m).padStart(2, "0")} ${period}`,
+    hour: h,
+    minute: m,
+  });
+}
+
+const WHEEL_ITEM_H = 44;
+const WHEEL_VISIBLE = 3;
+const WHEEL_H = WHEEL_ITEM_H * WHEEL_VISIBLE;
+
 const formatTime = (h, m) => {
   const period = h >= 12 ? "PM" : "AM";
   const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
@@ -27,11 +48,28 @@ const formatTime = (h, m) => {
 export default function ScheduleScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
   const [showCreate, setShowCreate] = useState(false);
+  const createSwipeY = useRef(new Animated.Value(0)).current;
+  const createPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 8,
+      onPanResponderMove: (_, g) => { if (g.dy > 0) createSwipeY.setValue(g.dy); },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 80) {
+          setShowCreate(false);
+          setTimeout(() => createSwipeY.setValue(0), 300);
+        } else {
+          Animated.spring(createSwipeY, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
+
   const [selectedDays, setSelectedDays] = useState([0, 1, 2, 3, 4]); // Mon-Fri
-  const [startHour, setStartHour] = useState(9);
-  const [startMin, setStartMin] = useState(0);
-  const [endHour, setEndHour] = useState(17);
-  const [endMin, setEndMin] = useState(0);
+  const [startIdx, setStartIdx] = useState(36); // 9:00 AM
+  const [endIdx, setEndIdx] = useState(40);     // 10:00 AM (minimum 1hr after start)
+  const startNotchRef = useRef(36);
+  const endNotchRef = useRef(40);
   const [selectedListIds, setSelectedListIds] = useState(
     state.blockLists.filter((l) => l.isActive).map((l) => l.id)
   );
@@ -50,13 +88,21 @@ export default function ScheduleScreen({ navigation }) {
     );
   };
 
-  const adjustTime = (setter, current, delta, max) => {
-    lightTap();
-    let next = current + delta;
-    if (next < 0) next = max;
-    if (next > max) next = 0;
-    setter(next);
-  };
+  const onStartScroll = useCallback((e) => {
+    const notch = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+    if (notch !== startNotchRef.current && notch >= 0 && notch < TIME_SLOTS.length) {
+      startNotchRef.current = notch;
+      lightTap();
+    }
+  }, []);
+
+  const onEndScroll = useCallback((e) => {
+    const notch = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+    if (notch !== endNotchRef.current && notch >= 0 && notch < TIME_SLOTS.length) {
+      endNotchRef.current = notch;
+      lightTap();
+    }
+  }, []);
 
   const handleCreate = async () => {
     if (selectedDays.length === 0) {
@@ -68,16 +114,27 @@ export default function ScheduleScreen({ navigation }) {
       return;
     }
 
+    const startSlot = TIME_SLOTS[startIdx];
+    const endSlot = TIME_SLOTS[endIdx];
+
+    // Ensure minimum 1 hour gap
+    const startTotal = startSlot.hour * 60 + startSlot.minute;
+    const endTotal = endSlot.hour * 60 + endSlot.minute;
+    if (endTotal <= startTotal || endTotal - startTotal < 60) {
+      showAlert("Too Short", "Schedule must be at least 1 hour long.");
+      return;
+    }
+
     const id = `sched_${Date.now()}`;
     const schedule = {
       id,
-      name: `${DAYS.filter((_, i) => selectedDays.includes(i)).join(", ")} ${formatTime(startHour, startMin)}-${formatTime(endHour, endMin)}`,
+      name: `${DAYS.filter((_, i) => selectedDays.includes(i)).join(", ")} ${startSlot.label}-${endSlot.label}`,
       listIds: selectedListIds,
       days: selectedDays,
-      startHour,
-      startMin,
-      endHour,
-      endMin,
+      startHour: startSlot.hour,
+      startMin: startSlot.minute,
+      endHour: endSlot.hour,
+      endMin: endSlot.minute,
       isEnabled: true,
     };
 
@@ -85,7 +142,7 @@ export default function ScheduleScreen({ navigation }) {
 
     if (isScreenTimeAvailable()) {
       try {
-        await createSchedule(id, startHour, startMin, endHour, endMin);
+        await createSchedule(id, startSlot.hour, startSlot.minute, endSlot.hour, endSlot.minute);
       } catch (e) {}
     }
 
@@ -170,8 +227,10 @@ export default function ScheduleScreen({ navigation }) {
       {/* Create Schedule Modal */}
       <Modal visible={showCreate} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
+          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: createSwipeY }] }]}>
+            <View {...createPanResponder.panHandlers} style={styles.handleZone}>
+              <View style={styles.modalHandle} />
+            </View>
             <Text style={styles.modalTitle}>NEW SCHEDULE</Text>
 
             {/* Days */}
@@ -188,35 +247,70 @@ export default function ScheduleScreen({ navigation }) {
               ))}
             </View>
 
-            {/* Time Range */}
+            {/* Time Range — scroll wheels */}
             <Text style={styles.sectionLabel}>TIME</Text>
             <View style={styles.timeRow}>
               <View style={styles.timeBlock}>
                 <Text style={styles.timeLabel}>Start</Text>
-                <View style={styles.timeControls}>
-                  <TouchableOpacity onPress={() => adjustTime(setStartHour, startHour, -1, 23)}>
-                    <Text style={styles.timeArrow}>{"\u25B2"}</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.timeValue}>{formatTime(startHour, startMin)}</Text>
-                  <TouchableOpacity onPress={() => adjustTime(setStartHour, startHour, 1, 23)}>
-                    <Text style={styles.timeArrow}>{"\u25BC"}</Text>
-                  </TouchableOpacity>
+                <View style={styles.wheelWrap}>
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={WHEEL_ITEM_H}
+                    decelerationRate="fast"
+                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H }}
+                    onScroll={onStartScroll}
+                    scrollEventThrottle={16}
+                    onMomentumScrollEnd={(e) => {
+                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+                      setStartIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
+                    }}
+                    onScrollEndDrag={(e) => {
+                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+                      setStartIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
+                    }}
+                    contentOffset={{ x: 0, y: startIdx * WHEEL_ITEM_H }}
+                  >
+                    {TIME_SLOTS.map((slot, i) => (
+                      <View key={i} style={styles.wheelItem}>
+                        <Text style={[styles.wheelText, i === startIdx && styles.wheelTextActive]}>{slot.label}</Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  <View style={styles.wheelHighlight} pointerEvents="none" />
                 </View>
               </View>
               <Text style={styles.timeDash}>to</Text>
               <View style={styles.timeBlock}>
                 <Text style={styles.timeLabel}>End</Text>
-                <View style={styles.timeControls}>
-                  <TouchableOpacity onPress={() => adjustTime(setEndHour, endHour, -1, 23)}>
-                    <Text style={styles.timeArrow}>{"\u25B2"}</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.timeValue}>{formatTime(endHour, endMin)}</Text>
-                  <TouchableOpacity onPress={() => adjustTime(setEndHour, endHour, 1, 23)}>
-                    <Text style={styles.timeArrow}>{"\u25BC"}</Text>
-                  </TouchableOpacity>
+                <View style={styles.wheelWrap}>
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={WHEEL_ITEM_H}
+                    decelerationRate="fast"
+                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H }}
+                    onScroll={onEndScroll}
+                    scrollEventThrottle={16}
+                    onMomentumScrollEnd={(e) => {
+                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+                      setEndIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
+                    }}
+                    onScrollEndDrag={(e) => {
+                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+                      setEndIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
+                    }}
+                    contentOffset={{ x: 0, y: endIdx * WHEEL_ITEM_H }}
+                  >
+                    {TIME_SLOTS.map((slot, i) => (
+                      <View key={i} style={styles.wheelItem}>
+                        <Text style={[styles.wheelText, i === endIdx && styles.wheelTextActive]}>{slot.label}</Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  <View style={styles.wheelHighlight} pointerEvents="none" />
                 </View>
               </View>
             </View>
+            <Text style={styles.timeHint}>{TIME_SLOTS[startIdx].label} — {TIME_SLOTS[endIdx].label}</Text>
 
             {/* Which lists */}
             <Text style={styles.sectionLabel}>BLOCK LISTS</Text>
@@ -237,7 +331,7 @@ export default function ScheduleScreen({ navigation }) {
               <GlowButton title="Create Schedule" onPress={handleCreate} />
               <GlowButton title="Cancel" ghost onPress={() => setShowCreate(false)} />
             </View>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -287,7 +381,8 @@ const styles = StyleSheet.create({
     padding: 24, paddingBottom: 40,
     maxHeight: "85%",
   },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: C.pinkPale, alignSelf: "center", marginBottom: 16 },
+  handleZone: { paddingTop: 12, paddingBottom: 8, alignItems: "center" },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: C.pinkPale },
   modalTitle: { fontSize: 18, fontWeight: "900", color: C.text, letterSpacing: 2, textAlign: "center", marginBottom: 20 },
 
   sectionLabel: { fontSize: 11, fontWeight: "800", color: C.textTertiary, letterSpacing: 1.5, marginTop: 16, marginBottom: 8 },
@@ -302,14 +397,42 @@ const styles = StyleSheet.create({
   dayText: { fontSize: 12, fontWeight: "700", color: C.textSecondary },
   dayTextActive: { color: "#FFF" },
 
-  // Time
+  // Time wheels
   timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
-  timeBlock: { alignItems: "center" },
+  timeBlock: { alignItems: "center", flex: 1 },
   timeLabel: { ...T.caption, marginBottom: 6 },
-  timeControls: { alignItems: "center" },
-  timeArrow: { fontSize: 16, color: C.pink, fontWeight: "800", padding: 4 },
-  timeValue: { fontSize: 20, fontWeight: "900", color: C.text, paddingVertical: 4 },
-  timeDash: { fontSize: 16, fontWeight: "600", color: C.textSecondary },
+  timeDash: { fontSize: 16, fontWeight: "600", color: C.textSecondary, marginTop: 20 },
+  timeHint: { fontSize: 14, fontWeight: "700", color: C.pink, textAlign: "center", marginTop: 8 },
+  wheelWrap: {
+    height: WHEEL_H,
+    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: C.pinkPale,
+  },
+  wheelItem: {
+    height: WHEEL_ITEM_H,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  wheelText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: C.textSecondary,
+  },
+  wheelTextActive: {
+    color: C.pink,
+    fontWeight: "900",
+  },
+  wheelHighlight: {
+    position: "absolute",
+    top: WHEEL_ITEM_H,
+    left: 0,
+    right: 0,
+    height: WHEEL_ITEM_H,
+    backgroundColor: C.pink,
+    opacity: 0.08,
+    borderRadius: 8,
+  },
 
   // List toggles
   listToggle: {

@@ -9,6 +9,7 @@ import {
   Animated,
   ScrollView,
   AppState,
+  PanResponder,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
@@ -62,6 +63,22 @@ export default function HomeScreen({ navigation }) {
   const [now, setNow] = useState(Date.now());
   const [showConfig, setShowConfig] = useState(false);
   const [showBlockList, setShowBlockList] = useState(false);
+  const blockListSwipeY = useRef(new Animated.Value(0)).current;
+  const blockListPan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 8,
+      onPanResponderMove: (_, g) => { if (g.dy > 0) blockListSwipeY.setValue(g.dy); },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 80) {
+          setShowBlockList(false);
+          setTimeout(() => blockListSwipeY.setValue(0), 300);
+        } else {
+          Animated.spring(blockListSwipeY, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
 
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
@@ -312,8 +329,10 @@ export default function HomeScreen({ navigation }) {
       {/* Block List Modal */}
       <Modal visible={showBlockList} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
+          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: blockListSwipeY }] }]}>
+            <View {...blockListPan.panHandlers} style={styles.handleZone}>
+              <View style={styles.modalHandle} />
+            </View>
             <Text style={styles.modalTitle}>BLOCK LISTS</Text>
 
             <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
@@ -390,7 +409,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() => setShowBlockList(false)}
               style={{ marginTop: 16 }}
             />
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -575,13 +594,16 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+  handleZone: {
+    paddingTop: 12,
+    paddingBottom: 8,
+    alignItems: "center",
+  },
   modalHandle: {
     width: 40,
     height: 4,
     borderRadius: 2,
     backgroundColor: C.pinkPale,
-    alignSelf: "center",
-    marginBottom: 20,
   },
   modalTitle: {
     fontSize: 18,
