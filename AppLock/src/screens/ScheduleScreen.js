@@ -228,8 +228,8 @@ export default function ScheduleScreen({ navigation }) {
 
       {/* Create Schedule Modal */}
       <Modal visible={showCreate} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: createSwipeY }] }]}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowCreate(false)}>
+          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: createSwipeY }] }]} onStartShouldSetResponder={() => true}>
             <View {...createPanResponder.panHandlers} style={styles.handleZone}>
               <View style={styles.modalHandle} />
             </View>
@@ -339,7 +339,7 @@ export default function ScheduleScreen({ navigation }) {
               <GlowButton title="Cancel" ghost onPress={() => setShowCreate(false)} />
             </View>
           </Animated.View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
@@ -388,8 +388,8 @@ const styles = StyleSheet.create({
     padding: 24, paddingBottom: 40,
     maxHeight: "85%",
   },
-  handleZone: { paddingTop: 12, paddingBottom: 8, alignItems: "center" },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: C.pinkPale },
+  handleZone: { paddingTop: 14, paddingBottom: 16, alignItems: "center", width: "100%" },
+  modalHandle: { width: 40, height: 5, borderRadius: 3, backgroundColor: C.pinkPale },
   modalTitle: { fontSize: 18, fontWeight: "900", color: C.text, letterSpacing: 2, textAlign: "center", marginBottom: 20 },
 
   sectionLabel: { fontSize: 11, fontWeight: "800", color: C.textTertiary, letterSpacing: 1.5, marginTop: 16, marginBottom: 8 },

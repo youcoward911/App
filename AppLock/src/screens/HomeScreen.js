@@ -399,8 +399,8 @@ export default function HomeScreen({ navigation }) {
 
       {/* Block List Modal */}
       <Modal visible={showBlockList} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: blockListSwipeY }] }]}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowBlockList(false)}>
+          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: blockListSwipeY }] }]} onStartShouldSetResponder={() => true}>
             <View {...blockListPan.panHandlers} style={styles.handleZone}>
               <View style={styles.modalHandle} />
             </View>
@@ -493,7 +493,7 @@ export default function HomeScreen({ navigation }) {
               style={{ marginTop: 16 }}
             />
           </Animated.View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
@@ -678,14 +678,15 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   handleZone: {
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 14,
+    paddingBottom: 16,
     alignItems: "center",
+    width: "100%",
   },
   modalHandle: {
     width: 40,
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: C.pinkPale,
   },
   modalTitle: {

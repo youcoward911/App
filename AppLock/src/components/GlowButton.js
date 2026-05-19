@@ -70,5 +70,5 @@ const styles = StyleSheet.create({
   },
   btnText: { ...T.button },
   ghost: { paddingVertical: 10, alignItems: "center" },
-  ghostText: { ...T.body, color: C.green, fontWeight: "600" },
+  ghostText: { ...T.body, color: C.text, fontWeight: "600" },
 });

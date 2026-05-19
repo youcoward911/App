@@ -101,8 +101,8 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: swipeY }] }]}>
+      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: swipeY }] }]} onStartShouldSetResponder={() => true}>
           <View {...handlePanResponder.panHandlers} style={styles.handleZone}>
             <View style={styles.handle} />
           </View>
@@ -178,7 +178,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
           </View>
           </ScrollView>
         </Animated.View>
-      </View>
+      </TouchableOpacity>
     </Modal>
   );
 }
@@ -199,14 +199,15 @@ const styles = StyleSheet.create({
     maxHeight: "85%",
   },
   handleZone: {
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 14,
+    paddingBottom: 16,
     alignItems: "center",
+    width: "100%",
   },
   handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
+    width: 40,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: C.pinkPale,
   },
   title: {
