@@ -54,9 +54,13 @@ export default function SettingsScreen() {
 
         {/* Unlock Fee */}
         <View style={[styles.card, CARD_SHADOW]}>
-          <Text style={styles.cardTitle}>Unlock Cost</Text>
+          <Text style={styles.cardTitle}>
+            {state.isProPig ? "Peek / Unlock Cost" : "Unlock Cost"}
+          </Text>
           <Text style={styles.cardDesc}>
-            Current: {state.settings.defaultFullFee} coins to unlock
+            {state.isProPig
+              ? `Current: ${state.settings.defaultPeekFee} peek / ${state.settings.defaultFullFee} unlock`
+              : `Current: ${state.settings.defaultFullFee} coins to unlock`}
           </Text>
 
           <View style={styles.presets}>
@@ -69,11 +73,14 @@ export default function SettingsScreen() {
                   onPress={() => {
                     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultPeekFee: t.peek, defaultFullFee: t.full } });
                     const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
-                    showAlert(`${t.full} coins to unlock`, taunt);
+                    showAlert(
+                      state.isProPig ? `${t.peek} peek / ${t.full} unlock` : `${t.full} coins to unlock`,
+                      taunt
+                    );
                   }}
                 >
                   <Text style={[styles.presetText, isActive && styles.presetTextActive]}>
-                    {t.full}
+                    {state.isProPig ? t.label : t.full}
                   </Text>
                 </TouchableOpacity>
               );
@@ -81,7 +88,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.customRow}>
-            <Text style={styles.customLabel}>Custom:</Text>
+            <Text style={styles.customLabel}>{state.isProPig ? "Custom peek:" : "Custom:"}</Text>
             <View style={styles.feeInputWrap}>
               <View style={styles.feeCoinIcon}>
                 <Text style={styles.feeCoinP}>P</Text>
@@ -91,12 +98,15 @@ export default function SettingsScreen() {
                 value={customFee}
                 onChangeText={setCustomFee}
                 keyboardType="number-pad"
-                placeholder="Unlock cost"
+                placeholder={state.isProPig ? "Peek cost" : "Unlock cost"}
                 placeholderTextColor={C.textTertiary}
                 onSubmitEditing={saveCustom}
               />
             </View>
           </View>
+          {state.isProPig && (
+            <Text style={styles.feeHint}>Unlock = 10x peek cost</Text>
+          )}
           <GlowButton
             title="Set Custom Fee"
             onPress={saveCustom}
