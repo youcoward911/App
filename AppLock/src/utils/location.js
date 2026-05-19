@@ -9,6 +9,16 @@ try {
   console.warn("[location] expo-location not available — leaderboard will show as Unknown city");
 }
 
+export async function requestLocationPermission() {
+  if (!Location) return false;
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status === "granted";
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function getUserCity() {
   // Check cache first
   try {
@@ -25,7 +35,8 @@ export async function getUserCity() {
   if (!Location) return null;
 
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    // Only use location if already granted — don't prompt here
+    const { status } = await Location.getForegroundPermissionsAsync();
     if (status !== "granted") return null;
 
     const loc = await Location.getCurrentPositionAsync({

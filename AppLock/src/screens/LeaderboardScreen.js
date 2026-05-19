@@ -110,7 +110,17 @@ export default function LeaderboardScreen() {
     setRefreshing(false);
   }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    // Request location permission on first leaderboard visit, then load
+    const init = async () => {
+      try {
+        const { requestLocationPermission } = require("../utils/location");
+        await requestLocationPermission();
+      } catch (e) {}
+      loadData();
+    };
+    init();
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
