@@ -23,7 +23,7 @@ import { C, T, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
 import { isScreenTimeAvailable, showAppPicker, showAppPickerForList, blockSelectedApps, blockLists as blockListsNative, deleteBlockList as deleteBlockListNative } from "../native/ScreenTime";
-import { heavyTap, successTap, lightTap } from "../utils/haptics";
+import { heavyTap, successTap, lightTap, warningTap } from "../utils/haptics";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -56,6 +56,65 @@ function formatCountdown(expiresAt) {
   if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+
+function SwipeToDeleteRow({ children, canDelete, onDelete }) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy),
+      onPanResponderMove: (_, g) => {
+        if (g.dx < 0 && canDelete) translateX.setValue(Math.max(g.dx, -80));
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dx < -50 && canDelete) {
+          Animated.spring(translateX, { toValue: -80, tension: 80, friction: 10, useNativeDriver: true }).start();
+        } else {
+          Animated.spring(translateX, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <View style={{ marginBottom: 10, overflow: "hidden", borderRadius: 16 }}>
+      {/* Delete button behind */}
+      <TouchableOpacity
+        style={swipeStyles.deleteReveal}
+        onPress={() => {
+          Animated.timing(translateX, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+          onDelete();
+        }}
+        activeOpacity={0.8}
+      >
+        <Text style={swipeStyles.deleteRevealText}>Delete</Text>
+      </TouchableOpacity>
+      {/* Swipeable content */}
+      <Animated.View {...pan.panHandlers} style={{ transform: [{ translateX }] }}>
+        {children}
+      </Animated.View>
+    </View>
+  );
+}
+
+const swipeStyles = StyleSheet.create({
+  deleteReveal: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    backgroundColor: "#FF3B30",
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteRevealText: {
+    color: "#FFF",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+});
 
 export default function HomeScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -348,38 +407,50 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.modalTitle}>BLOCK LISTS</Text>
 
             <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-              {state.blockLists.map((list) => (
-                <View key={list.id} style={[styles.listItem, NEU_RAISED]}>
-                  <TouchableOpacity
-                    style={styles.listCheckbox}
-                    onPress={() => { lightTap(); dispatch({ type: "TOGGLE_BLOCK_LIST", payload: { id: list.id } }); }}
-                  >
-                    <View style={[styles.checkbox, list.isActive && styles.checkboxActive]}>
-                      {list.isActive && <Text style={styles.checkmark}>{"\u2713"}</Text>}
-                    </View>
-                  </TouchableOpacity>
-                  <View style={styles.listInfo}>
-                    <Text style={styles.listItemName}>{list.name}</Text>
-                    {list.appCount > 0 ? (
-                      <View style={styles.listPreviewRow}>
-                        <View style={styles.appCountBadge}>
-                          <Text style={styles.appCountBadgeText}>{list.appCount}</Text>
-                        </View>
-                        <Text style={styles.listItemCount}>
-                          app{list.appCount !== 1 ? "s" : ""} blocked
-                        </Text>
+              {(state.blockLists || []).map((list) => (
+                <SwipeToDeleteRow
+                  key={list.id}
+                  canDelete={state.blockLists.length > 1}
+                  onDelete={() => {
+                    warningTap();
+                    dispatch({ type: "DELETE_BLOCK_LIST", payload: { id: list.id } });
+                    if (isScreenTimeAvailable()) {
+                      deleteBlockListNative(list.id).catch(() => {});
+                    }
+                  }}
+                >
+                  <View style={[styles.listItem, NEU_RAISED]}>
+                    <TouchableOpacity
+                      style={styles.listCheckbox}
+                      onPress={() => { lightTap(); dispatch({ type: "TOGGLE_BLOCK_LIST", payload: { id: list.id } }); }}
+                    >
+                      <View style={[styles.checkbox, list.isActive && styles.checkboxActive]}>
+                        {list.isActive && <Text style={styles.checkmark}>{"\u2713"}</Text>}
                       </View>
-                    ) : (
-                      <Text style={styles.listItemCountEmpty}>No apps yet — tap Edit</Text>
-                    )}
+                    </TouchableOpacity>
+                    <View style={styles.listInfo}>
+                      <Text style={styles.listItemName}>{list.name}</Text>
+                      {list.appCount > 0 ? (
+                        <View style={styles.listPreviewRow}>
+                          <View style={styles.appCountBadge}>
+                            <Text style={styles.appCountBadgeText}>{list.appCount}</Text>
+                          </View>
+                          <Text style={styles.listItemCount}>
+                            app{list.appCount !== 1 ? "s" : ""} blocked
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.listItemCountEmpty}>No apps yet — tap Edit</Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => { setShowBlockList(false); setTimeout(() => navigation.navigate("BlockListDetail", { listId: list.id }), 400); }}
+                    >
+                      <Text style={styles.editBtnText}>Edit</Text>
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={styles.editBtn}
-                    onPress={() => { setShowBlockList(false); setTimeout(() => navigation.navigate("BlockListDetail", { listId: list.id }), 400); }}
-                  >
-                    <Text style={styles.editBtnText}>Edit</Text>
-                  </TouchableOpacity>
-                </View>
+                </SwipeToDeleteRow>
               ))}
 
               {/* Add New List — stays on modal */}
@@ -631,7 +702,6 @@ const styles = StyleSheet.create({
     padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
   },
   listCheckbox: {
     marginRight: 12,
