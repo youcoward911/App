@@ -82,7 +82,12 @@ class ScreenTimeModule: RCTEventEmitter {
         topVC = presented
       }
 
-      let picker = AppPickerViewController { [weak self] selection in
+      // Load existing selection for this list
+      let key = listId.hasPrefix("blocklist_") ? listId : "blocklist_\(listId)"
+      let existingSelection = self.shared.loadSelection(forKey: key) ?? FamilyActivitySelection()
+      NSLog("[ScrollPig] showAppPickerForList: loading existing selection for key '\(key)': apps=\(existingSelection.applicationTokens.count), categories=\(existingSelection.categoryTokens.count)")
+
+      let picker = AppPickerViewController(initialSelection: existingSelection) { [weak self] selection in
         guard let self = self else { return }
 
         let key = listId.hasPrefix("blocklist_") ? listId : "blocklist_\(listId)"

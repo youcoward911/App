@@ -7,8 +7,9 @@ import FamilyControls
 
 class AppPickerViewController: UIHostingController<AppPickerView> {
 
-  init(onSelection: @escaping (FamilyActivitySelection) -> Void) {
-    let pickerView = AppPickerView(onSelection: onSelection)
+  init(initialSelection: FamilyActivitySelection = FamilyActivitySelection(),
+       onSelection: @escaping (FamilyActivitySelection) -> Void) {
+    let pickerView = AppPickerView(initialSelection: initialSelection, onSelection: onSelection)
     super.init(rootView: pickerView)
     self.modalPresentationStyle = .pageSheet
   }
@@ -19,8 +20,13 @@ class AppPickerViewController: UIHostingController<AppPickerView> {
 }
 
 struct AppPickerView: View {
-  @State private var selection = FamilyActivitySelection()
+  @State private var selection: FamilyActivitySelection
   var onSelection: (FamilyActivitySelection) -> Void
+
+  init(initialSelection: FamilyActivitySelection, onSelection: @escaping (FamilyActivitySelection) -> Void) {
+    _selection = State(initialValue: initialSelection)
+    self.onSelection = onSelection
+  }
 
   var body: some View {
     NavigationView {
@@ -34,7 +40,6 @@ struct AppPickerView: View {
 
         Button(action: {
           onSelection(selection)
-          // Dismiss happens automatically
         }) {
           Text("Save Selection")
             .font(.headline)
