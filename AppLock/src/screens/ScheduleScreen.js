@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
-import { C, T, NEU_RAISED } from "../utils/theme";
+import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
 import { createSchedule, deleteSchedule as deleteScheduleNative, isScreenTimeAvailable } from "../native/ScreenTime";
@@ -255,11 +255,13 @@ export default function ScheduleScreen({ navigation }) {
               <View style={styles.timeBlock}>
                 <Text style={styles.timeLabel}>Start</Text>
                 <View style={styles.wheelWrap}>
+                  <View style={styles.wheelHighlight} />
                   <ScrollView
+                    style={styles.wheel}
                     showsVerticalScrollIndicator={false}
                     snapToInterval={WHEEL_ITEM_H}
                     decelerationRate="fast"
-                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H }}
+                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2) }}
                     onScroll={onStartScroll}
                     scrollEventThrottle={16}
                     onMomentumScrollEnd={(e) => {
@@ -278,18 +280,19 @@ export default function ScheduleScreen({ navigation }) {
                       </View>
                     ))}
                   </ScrollView>
-                  <View style={styles.wheelHighlight} pointerEvents="none" />
                 </View>
               </View>
               <Text style={styles.timeDash}>to</Text>
               <View style={styles.timeBlock}>
                 <Text style={styles.timeLabel}>End</Text>
                 <View style={styles.wheelWrap}>
+                  <View style={styles.wheelHighlight} />
                   <ScrollView
+                    style={styles.wheel}
                     showsVerticalScrollIndicator={false}
                     snapToInterval={WHEEL_ITEM_H}
                     decelerationRate="fast"
-                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H }}
+                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2) }}
                     onScroll={onEndScroll}
                     scrollEventThrottle={16}
                     onMomentumScrollEnd={(e) => {
@@ -308,11 +311,13 @@ export default function ScheduleScreen({ navigation }) {
                       </View>
                     ))}
                   </ScrollView>
-                  <View style={styles.wheelHighlight} pointerEvents="none" />
                 </View>
               </View>
             </View>
-            <Text style={styles.timeHint}>{TIME_SLOTS[startIdx]?.label || ""} — {TIME_SLOTS[endIdx]?.label || ""}</Text>
+            <View style={styles.selectedTimeWrap}>
+              <Text style={styles.selectedTimeLabel}>SELECTED:</Text>
+              <Text style={styles.selectedTimeValue}>{TIME_SLOTS[startIdx]?.label || ""} — {TIME_SLOTS[endIdx]?.label || ""}</Text>
+            </View>
 
             {/* Which lists */}
             <Text style={styles.sectionLabel}>BLOCK LISTS</Text>
@@ -399,17 +404,20 @@ const styles = StyleSheet.create({
   dayText: { fontSize: 12, fontWeight: "700", color: C.textSecondary },
   dayTextActive: { color: "#FFF" },
 
-  // Time wheels
+  // Time wheels — matches LockConfigModal style
   timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
   timeBlock: { alignItems: "center", flex: 1 },
   timeLabel: { ...T.caption, marginBottom: 6 },
   timeDash: { fontSize: 16, fontWeight: "600", color: C.textSecondary, marginTop: 20 },
-  timeHint: { fontSize: 14, fontWeight: "700", color: C.pink, textAlign: "center", marginTop: 8 },
   wheelWrap: {
     height: WHEEL_H,
     overflow: "hidden",
-    borderRadius: 12,
-    backgroundColor: C.pinkPale,
+    borderRadius: 16,
+    backgroundColor: C.white,
+    ...NEU_INSET,
+  },
+  wheel: {
+    height: WHEEL_H,
   },
   wheelItem: {
     height: WHEEL_ITEM_H,
@@ -417,24 +425,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   wheelText: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "600",
-    color: C.textSecondary,
+    color: C.textTertiary,
+    letterSpacing: 0.5,
   },
   wheelTextActive: {
     color: C.pink,
     fontWeight: "900",
+    fontSize: 20,
   },
   wheelHighlight: {
     position: "absolute",
-    top: WHEEL_ITEM_H,
+    top: WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2),
     left: 0,
     right: 0,
     height: WHEEL_ITEM_H,
-    backgroundColor: C.pink,
-    opacity: 0.08,
-    borderRadius: 8,
+    backgroundColor: "rgba(255,105,180,0.08)",
+    borderRadius: 12,
+    zIndex: 1,
+    pointerEvents: "none",
   },
+  selectedTimeWrap: {
+    alignItems: "center",
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255,105,180,0.08)",
+    borderRadius: 10,
+    alignSelf: "center",
+  },
+  selectedTimeLabel: { fontSize: 10, fontWeight: "800", color: C.textTertiary, letterSpacing: 1 },
+  selectedTimeValue: { fontSize: 16, fontWeight: "900", color: C.pink, marginTop: 2 },
 
   // List toggles
   listToggle: {
