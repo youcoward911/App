@@ -375,7 +375,7 @@ export default function HomeScreen({ navigation }) {
                   </View>
                   <TouchableOpacity
                     style={styles.editBtn}
-                    onPress={() => { setShowBlockList(false); setTimeout(() => handleEditApps(list.id), 800); }}
+                    onPress={() => { setShowBlockList(false); setTimeout(() => navigation.navigate("BlockListDetail", { listId: list.id }), 400); }}
                   >
                     <Text style={styles.editBtnText}>Edit</Text>
                   </TouchableOpacity>
@@ -393,6 +393,8 @@ export default function HomeScreen({ navigation }) {
                     const newId = `list_${Date.now()}`;
                     const name = `Slop List ${listNum}`;
                     dispatch({ type: "ADD_BLOCK_LIST", payload: { id: newId, name } });
+                    setShowBlockList(false);
+                    setTimeout(() => navigation.navigate("BlockListDetail", { listId: newId }), 400);
                   } else {
                     setShowBlockList(false);
                     setTimeout(() => {

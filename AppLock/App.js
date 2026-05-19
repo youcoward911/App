@@ -8,6 +8,7 @@ import { AppLockProvider, useAppLock } from "./src/context/AppLockContext";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import PaywallScreen from "./src/screens/PaywallScreen";
 import ScheduleScreen from "./src/screens/ScheduleScreen";
+import BlockListDetailScreen from "./src/screens/BlockListDetailScreen";
 import CustomAlert from "./src/components/CustomAlert";
 // AddAppsScreen removed — replaced by FamilyActivityPicker in onboarding
 import HomeScreen from "./src/screens/HomeScreen";
@@ -284,6 +285,11 @@ export default function App() {
           <Stack.Screen
             name="Schedules"
             component={ScheduleScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="BlockListDetail"
+            component={BlockListDetailScreen}
             options={{ presentation: "modal" }}
           />
         </Stack.Navigator>
