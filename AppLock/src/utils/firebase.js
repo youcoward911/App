@@ -2,17 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { initializeAuth, getReactNativePersistence, signInAnonymously } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
-
-const extra = Constants.expoConfig?.extra || {};
 
 const firebaseConfig = {
-  apiKey: extra.firebaseApiKey,
-  authDomain: extra.firebaseAuthDomain,
-  projectId: extra.firebaseProjectId,
-  storageBucket: extra.firebaseStorageBucket,
-  messagingSenderId: extra.firebaseMessagingSenderId,
-  appId: extra.firebaseAppId,
+  apiKey: "AIzaSyDI•••••••••••••••••••••••••••••••",
+  authDomain: "scrollpig.firebaseapp.com",
+  projectId: "scrollpig",
+  storageBucket: "scrollpig.firebasestorage.app",
+  messagingSenderId: "1086523023976",
+  appId: "1:1086523023976:web:904f1d5bcd8822359151dd",
 };
 
 const app = initializeApp(firebaseConfig);
