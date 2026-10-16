@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   speechBubble: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,

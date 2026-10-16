@@ -8,16 +8,16 @@ export const C = {
   white: "#FFFFFF",
   card: "#FFFFFF",
 
-  // Brand — hot pink accent
-  pink: "#FF69B4",
-  pinkLight: "#FF8AC6",
-  pinkPale: "#FFD6EB",
-  pinkBg: "#FFF5FA",
+  // Brand
+  pink: "#F7A0B2",
+  pinkLight: "#F7A0B2",
+  pinkPale: "#F0D4DE",
+  pinkBg: "#FFF5F8",
 
-  // Text — black
-  text: "#4A2040",
-  textSecondary: "#8E6080",
-  textTertiary: "#B898A8",
+  // Text
+  text: "#2D2D2D",
+  textSecondary: "#2D2D2D",
+  textTertiary: "#2D2D2D",
   textOnPink: "#FFFFFF",
 
   // Accent
@@ -121,36 +121,32 @@ export const T = {
     fontFamily: FONT,
   },
   body: {
-    fontSize: 15,
-    fontWeight: "300",
+    fontSize: 13,
+    fontWeight: "600",
     color: C.textSecondary,
-    lineHeight: 22,
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    lineHeight: 20,
+    letterSpacing: 0.3,
     fontFamily: FONT,
   },
   bodyBold: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "600",
     color: C.text,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
+    letterSpacing: 0.3,
     fontFamily: FONT,
   },
   caption: {
-    fontSize: 12,
-    fontWeight: "300",
+    fontSize: 13,
+    fontWeight: "600",
     color: C.textTertiary,
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    letterSpacing: 0.3,
     fontFamily: FONT,
   },
   label: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "600",
     color: C.textTertiary,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
+    letterSpacing: 0.3,
     fontFamily: FONT,
   },
   stat: {
@@ -170,11 +166,10 @@ export const T = {
     fontFamily: FONT,
   },
   button: {
-    fontSize: 16,
-    fontWeight: "900",
+    fontSize: 13,
+    fontWeight: "600",
     color: C.textOnPink,
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    letterSpacing: 0.3,
     fontFamily: FONT,
   },
 };

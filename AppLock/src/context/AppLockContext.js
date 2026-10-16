@@ -5,6 +5,8 @@ import * as SecureStore from "expo-secure-store";
 import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification, notifyPeekExpired, schedulePeekExpiryNotification, notifySurrender } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 import { updateLeaderboard } from "../utils/leaderboard";
+import { syncUserToFirestore, loadUserFromFirestore, shouldSync } from "../utils/userSync";
+import { logEvent } from "../utils/analytics";
 import {
   syncToAppGroup,
   syncFromAppGroup,
@@ -61,7 +63,7 @@ const initialState = {
     activeListIds: ["default"],
   },
   blockLists: [
-    { id: "default", name: "Slop Lock", appCount: 0, isActive: true },
+    { id: "default", name: "Slop List", appCount: 0, isActive: true },
   ],
   schedules: [],
   piggyCoins: 50,
@@ -78,6 +80,7 @@ const initialState = {
   bestIronSnout: 0,
   isProPig: false,
   proPigSince: null,
+  activeSkin: "default",
   settings: {
     defaultPeekFee: 1,
     defaultFullFee: 10,
@@ -115,7 +118,7 @@ function migrateState(payload) {
   if (!migrated.blockLists) {
     const appCount = migrated.slopLock?.appCount || 0;
     migrated.blockLists = [
-      { id: "default", name: "Slop Lock", appCount, isActive: true },
+      { id: "default", name: "Slop List", appCount, isActive: true },
     ];
   }
 
@@ -372,6 +375,30 @@ function reducer(state, action) {
       };
     }
 
+    case "SET_SKIN": {
+      return { ...state, activeSkin: action.payload };
+    }
+
+    case "ADD_COINS": {
+      return { ...state, piggyCoins: state.piggyCoins + (action.payload.coins || 0) };
+    }
+
+    case "PAY_TRIBUTE": {
+      const fee = action.payload.fee || 10;
+      if (state.piggyCoins < fee) return state;
+      const today = new Date().toDateString();
+      const isTodaySame = state.tributesTodayDate === today;
+      return {
+        ...state,
+        piggyCoins: state.piggyCoins - fee,
+        totalCoinsSpent: state.totalCoinsSpent + fee,
+        totalUnlocks: state.totalUnlocks + 1,
+        tributesToday: isTodaySame ? (state.tributesToday || 0) + 1 : 1,
+        tributesTodayDate: today,
+        lastTributeTime: Date.now(),
+      };
+    }
+
     default:
       return state;
   }
@@ -379,6 +406,7 @@ function reducer(state, action) {
 
 export function AppLockProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const stateLoaded = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -393,16 +421,32 @@ export function AppLockProvider({ children }) {
         if (stored) {
           const parsed = JSON.parse(stored);
           dispatch({ type: "LOAD_STATE", payload: parsed });
+          stateLoaded.current = true;
           await refreshNotifications(parsed.lastTributeTime);
+        } else {
+          stateLoaded.current = true;
         }
 
         if (!stored) {
-          // Fresh install — grant welcome bonus
-          dispatch({ type: "WELCOME_BONUS" });
-          if (Platform.OS === "ios") {
-            try {
-              await SecureStore.setItemAsync(WELCOME_BONUS_KEY, "1");
-            } catch (e) {}
+          // Fresh install — try restoring from Firestore (returning user)
+          try {
+            const cloudData = await loadUserFromFirestore();
+            if (cloudData) {
+              dispatch({ type: "LOAD_STATE", payload: cloudData });
+              stateLoaded.current = true;
+            }
+          } catch (e) {
+            console.warn("Firestore restore failed:", e);
+          }
+
+          // Grant welcome bonus only if no cloud restore happened
+          if (!stateLoaded.current) {
+            dispatch({ type: "WELCOME_BONUS" });
+            if (Platform.OS === "ios") {
+              try {
+                await SecureStore.setItemAsync(WELCOME_BONUS_KEY, "1");
+              } catch (e) {}
+            }
           }
         }
 
@@ -455,7 +499,7 @@ export function AppLockProvider({ children }) {
     const lock = state.slopLock;
     if (lock.isLocked && lock.lockExpiresAt && lock.lockExpiresAt !== prevLockExpiresRef.current) {
       prevLockExpiresRef.current = lock.lockExpiresAt;
-      scheduleLockExpiryNotification("Slop Lock", lock.lockExpiresAt).catch(() => {});
+      scheduleLockExpiryNotification("Slop List", lock.lockExpiresAt).catch(() => {});
     }
   }, [state.slopLock.lockExpiresAt]);
 
@@ -468,6 +512,7 @@ export function AppLockProvider({ children }) {
   }, [state.lastTributeTime]);
 
   useEffect(() => {
+    if (!stateLoaded.current) return;
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch((e) =>
       console.warn("Failed to save state:", e)
     );
@@ -498,6 +543,26 @@ export function AppLockProvider({ children }) {
     });
     return () => sub.remove();
   }, [state.piggyCoins]);
+
+  // Debounced Firestore sync — backs up meaningful state changes
+  const prevSyncState = useRef(state);
+  useEffect(() => {
+    if (!stateLoaded.current) return;
+    if (!shouldSync(prevSyncState.current, state)) return;
+    const timer = setTimeout(() => {
+      prevSyncState.current = state;
+      syncUserToFirestore(state).catch((e) => console.warn("Firestore sync failed:", e));
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [state]);
+
+  // Analytics: log key events
+  useEffect(() => {
+    if (!stateLoaded.current) return;
+    if (state.lastTributeTime) {
+      logEvent("tribute_paid", { coins: state.totalCoinsSpent });
+    }
+  }, [state.lastTributeTime]);
 
   return (
     <AppLockContext.Provider value={{ state, dispatch }}>

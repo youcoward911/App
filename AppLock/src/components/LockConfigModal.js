@@ -99,14 +99,24 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
     ? CUSTOM_MINUTES[customIdx].label
     : DURATION_PRESETS[durationIdx].label;
 
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    if (visible) {
+      Animated.timing(overlayOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+    } else {
+      overlayOpacity.setValue(0);
+    }
+  }, [visible]);
+
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: swipeY }] }]} onStartShouldSetResponder={() => true}>
+      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
+      <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: swipeY }] }]}>
           <View {...handlePanResponder.panHandlers} style={styles.handleZone}>
             <View style={styles.handle} />
           </View>
-          <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+          <ScrollView showsVerticalScrollIndicator={false} bounces={false} nestedScrollEnabled={true}>
           <Text style={styles.title}>Lock {appName}</Text>
 
           {/* Duration Section */}
@@ -138,6 +148,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
               <ScrollView
                 ref={scrollRef}
                 style={styles.wheel}
+                nestedScrollEnabled={true}
                 contentContainerStyle={{
                   paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
                 }}
@@ -178,7 +189,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
           </View>
           </ScrollView>
         </Animated.View>
-      </TouchableOpacity>
+      </Animated.View>
     </Modal>
   );
 }

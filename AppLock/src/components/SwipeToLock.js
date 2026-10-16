@@ -2,46 +2,48 @@ import React, { useRef, useEffect } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Animated,
   PanResponder,
   Easing,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 import { C } from "../utils/theme";
 import { heavyTap } from "../utils/haptics";
 
-const TRACK_W = 260;
-const THUMB_SIZE = 56;
-const MAX_SLIDE = TRACK_W - THUMB_SIZE - 8;
+const ICON_LOCK = require("../../assets/icon-lock-slider.png");
+
+const { width: SCREEN_W } = require("react-native").Dimensions.get("window");
+const TRACK_W = SCREEN_W - 40;
+const THUMB_SIZE = 54;
+const MAX_SLIDE = TRACK_W - THUMB_SIZE - 12;
 
 export default function SlideToLock({ onLock, locked }) {
   const pan = useRef(new Animated.Value(0)).current;
   const triggered = useRef(false);
   const lastDx = useRef(0);
-  const arrowPulse = useRef(new Animated.Value(0.3)).current;
 
-  // Subtle pulsing glow on the arrow
+  // Shimmer animation — sweeps across the text
+  const shimmerPos = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (locked) return;
-    const pulse = Animated.loop(
+    const shimmer = Animated.loop(
       Animated.sequence([
-        Animated.timing(arrowPulse, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(arrowPulse, {
-          toValue: 0.3,
-          duration: 1200,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
+        Animated.timing(shimmerPos, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(shimmerPos, { toValue: 0, duration: 0, useNativeDriver: true }),
+        Animated.delay(1000),
       ])
     );
-    pulse.start();
-    return () => pulse.stop();
+    shimmer.start();
+    return () => shimmer.stop();
   }, [locked]);
+
+  const shimmerTranslateX = shimmerPos.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-200, 250],
+  });
 
   const snapToLock = () => {
     triggered.current = true;
@@ -79,8 +81,6 @@ export default function SlideToLock({ onLock, locked }) {
         const x = Math.max(0, Math.min(g.dx, MAX_SLIDE));
         lastDx.current = x;
         pan.setValue(x);
-
-        // Auto-magnet: if past 40%, snap to lock immediately
         if (x >= MAX_SLIDE * 0.4) {
           snapToLock();
         }
@@ -92,9 +92,9 @@ export default function SlideToLock({ onLock, locked }) {
     })
   ).current;
 
-  const shimmer = pan.interpolate({
+  const textOpacity = pan.interpolate({
     inputRange: [0, MAX_SLIDE * 0.3],
-    outputRange: [1, 0],
+    outputRange: [0.8, 0],
     extrapolate: "clamp",
   });
 
@@ -107,75 +107,103 @@ export default function SlideToLock({ onLock, locked }) {
   }
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.track} {...panResponder.panHandlers}>
-        <Animated.View
-          style={[styles.thumb, { transform: [{ translateX: pan }] }]}
-        />
-        <Animated.View style={[styles.arrowWrap, { opacity: Animated.multiply(shimmer, arrowPulse), transform: [{ translateX: pan }] }]}>
-          <Text style={styles.trackLabel}>›</Text>
-        </Animated.View>
-      </View>
-      <Text style={styles.hint}>swipe to lock</Text>
+    <View style={styles.track} {...panResponder.panHandlers}>
+      {/* Swipe text — gradient from pink to dark, with shimmer */}
+      <Animated.View style={[styles.textWrap, { opacity: textOpacity }]}>
+        <MaskedView
+          maskElement={
+            <Text style={styles.swipeTextMask} numberOfLines={1}>SWIPE TO LOCK SLOP</Text>
+          }
+        >
+          <LinearGradient
+            colors={["#2D2D2D", "#2D2D2D"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={[styles.swipeTextMask, { opacity: 0 }]} numberOfLines={1}>SWIPE TO LOCK SLOP</Text>
+          </LinearGradient>
+          {/* Shimmer overlay */}
+          <Animated.View
+            style={[styles.shimmer, { transform: [{ translateX: shimmerTranslateX }] }]}
+            pointerEvents="none"
+          />
+        </MaskedView>
+      </Animated.View>
+
+      {/* Thumb — white circle with lock icon */}
+      <Animated.View style={[styles.thumb, { transform: [{ translateX: pan }] }]}>
+        <Image source={ICON_LOCK} style={styles.lockIcon} resizeMode="contain" />
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    alignItems: "center",
-  },
   track: {
     width: TRACK_W,
-    height: THUMB_SIZE + 8,
-    borderRadius: (THUMB_SIZE + 8) / 2,
-    backgroundColor: "#FFE0EE",
+    height: THUMB_SIZE + 10,
+    borderRadius: 32,
+    backgroundColor: "rgba(255,255,255,0.3)",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.35)",
   },
-  arrowWrap: {
+  textWrap: {
     position: "absolute",
-    left: THUMB_SIZE + 8,
+    left: THUMB_SIZE + 10,
+    right: 8,
     top: 0,
     bottom: 0,
     justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
-  trackLabel: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: C.pink,
+  swipeTextMask: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+    textAlign: "center",
+  },
+  shimmer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 60,
+    backgroundColor: "rgba(255,255,255,0.35)",
   },
   thumb: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
-    backgroundColor: C.pink,
+    backgroundColor: "#F5F3F0",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: C.pink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
+    shadowColor: "#F7A0B2",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
   },
-  hint: {
-    fontSize: 9,
-    fontWeight: "500",
-    color: C.textTertiary,
-    letterSpacing: 0.5,
-    marginTop: 3,
-    textTransform: "uppercase",
+  lockIcon: {
+    width: 15,
+    height: 17,
+    tintColor: "#2D2D2D",
   },
   lockedWrap: {
     width: TRACK_W,
-    height: THUMB_SIZE + 8,
-    borderRadius: (THUMB_SIZE + 8) / 2,
-    backgroundColor: C.pink,
+    height: THUMB_SIZE + 10,
+    borderRadius: 32,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderWidth: 1.5,
+    borderColor: "#2D2D2D",
     alignItems: "center",
     justifyContent: "center",
   },
   lockedText: {
-    color: "#FFF",
+    color: "#2D2D2D",
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.5,

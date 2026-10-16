@@ -7,7 +7,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { C } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
-import PigMascot from "../components/PigMascot";
+import { showAlert } from "../components/CustomAlert";
+import PigIdleWebView from "../components/PigIdleWebView";
 import { requestAuthorization, getAuthorizationStatus, isScreenTimeAvailable, showAppPicker } from "../native/ScreenTime";
 import { useAppLock } from "../context/AppLockContext";
 
@@ -31,10 +32,33 @@ export default function OnboardingScreen({ onComplete }) {
   const handleGrant = async () => {
     if (isScreenTimeAvailable()) {
       try {
+        // Check current status first
+        const status = await getAuthorizationStatus();
+        if (status.status === "approved") {
+          // Already authorized
+          setStep(2);
+          return;
+        }
+        if (status.status === "denied") {
+          // Previously denied — must go to Settings
+          showAlert(
+            "Access Denied",
+            "Screen Time access was previously denied. Please go to Settings > Screen Time > Scroll Pig and enable it.",
+          );
+          return;
+        }
+        // Not determined — show the system prompt
         await requestAuthorization();
-      } catch (e) {}
+        setStep(2);
+      } catch (e) {
+        showAlert(
+          "Access Required",
+          "Scroll Pig needs Screen Time access to block apps. Please tap Grant Access and allow it.",
+        );
+      }
+    } else {
+      setStep(2);
     }
-    setStep(2);
   };
 
   const handleAddSlop = async () => {
@@ -59,7 +83,7 @@ export default function OnboardingScreen({ onComplete }) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
           <View style={styles.spacer} />
-          <PigMascot size={120} />
+          <PigIdleWebView size={120} />
           <Text style={styles.title}>Hi Piggy!</Text>
           <Text style={styles.message}>
             Grant me access to your{"\n"}screen time controls.
@@ -83,10 +107,10 @@ export default function OnboardingScreen({ onComplete }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.content}>
         <View style={styles.spacer} />
-        <PigMascot size={120} />
+        <PigIdleWebView size={120} />
         <Text style={styles.title}>Very good.</Text>
         <Text style={styles.message}>
-          Already following directions. Now let me know which apps you'd like to add to your Slop Lock.
+          Already following directions. Now let me know which apps you'd like to add to your Slop List.
         </Text>
         <View style={styles.spacer} />
         <View style={styles.buttons}>
@@ -109,7 +133,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: "900",
-    color: "#000",
+    color: "#2D2D2D",
     textAlign: "center",
     letterSpacing: -1,
     marginTop: 28,

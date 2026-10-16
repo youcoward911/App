@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
-import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
+import { C, T, NEU_RAISED } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
 import { createSchedule, deleteSchedule as deleteScheduleNative, isScreenTimeAvailable } from "../native/ScreenTime";
@@ -67,9 +67,33 @@ export default function ScheduleScreen({ navigation }) {
 
   const [selectedDays, setSelectedDays] = useState([0, 1, 2, 3, 4]); // Mon-Fri
   const [startIdx, setStartIdx] = useState(36); // 9:00 AM
-  const [endIdx, setEndIdx] = useState(40);     // 10:00 AM (minimum 1hr after start)
+  const [endIdx, setEndIdx] = useState(40);     // 10:00 AM
   const startNotchRef = useRef(36);
   const endNotchRef = useRef(40);
+
+  const onStartScroll = useCallback((e) => {
+    const notch = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+    if (notch !== startNotchRef.current && notch >= 0 && notch < TIME_SLOTS.length) {
+      startNotchRef.current = notch;
+      lightTap();
+    }
+  }, []);
+  const onStartEnd = useCallback((e) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+    setStartIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
+  }, []);
+  const onEndScroll = useCallback((e) => {
+    const notch = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+    if (notch !== endNotchRef.current && notch >= 0 && notch < TIME_SLOTS.length) {
+      endNotchRef.current = notch;
+      lightTap();
+    }
+  }, []);
+  const onEndEnd = useCallback((e) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
+    setEndIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
+  }, []);
+
   const [selectedListIds, setSelectedListIds] = useState(
     state.blockLists.filter((l) => l.isActive).map((l) => l.id)
   );
@@ -87,22 +111,6 @@ export default function ScheduleScreen({ navigation }) {
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-
-  const onStartScroll = useCallback((e) => {
-    const notch = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
-    if (notch !== startNotchRef.current && notch >= 0 && notch < TIME_SLOTS.length) {
-      startNotchRef.current = notch;
-      lightTap();
-    }
-  }, []);
-
-  const onEndScroll = useCallback((e) => {
-    const notch = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
-    if (notch !== endNotchRef.current && notch >= 0 && notch < TIME_SLOTS.length) {
-      endNotchRef.current = notch;
-      lightTap();
-    }
-  }, []);
 
   const handleCreate = async () => {
     if (selectedDays.length === 0) {
@@ -228,8 +236,9 @@ export default function ScheduleScreen({ navigation }) {
 
       {/* Create Schedule Modal */}
       <Modal visible={showCreate} transparent animationType="slide">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowCreate(false)}>
-          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: createSwipeY }] }]} onStartShouldSetResponder={() => true}>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={{flex:1}} activeOpacity={1} onPress={() => setShowCreate(false)} />
+          <Animated.View style={[styles.modalSheet, { transform: [{ translateY: createSwipeY }] }]}>
             <View {...createPanResponder.panHandlers} style={styles.handleZone}>
               <View style={styles.modalHandle} />
             </View>
@@ -258,20 +267,15 @@ export default function ScheduleScreen({ navigation }) {
                   <View style={styles.wheelHighlight} />
                   <ScrollView
                     style={styles.wheel}
+                    nestedScrollEnabled={true}
                     showsVerticalScrollIndicator={false}
                     snapToInterval={WHEEL_ITEM_H}
                     decelerationRate="fast"
-                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2) }}
+                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H }}
                     onScroll={onStartScroll}
                     scrollEventThrottle={16}
-                    onMomentumScrollEnd={(e) => {
-                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
-                      setStartIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
-                    }}
-                    onScrollEndDrag={(e) => {
-                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
-                      setStartIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
-                    }}
+                    onMomentumScrollEnd={onStartEnd}
+                    onScrollEndDrag={onStartEnd}
                     contentOffset={{ x: 0, y: startIdx * WHEEL_ITEM_H }}
                   >
                     {TIME_SLOTS.map((slot, i) => (
@@ -289,20 +293,15 @@ export default function ScheduleScreen({ navigation }) {
                   <View style={styles.wheelHighlight} />
                   <ScrollView
                     style={styles.wheel}
+                    nestedScrollEnabled={true}
                     showsVerticalScrollIndicator={false}
                     snapToInterval={WHEEL_ITEM_H}
                     decelerationRate="fast"
-                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2) }}
+                    contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H }}
                     onScroll={onEndScroll}
                     scrollEventThrottle={16}
-                    onMomentumScrollEnd={(e) => {
-                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
-                      setEndIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
-                    }}
-                    onScrollEndDrag={(e) => {
-                      const idx = Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H);
-                      setEndIdx(Math.max(0, Math.min(idx, TIME_SLOTS.length - 1)));
-                    }}
+                    onMomentumScrollEnd={onEndEnd}
+                    onScrollEndDrag={onEndEnd}
                     contentOffset={{ x: 0, y: endIdx * WHEEL_ITEM_H }}
                   >
                     {TIME_SLOTS.map((slot, i) => (
@@ -339,7 +338,7 @@ export default function ScheduleScreen({ navigation }) {
               <GlowButton title="Cancel" ghost onPress={() => setShowCreate(false)} />
             </View>
           </Animated.View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -404,45 +403,30 @@ const styles = StyleSheet.create({
   dayText: { fontSize: 12, fontWeight: "700", color: C.textSecondary },
   dayTextActive: { color: "#FFF" },
 
-  // Time wheels — matches LockConfigModal style
+  // Time wheels
   timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
   timeBlock: { alignItems: "center", flex: 1 },
-  timeLabel: { ...T.caption, marginBottom: 6 },
-  timeDash: { fontSize: 16, fontWeight: "600", color: C.textSecondary, marginTop: 20 },
+  timeLabel: { fontSize: 11, fontWeight: "700", color: C.textTertiary, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 },
+  timeDash: { fontSize: 16, fontWeight: "700", color: C.textTertiary, marginTop: 14 },
   wheelWrap: {
-    height: WHEEL_H,
+    height: WHEEL_ITEM_H * 3,
     overflow: "hidden",
     borderRadius: 16,
-    backgroundColor: C.white,
-    ...NEU_INSET,
+    backgroundColor: "rgba(0,0,0,0.02)",
   },
-  wheel: {
-    height: WHEEL_H,
-  },
-  wheelItem: {
-    height: WHEEL_ITEM_H,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  wheelText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: C.textTertiary,
-    letterSpacing: 0.5,
-  },
-  wheelTextActive: {
-    color: C.pink,
-    fontWeight: "900",
-    fontSize: 20,
-  },
+  wheel: { height: WHEEL_ITEM_H * 3 },
+  wheelItem: { height: WHEEL_ITEM_H, justifyContent: "center", alignItems: "center" },
+  wheelText: { fontSize: 16, fontWeight: "500", color: "rgba(0,0,0,0.2)" },
+  wheelTextActive: { color: C.text, fontWeight: "800", fontSize: 19 },
   wheelHighlight: {
     position: "absolute",
-    top: WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2),
-    left: 0,
-    right: 0,
+    top: WHEEL_ITEM_H,
+    left: 6, right: 6,
     height: WHEEL_ITEM_H,
-    backgroundColor: "rgba(255,105,180,0.08)",
+    backgroundColor: "rgba(255,133,160,0.06)",
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,133,160,0.12)",
     zIndex: 1,
     pointerEvents: "none",
   },
@@ -451,7 +435,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(255,105,180,0.08)",
+    backgroundColor: "rgba(255,133,160,0.08)",
     borderRadius: 10,
     alignSelf: "center",
   },

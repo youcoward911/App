@@ -15,6 +15,7 @@ import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
 import { isScreenTimeAvailable, showAppPickerForList, deleteBlockList as deleteBlockListNative } from "../native/ScreenTime";
 import { lightTap, successTap, warningTap } from "../utils/haptics";
+import SelectedAppsList from "../components/SelectedAppsList";
 
 export default function BlockListDetailScreen({ route, navigation }) {
   const listId = route?.params?.listId || "default";
@@ -120,25 +121,8 @@ export default function BlockListDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* App count display */}
-        {list.appCount > 0 ? (
-          <View style={[styles.appsCard, NEU_RAISED]}>
-            {Array.from({ length: Math.min(list.appCount, 6) }).map((_, i) => (
-              <View key={i} style={styles.appPlaceholder}>
-                <View style={styles.appPlaceholderIcon} />
-                <View style={styles.appPlaceholderLine} />
-              </View>
-            ))}
-            {list.appCount > 6 && (
-              <Text style={styles.moreApps}>+{list.appCount - 6} more</Text>
-            )}
-          </View>
-        ) : (
-          <View style={[styles.appsCard, NEU_RAISED, styles.appsCardEmpty]}>
-            <Text style={styles.emptyText}>No apps selected yet</Text>
-            <Text style={styles.emptySubtext}>Tap "Add / Remove" to choose apps</Text>
-          </View>
-        )}
+        {/* App list — native view shows real icons + names */}
+        <SelectedAppsList listId={list.id} appCount={list.appCount} />
 
         {/* Spacer */}
         <View style={{ flex: 1 }} />

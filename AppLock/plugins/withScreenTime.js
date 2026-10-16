@@ -13,19 +13,28 @@ const NATIVE_FILES = [
   "ScreenTimeModule.m",
   "AppPickerViewController.swift",
   "SharedDefaults.swift",
+  "SelectedAppsView.swift",
+  "SelectedAppsViewManager.swift",
+  "SelectedAppsViewManager.m",
+  "AppIconsRowView.swift",
+  "AppIconsRowViewManager.swift",
+  "AppIconsRowViewManager.m",
+  "DeviceActivityReportView.swift",
+  "DeviceActivityReportViewManager.m",
 ];
 
+// Extension target (DeviceActivityReport) is handled by @bacons/apple-targets
+// via targets/report/expo-target.config.js
+
 function withScreenTime(config) {
-  // 1. Family Controls entitlement — only when ENABLE_FAMILY_CONTROLS=1 (GitHub Actions)
-  if (process.env.ENABLE_FAMILY_CONTROLS === "1") {
-    config = withEntitlementsPlist(config, (mod) => {
-      mod.modResults["com.apple.developer.family-controls"] = true;
-      // Remove push notification entitlement — not needed
-      delete mod.modResults["aps-environment"];
-      return mod;
-    });
-    console.log("[withScreenTime] Family Controls entitlement ENABLED");
-  }
+  // 1. Family Controls entitlement — always enabled
+  config = withEntitlementsPlist(config, (mod) => {
+    mod.modResults["com.apple.developer.family-controls"] = true;
+    // Remove push notification entitlement — not needed
+    delete mod.modResults["aps-environment"];
+    return mod;
+  });
+  console.log("[withScreenTime] Family Controls entitlement ENABLED");
 
   // 2. Copy native module files into the app target
   config = withDangerousMod(config, [
@@ -61,10 +70,11 @@ function withScreenTime(config) {
         }
       }
 
-      // Patch Podfile for DEVELOPMENT_TEAM on resource bundles
+      // Patch Podfile
       const podfile = path.join(platformRoot, "Podfile");
       if (fs.existsSync(podfile)) {
         let content = fs.readFileSync(podfile, "utf8");
+
         const teamPatch = `
     # Set DEVELOPMENT_TEAM on all targets to fix Xcode 14+ resource bundle signing
     installer.pods_project.targets.each do |target|
@@ -78,6 +88,9 @@ function withScreenTime(config) {
         );
         fs.writeFileSync(podfile, content);
       }
+
+      // DeviceActivityReport extension target is handled by @bacons/apple-targets
+      // from targets/report/ — no manual copying needed here.
 
       console.log("[withScreenTime] copied native module files + patched Podfile");
       return mod;
@@ -102,13 +115,14 @@ function withScreenTime(config) {
       if (cfg.buildSettings) {
         cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = "16.0";
         cfg.buildSettings.DEVELOPMENT_TEAM = TEAM_ID;
-        cfg.buildSettings.CODE_SIGN_STYLE = "Automatic";
         // Ensure Swift bridging header is set
         if (cfg.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === "com.paypig.app") {
           cfg.buildSettings.SWIFT_OBJC_BRIDGING_HEADER = `${appName}/${appName}-Bridging-Header.h`;
         }
       }
     }
+
+    // Extension target is created by @bacons/apple-targets from targets/report/
 
     console.log("[withScreenTime] added native source files to Xcode project");
     return mod;

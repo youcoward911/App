@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   edge: { position: "absolute", backgroundColor: "#CC8800" },
   face: {
     position: "absolute",
-    backgroundColor: "#FF69B4",
+    backgroundColor: "#D4839B",
     alignItems: "center", justifyContent: "center",
     borderWidth: 1, borderColor: "#FFD700",
   },

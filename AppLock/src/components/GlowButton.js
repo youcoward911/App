@@ -39,11 +39,11 @@ export default function GlowButton({ title, onPress, style, textStyle, ghost = f
       style={[
         styles.glowWrap,
         {
-          shadowColor: C.pink,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: glowOpacity,
-          shadowRadius: glowRadius,
-          elevation: 10,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 3,
         },
         style,
       ]}
@@ -61,14 +61,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   btn: {
-    backgroundColor: C.pink,
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 16,
     width: "100%",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  btnText: { ...T.button },
+  btnText: { ...T.button, color: "#2D2D2D", fontWeight: "500" },
   ghost: { paddingVertical: 10, alignItems: "center" },
   ghostText: { ...T.body, color: C.text, fontWeight: "600" },
 });

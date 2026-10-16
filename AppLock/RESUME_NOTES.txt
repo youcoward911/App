@@ -1,0 +1,2 @@
+Resume: implementing UXPilot Figma design for Scroll Pig homepage. Figma MCP server added, needs restart to
+   connect.

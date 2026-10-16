@@ -28,7 +28,7 @@ class ScreenTimeModule: RCTEventEmitter {
   @objc
   func requestAuthorization(_ resolve: @escaping RCTPromiseResolveBlock,
                             rejecter reject: @escaping RCTPromiseRejectBlock) {
-    Task {
+    Task { @MainActor in
       do {
         try await center.requestAuthorization(for: .individual)
         resolve(["status": "approved"])

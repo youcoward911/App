@@ -10,6 +10,7 @@ import {
   purchaseUpdatedListener,
   purchaseErrorListener,
 } from "expo-iap";
+import { callValidateReceipt, callValidateSubscription } from "./cloudFunctions";
 
 // StoreKit product IDs — must match App Store Connect
 export const PRODUCT_IDS = [
@@ -67,9 +68,25 @@ export async function initIAP() {
       }
       if (pendingResolver) {
         const sku = purchase?.productId || purchase?.id || pendingProductId;
+        const receiptData = purchase?.transactionReceipt;
+
+        // Server-side receipt validation — fall back to optimistic credit on failure
+        let coins = PRODUCT_COINS[sku] || 0;
+        if (receiptData) {
+          try {
+            const validation = await callValidateReceipt(receiptData, sku);
+            if (validation.valid && !validation.duplicate) {
+              coins = validation.coins || coins;
+            }
+          } catch (e) {
+            // Network/server error — fall back to optimistic credit
+            console.warn("Receipt validation failed, using optimistic credit:", e);
+          }
+        }
+
         pendingResolver({
           success: true,
-          coins: PRODUCT_COINS[sku] || 0,
+          coins,
           price: PRODUCT_PRICES[sku] || 0,
         });
         pendingResolver = null;
@@ -236,17 +253,33 @@ export async function restorePurchases() {
   }
 
   try {
-    // Fetch available subscriptions to check receipt
-    const result = await fetchProducts({
-      skus: [SUBSCRIPTION_ID, SUBSCRIPTION_YEARLY_ID],
-      type: "subs",
-    });
     const { getAvailablePurchases } = require("expo-iap");
     const purchases = await getAvailablePurchases();
-    const hasPro = purchases?.some(
+    const subPurchase = purchases?.find(
       (p) => [SUBSCRIPTION_ID, SUBSCRIPTION_YEARLY_ID].includes(p.productId || p.id)
     );
-    return { success: true, hasPro };
+
+    if (!subPurchase) {
+      return { success: true, hasPro: false };
+    }
+
+    // Validate subscription server-side
+    const receiptData = subPurchase.transactionReceipt;
+    if (receiptData) {
+      try {
+        const validation = await callValidateSubscription(receiptData);
+        return {
+          success: true,
+          hasPro: validation.isActive,
+          expiresDate: validation.expiresDate,
+        };
+      } catch (e) {
+        console.warn("Subscription validation failed, using local check:", e);
+      }
+    }
+
+    // Fallback: trust the local purchase existence
+    return { success: true, hasPro: true };
   } catch (e) {
     return { success: false, error: e?.message || "Restore failed" };
   }

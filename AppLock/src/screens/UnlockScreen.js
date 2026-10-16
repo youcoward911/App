@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
-import PigMascot from "../components/PigMascot";
+import PigIdleWebView from "../components/PigIdleWebView";
 import CoinBadge from "../components/CoinBadge";
 import { trackUnlock } from "../utils/usageTracker";
 import {
@@ -26,6 +26,7 @@ import { warningTap, heavyTap, successTap } from "../utils/haptics";
 import { schedulePeekExpiryNotification, notifySurrender } from "../utils/notifications";
 import GlowButton from "../components/GlowButton";
 import WalletSVG from "../components/art/WalletSVG";
+import CloseButton from "../components/CloseButton";
 import CoinSVG from "../components/art/CoinSVG";
 import TroughSVG from "../components/art/TroughSVG";
 import GodHandSVG from "../components/art/GodHandSVG";
@@ -440,9 +441,7 @@ export default function UnlockScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.closeX}>X</Text>
-      </TouchableOpacity>
+      <CloseButton onPress={() => navigation.goBack()} style={styles.closeBtn} />
 
       <Animated.View style={[styles.contentWrap, { transform: [{ translateX: screenShake }] }]}>
         <View style={styles.content}>
@@ -477,7 +476,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* CONFIRM PEEK phase */}
           {phase === "confirm_peek" && (
             <View style={styles.middle}>
-              <PigMascot size={56} mood="restless" />
+              <PigIdleWebView size={56} />
               <Text style={styles.confirmTitle}>{peekShame}</Text>
               <View style={{ height: 24 }} />
               <Text style={styles.confirmBody}>{costLine}</Text>
@@ -487,7 +486,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* CONFIRM FULL (surrender) phase */}
           {phase === "confirm_full" && (
             <View style={styles.middle}>
-              <PigMascot size={56} mood="restless" />
+              <PigIdleWebView size={56} />
               <Text style={styles.confirmTitle}>{surrenderShame}</Text>
               <View style={{ height: 24 }} />
               <Text style={styles.confirmBody}>{costLine}</Text>
@@ -497,7 +496,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* BROKE phase */}
           {phase === "broke" && (
             <View style={styles.middle}>
-              <PigMascot size={70} mood="feral" />
+              <PigIdleWebView size={70} />
               <Text style={styles.brokeTitle}>BROKE</Text>
               <Text style={styles.brokeBody} numberOfLines={3}>{brokeMsg}</Text>
             </View>
@@ -506,7 +505,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* PEEKING phase — 60 second countdown, no elaborate animation */}
           {phase === "peeking" && (
             <View style={styles.middle}>
-              <PigMascot size={60} mood="restless" />
+              <PigIdleWebView size={60} />
               <Text style={styles.peekTimerLabel}>PEEK WINDOW</Text>
               <Text style={styles.peekTimerValue}>{peekCountdown}</Text>
               <Text style={styles.peekTimerUnit}>seconds</Text>
@@ -587,7 +586,7 @@ export default function UnlockScreen({ route, navigation }) {
                   { translateY: pigBob },
                 ],
               }]}>
-                <PigMascot size={90} mood="happy" />
+                <PigIdleWebView size={90} />
                 <Text style={styles.feastText}>*OINK OINK OINK*</Text>
               </Animated.View>
 

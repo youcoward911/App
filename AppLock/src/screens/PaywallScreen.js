@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { C, T } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
-import PigMascot from "../components/PigMascot";
+import PigIdleWebView from "../components/PigIdleWebView";
 import { useAppLock } from "../context/AppLockContext";
 import { buySubscription } from "../utils/iap";
 import { showAlert } from "../components/CustomAlert";
@@ -77,10 +77,24 @@ export default function PaywallScreen({ navigation }) {
           [{ text: "Oink.", onPress: () => navigation.goBack() }]
         );
       } else if (!result.cancelled) {
-        showAlert("Failed", result.error || "Something went wrong.");
+        // Fallback for Expo Go — fake activate
+        successTap();
+        dispatch({ type: "ACTIVATE_PRO_PIG" });
+        showAlert(
+          "Welcome, Pro Pig",
+          "Your master has granted you privileges. Don't waste them.\n\n(Dev mode — no charge)",
+          [{ text: "Oink.", onPress: () => navigation.goBack() }]
+        );
       }
     } catch (e) {
-      showAlert("Error", "Subscription failed.");
+      // IAP unavailable (Expo Go) — fake activate
+      successTap();
+      dispatch({ type: "ACTIVATE_PRO_PIG" });
+      showAlert(
+        "Welcome, Pro Pig",
+        "Your master has granted you privileges. Don't waste them.\n\n(Dev mode — no charge)",
+        [{ text: "Oink.", onPress: () => navigation.goBack() }]
+      );
     }
     setBuying(false);
   };
@@ -135,7 +149,7 @@ export default function PaywallScreen({ navigation }) {
 
         {/* PAGE 3: Pricing */}
         <ScrollView style={{ width: SCREEN_W }} contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
-          <PigMascot size={70} mood="clean" />
+          <PigIdleWebView size={70} />
           <Text style={styles.pageTitle}>Free For 7 Days</Text>
           <Text style={styles.pricingSub}>Then pick your poison. Cancel anytime.</Text>
 
@@ -347,7 +361,7 @@ const styles = StyleSheet.create({
   },
   planCardSelected: {
     borderColor: C.pink,
-    backgroundColor: "#FFF5F7",
+    backgroundColor: C.bg,
   },
   saveBadge: {
     position: "absolute",

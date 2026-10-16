@@ -11,10 +11,22 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { showAlert } from "../components/CustomAlert";
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
-import PigMascot from "../components/PigMascot";
+import PigIdleWebView from "../components/PigIdleWebView";
 import CoinBadge from "../components/CoinBadge";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import { initIAP, buyCoins, buySubscription, restorePurchases, endIAP } from "../utils/iap";
+import { lightTap } from "../utils/haptics";
+
+const SHOP_MESSAGES = [
+  "Buy more slop coins!",
+  "Coins let you unlock early!",
+  "Coins help you cave, piggy",
+  "Feed me coins!",
+  "More coins = more slop!",
+  "You know you want to buy some...",
+  "Oink oink, open that wallet!",
+  "Treat yourself to some coins!",
+];
 
 export default function CoinShopScreen({ navigation, route }) {
   const { state, dispatch } = useAppLock();
@@ -82,14 +94,14 @@ export default function CoinShopScreen({ navigation, route }) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.back}>Done</Text>
+          <TouchableOpacity style={styles.doneBtn} activeOpacity={0.6} onPress={() => { lightTap(); navigation.goBack(); }}>
+            <Text style={styles.doneBtnText}>Done</Text>
           </TouchableOpacity>
         </View>
 
         {/* Pig + Balance */}
         <View style={styles.hero}>
-          <PigMascot size={100} />
+          <PigIdleWebView size={160} idleMessages={SHOP_MESSAGES} />
           <Text style={styles.shopTitle}>Slop Coins</Text>
           <View style={styles.balanceWrap}>
             <CoinBadge amount={state.piggyCoins} />
@@ -300,9 +312,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 2,
+    paddingBottom: 0,
+    zIndex: 10,
   },
-  back: { ...T.body, color: C.pink, fontWeight: "600" },
+  doneBtn: {
+    backgroundColor: "rgba(255,133,160,0.15)",
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  doneBtnText: { fontSize: 15, fontWeight: "700", color: C.pink },
 
   // Hero
   hero: { alignItems: "center", paddingVertical: 20 },
@@ -312,7 +332,7 @@ const styles = StyleSheet.create({
 
   // Warning
   warningCard: {
-    backgroundColor: "#FFF0F0",
+    backgroundColor: C.bg,
     marginHorizontal: 24,
     borderRadius: 16,
     padding: 18,
@@ -321,7 +341,7 @@ const styles = StyleSheet.create({
     borderLeftColor: C.pink,
   },
   warningTitle: { ...T.label, color: C.pink, marginBottom: 6 },
-  warningBody: { ...T.body, fontSize: 14, color: "#8B4A4A", lineHeight: 22 },
+  warningBody: { ...T.body, fontSize: 14, color: "#2D2D2D", lineHeight: 22 },
 
   // Section
   sectionTitle: { ...T.h1, paddingHorizontal: 24, marginBottom: 4 },
@@ -403,7 +423,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   proCardActive: {
-    backgroundColor: "#FFF5F7",
+    backgroundColor: C.bg,
   },
   proBadge: {
     position: "absolute",

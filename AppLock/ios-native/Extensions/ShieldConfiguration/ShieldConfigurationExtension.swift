@@ -5,6 +5,12 @@ import UIKit
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     let shared = SharedDefaults.shared
 
+    // Warm coral from mockup C
+    private let bgColor = UIColor(red: 0.969, green: 0.702, blue: 0.659, alpha: 1.0) // #F7B3A8
+    private let btnPrimary = UIColor(red: 0.878, green: 0.824, blue: 0.722, alpha: 1.0) // warm cream
+    private let btnSecondary = UIColor(red: 1.0, green: 0.788, blue: 0.420, alpha: 1.0) // gold #FFC96B
+    private let textDark = UIColor(red: 0.494, green: 0.212, blue: 0.180, alpha: 1.0) // #7E362E
+
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         let peekFee = shared.defaultPeekFee
         let fullFee = shared.defaultFullFee
@@ -13,31 +19,31 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
         let subtitle: String
         if coins < peekFee {
-            subtitle = "\(shame)\n\nYou have \(coins) coins. You can't even afford a peek. Buy more, piggy."
+            subtitle = "\(shame)\n\n\(coins) coins — not enough to peek. Buy more, piggy."
         } else {
-            subtitle = "\(shame)\n\nYou have \(coins) coins."
+            subtitle = "\(shame)\n\n\(coins) coins available"
         }
 
         return ShieldConfiguration(
             backgroundBlurStyle: .systemUltraThinMaterial,
-            backgroundColor: UIColor(red: 1.0, green: 0.94, blue: 0.95, alpha: 1.0),
+            backgroundColor: bgColor,
             icon: nil,
             title: ShieldConfiguration.Label(
-                text: "Locked, Piggy",
-                color: UIColor.systemPink
+                text: "Slop Locked",
+                color: .white
             ),
             subtitle: ShieldConfiguration.Label(
                 text: subtitle,
-                color: UIColor.darkGray
+                color: .white
             ),
             primaryButtonLabel: ShieldConfiguration.Label(
-                text: "Peek (1 min) — \(peekFee) coins",
-                color: UIColor.white
+                text: "Peek (2 min) — \(peekFee) coins",
+                color: textDark
             ),
-            primaryButtonBackgroundColor: UIColor.systemPink,
+            primaryButtonBackgroundColor: .white,
             secondaryButtonLabel: ShieldConfiguration.Label(
                 text: "Full Unlock — \(fullFee) coins",
-                color: UIColor.systemPink
+                color: textDark
             )
         )
     }
@@ -47,13 +53,15 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     }
 
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
+        let shame = shared.randomShameMessage
+
         return ShieldConfiguration(
             backgroundBlurStyle: .systemUltraThinMaterial,
-            backgroundColor: UIColor(red: 1.0, green: 0.94, blue: 0.95, alpha: 1.0),
-            title: ShieldConfiguration.Label(text: "Locked, Piggy", color: .systemPink),
-            subtitle: ShieldConfiguration.Label(text: shared.randomShameMessage, color: .darkGray),
-            primaryButtonLabel: ShieldConfiguration.Label(text: "Close", color: .white),
-            primaryButtonBackgroundColor: .systemPink
+            backgroundColor: bgColor,
+            title: ShieldConfiguration.Label(text: "Slop Locked", color: .white),
+            subtitle: ShieldConfiguration.Label(text: shame, color: .white),
+            primaryButtonLabel: ShieldConfiguration.Label(text: "Close", color: textDark),
+            primaryButtonBackgroundColor: .white
         )
     }
 

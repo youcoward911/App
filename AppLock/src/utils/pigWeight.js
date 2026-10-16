@@ -41,6 +41,97 @@ export function getWeightProgress(totalCoinsSpent) {
   return Math.min(1, Math.max(0, progress));
 }
 
+// ─── XP / LEVEL SYSTEM ───
+// XP = totalCoinsSpent. Each level has an XP threshold and a pig tier name.
+// The glass-break animation triggers when XP crosses a level boundary.
+
+export const LEVELS = [
+  { level: 1,  xpRequired: 0,     tier: "Runt",           skin: null },
+  { level: 2,  xpRequired: 20,    tier: "Scrawny Pig",    skin: null },
+  { level: 3,  xpRequired: 60,    tier: "Lean Pig",       skin: "pirate" },
+  { level: 4,  xpRequired: 120,   tier: "Chonky Pig",     skin: "baller" },
+  { level: 5,  xpRequired: 200,   tier: "Mega Hog",       skin: null },
+  { level: 6,  xpRequired: 350,   tier: "Thicc Boar",     skin: "ghost" },
+  { level: 7,  xpRequired: 550,   tier: "Absolute Unit",  skin: "zombie" },
+  { level: 8,  xpRequired: 800,   tier: "Slop Lord",      skin: null },
+  { level: 9,  xpRequired: 1100,  tier: "Hog God",        skin: "punk" },
+  { level: 10, xpRequired: 1500,  tier: "Supreme Swine",  skin: "cowboy" },
+  { level: 11, xpRequired: 2000,  tier: "Elder Hog",      skin: null },
+  { level: 12, xpRequired: 2800,  tier: "Overlord Pig",   skin: "devil" },
+  { level: 13, xpRequired: 3800,  tier: "Mythic Boar",    skin: "astro" },
+  { level: 14, xpRequired: 5000,  tier: "Pig Royale",     skin: "king" },
+  { level: 15, xpRequired: 7500,  tier: "LEGENDARY",      skin: null },
+];
+
+export function getLevel(xp) {
+  let lvl = LEVELS[0];
+  for (const l of LEVELS) {
+    if (xp >= l.xpRequired) lvl = l;
+  }
+  return lvl;
+}
+
+export function getNextLevel(xp) {
+  const current = getLevel(xp);
+  const idx = LEVELS.findIndex((l) => l.level === current.level);
+  if (idx >= LEVELS.length - 1) return null;
+  return LEVELS[idx + 1];
+}
+
+export function getLevelProgress(xp) {
+  const current = getLevel(xp);
+  const next = getNextLevel(xp);
+  if (!next) return 1;
+  const range = next.xpRequired - current.xpRequired;
+  return Math.min(1, Math.max(0, (xp - current.xpRequired) / range));
+}
+
+export function getXPInLevel(xp) {
+  const current = getLevel(xp);
+  return xp - current.xpRequired;
+}
+
+export function getXPForLevel(xp) {
+  const current = getLevel(xp);
+  const next = getNextLevel(xp);
+  if (!next) return 0;
+  return next.xpRequired - current.xpRequired;
+}
+
+// Detect if a level-up just happened (oldXP was below threshold, newXP is at/above)
+export function checkLevelUp(oldXP, newXP) {
+  const oldLevel = getLevel(oldXP);
+  const newLevel = getLevel(newXP);
+  if (newLevel.level > oldLevel.level) {
+    return { from: oldLevel, to: newLevel };
+  }
+  return null;
+}
+
+// ─── ACHIEVEMENTS ───
+
+export const ACHIEVEMENT_DEFS = [
+  { id: "first_lock",    name: "First Lock",     desc: "Lock your apps for the first time", icon: "🔒", check: (s) => s.totalUnlocks >= 1 || s.slopLock?.isLocked },
+  { id: "hog_lord",      name: "Hog Lord",       desc: "Reach Level 5",                     icon: "👑", check: (s) => getLevel(s.totalCoinsSpent).level >= 5 },
+  { id: "slop_master",   name: "Slop Master",    desc: "Reach a 12-day streak",             icon: "🔥", check: (s) => (s.ironSnoutStreak >= 12 || s.bestIronSnout >= 12) },
+  { id: "glass_breaker", name: "Glass Breaker",  desc: "Level up for the first time",       icon: "💎", check: (s) => getLevel(s.totalCoinsSpent).level >= 2 },
+  { id: "big_spender",   name: "Big Spender",    desc: "Spend 500 coins",                   icon: "💸", check: (s) => s.totalCoinsSpent >= 500 },
+  { id: "iron_snout",    name: "Iron Snout",     desc: "Complete 5 locks without peeking",   icon: "🐽", check: (s) => s.bestIronSnout >= 5 },
+  { id: "mega_hog",      name: "Mega Hog",       desc: "Reach Level 5",                     icon: "🐷", check: (s) => getLevel(s.totalCoinsSpent).level >= 5 },
+  { id: "legendary",     name: "Legendary Pig",  desc: "Reach Level 10",                    icon: "⭐", check: (s) => getLevel(s.totalCoinsSpent).level >= 10 },
+  { id: "surrender_10",  name: "Serial Surrenderer", desc: "Surrender 10 times",            icon: "🏳️", check: (s) => s.totalSurrenders >= 10 },
+  { id: "peek_addict",   name: "Peek Addict",    desc: "Peek 20 times",                     icon: "👀", check: (s) => s.totalPeeks >= 20 },
+];
+
+export function getUnlockedAchievements(state) {
+  return ACHIEVEMENT_DEFS.filter((a) => a.check(state));
+}
+
+export function getNewAchievements(oldState, newState) {
+  const oldUnlocked = new Set(getUnlockedAchievements(oldState).map((a) => a.id));
+  return getUnlockedAchievements(newState).filter((a) => !oldUnlocked.has(a.id));
+}
+
 // Speech bubble messages per weight tier — cycled every ~30s
 export const PIG_SPEECH = {
   starving: [

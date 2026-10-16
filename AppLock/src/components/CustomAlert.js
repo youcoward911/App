@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: SCREEN_W - 64,
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     paddingTop: 28,
     paddingHorizontal: 24,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#000",
+    color: "#2D2D2D",
     textAlign: "center",
     marginBottom: 10,
     letterSpacing: -0.5,
@@ -144,24 +144,25 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
-    backgroundColor: C.pinkPale,
+    borderWidth: 1.5,
+    borderColor: "#F7A0B2",
   },
   btnPrimary: {
-    backgroundColor: C.pink,
+    borderColor: "#2D2D2D",
   },
   btnCancel: {
-    backgroundColor: "#F0F0F0",
+    borderColor: "#F7A0B2",
   },
   btnFull: {
-    backgroundColor: C.pink,
+    borderColor: "#2D2D2D",
   },
   btnText: {
     fontSize: 15,
     fontWeight: "700",
-    color: C.pink,
+    color: "#2D2D2D",
   },
   btnTextPrimary: {
-    color: "#FFF",
+    color: "#2D2D2D",
   },
   btnTextCancel: {
     color: C.textSecondary,

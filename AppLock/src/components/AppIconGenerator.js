@@ -52,7 +52,7 @@ export default function AppIconGenerator({ size = 200 }) {
 
 const styles = StyleSheet.create({
   bg: {
-    backgroundColor: "#FFF0F3",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     position: "relative",
     overflow: "hidden",

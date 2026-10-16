@@ -36,7 +36,7 @@ function Confetti() {
       x: new Animated.Value(Math.random() * SCREEN_W),
       y: new Animated.Value(-20 - Math.random() * 60),
       rotate: new Animated.Value(0),
-      color: ["#FF69B4", "#FFD700", "#FF6B9D", "#FFA0C4", "#FF85A2", "#FFB6C1", "#E8668A"][
+      color: ["#2D2D2D", "#FFD700", "#FF6B9D", "#FFA0C4", "#FF85A2", "#FFB6C1", "#E8668A"][
         Math.floor(Math.random() * 7)
       ],
       size: 6 + Math.random() * 8,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     width: SCREEN_W - 64,
     alignItems: "center",
-    shadowColor: "#FF69B4",
+    shadowColor: "#2D2D2D",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 30,
