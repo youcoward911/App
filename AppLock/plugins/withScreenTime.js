@@ -113,7 +113,7 @@ function withScreenTime(config) {
     for (const key in buildConfigs) {
       const cfg = buildConfigs[key];
       if (cfg.buildSettings) {
-        cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = "16.0";
+        cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = "18.0";
         cfg.buildSettings.DEVELOPMENT_TEAM = TEAM_ID;
         // Ensure Swift bridging header is set
         if (cfg.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === "com.paypig.app") {

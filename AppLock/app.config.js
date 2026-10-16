@@ -48,7 +48,7 @@ export default {
         },
       ],
       "expo-apple-authentication",
-      // "@bacons/apple-targets",
+      "@bacons/apple-targets",
     ],
     extra: {
       eas: {
