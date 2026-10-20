@@ -44,3 +44,6 @@ yarn-error.*
 credentials/
 certs/
 credentials.json
+
+# Copied from ios-native/ScreenTimeModule at prebuild (plugins/withScreenTime.js)
+targets/*/SharedDefaults.swift

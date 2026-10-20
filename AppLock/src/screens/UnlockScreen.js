@@ -12,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppLock } from "../context/AppLockContext";
 import PigIdleWebView from "../components/PigIdleWebView";
 import CoinBadge from "../components/CoinBadge";
+import PCoin from "../components/PCoin";
+import { getPeekCost, getPeekPercent } from "../utils/peekPricing";
 import { trackUnlock } from "../utils/usageTracker";
 import {
   getSingleRoast,
@@ -30,7 +32,7 @@ import CloseButton from "../components/CloseButton";
 import CoinSVG from "../components/art/CoinSVG";
 import TroughSVG from "../components/art/TroughSVG";
 import GodHandSVG from "../components/art/GodHandSVG";
-import { clearAllBlocks } from "../native/ScreenTime";
+import { clearAllBlocks, startPeek } from "../native/ScreenTime";
 import SlopSplashSVG from "../components/art/SlopSplashSVG";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
@@ -110,9 +112,8 @@ export default function UnlockScreen({ route, navigation }) {
   const btnOpacity = useRef(new Animated.Value(0)).current;
 
   const peekCount = lockInfo?.peekCount || 0;
-  const basePeekFee = lockInfo?.peekFee || 1;
   const fullFee = lockInfo?.fullFee || 10;
-  const peekCost = basePeekFee * Math.pow(2, peekCount);
+  const peekCost = getPeekCost(peekCount, fullFee, state.isProPig);
   const canAffordPeek = state.piggyCoins >= peekCost;
   const canAffordFull = state.piggyCoins >= fullFee;
 
@@ -242,8 +243,10 @@ export default function UnlockScreen({ route, navigation }) {
   const handleConfirmPeek = () => {
     successTap();
     dispatch({ type: "PEEK_SLOP" });
-    trackUnlock(appId, peekCost, lockInfo?.lockedAt).catch(() => {});
+    trackUnlock(appId, peekCost, lockInfo?.lockedAt, { kind: "peek" }).catch(() => {});
     clearAllBlocks().catch(() => {});
+    // Native re-block after 2 min — the JS timer stops once the user leaves for the peeked app
+    startPeek(2 * 60).catch(() => {});
     // Schedule "10 seconds left" warning notification
     const peekEnd = Date.now() + 2 * 60 * 1000;
     schedulePeekExpiryNotification(peekEnd).catch(() => {});
@@ -254,7 +257,7 @@ export default function UnlockScreen({ route, navigation }) {
   const handleConfirmFull = () => {
     successTap();
     dispatch({ type: "UNLOCK_SLOP" });
-    trackUnlock(appId, fullFee, lockInfo?.lockedAt).catch(() => {});
+    trackUnlock(appId, fullFee, lockInfo?.lockedAt, { kind: "surrender" }).catch(() => {});
     clearAllBlocks().catch(() => {});
     notifySurrender().catch(() => {});
     setPostShade(getPostUnlockDegradation());
@@ -435,7 +438,9 @@ export default function UnlockScreen({ route, navigation }) {
   };
 
   if (!lockInfo || !lockInfo.isLocked) {
-    navigation.goBack();
+    // Only pop once — re-renders while the screen is already leaving would
+    // dispatch an unhandled GO_BACK
+    if (navigation.isFocused() && navigation.canGoBack()) navigation.goBack();
     return null;
   }
 
@@ -445,14 +450,10 @@ export default function UnlockScreen({ route, navigation }) {
 
       <Animated.View style={[styles.contentWrap, { transform: [{ translateX: screenShake }] }]}>
         <View style={styles.content}>
-          {/* Lock header */}
-          <View style={styles.topRow}>
-            <Text style={styles.lockTitle}>SLOP LOCK</Text>
-          </View>
-
           {/* ROAST phase */}
           {phase === "roast" && (
             <View style={styles.middle}>
+              <PigIdleWebView size={200} />
               <Animated.Text
                 style={[styles.roast, { opacity: fade, transform: [{ translateY: slide }] }]}
                 numberOfLines={3}
@@ -460,15 +461,23 @@ export default function UnlockScreen({ route, navigation }) {
                 {roast}
               </Animated.Text>
 
-              {lockInfo.lockExpiresAt && (
-                <View style={styles.timerCard}>
-                  <Text style={styles.timerLabel}>LOCK EXPIRES IN</Text>
-                  <Text style={styles.timerValue}>{lockTimeLeft}</Text>
+              <Animated.View style={[styles.infoCard, { transform: [{ translateX: shake }] }]}>
+                {lockInfo.lockExpiresAt && (
+                  <>
+                    <View style={styles.infoCol}>
+                      <Text style={styles.infoLabel}>LOCK EXPIRES IN</Text>
+                      <Text style={styles.infoValue}>{lockTimeLeft}</Text>
+                    </View>
+                    <View style={styles.infoDivider} />
+                  </>
+                )}
+                <View style={styles.infoCol}>
+                  <Text style={styles.infoLabel}>YOUR COINS</Text>
+                  <View style={styles.infoCoinRow}>
+                    <PCoin size={26} style={{ marginRight: 6 }} />
+                    <Text style={styles.infoValue}>{state.piggyCoins}</Text>
+                  </View>
                 </View>
-              )}
-
-              <Animated.View style={[styles.feeCard, NEON_GLOW, { transform: [{ translateX: shake }] }]}>
-                <CoinBadge amount={state.piggyCoins} size="small" />
               </Animated.View>
             </View>
           )}
@@ -476,7 +485,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* CONFIRM PEEK phase */}
           {phase === "confirm_peek" && (
             <View style={styles.middle}>
-              <PigIdleWebView size={56} />
+              <PigIdleWebView size={224} />
               <Text style={styles.confirmTitle}>{peekShame}</Text>
               <View style={{ height: 24 }} />
               <Text style={styles.confirmBody}>{costLine}</Text>
@@ -486,7 +495,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* CONFIRM FULL (surrender) phase */}
           {phase === "confirm_full" && (
             <View style={styles.middle}>
-              <PigIdleWebView size={56} />
+              <PigIdleWebView size={224} />
               <Text style={styles.confirmTitle}>{surrenderShame}</Text>
               <View style={{ height: 24 }} />
               <Text style={styles.confirmBody}>{costLine}</Text>
@@ -496,7 +505,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* BROKE phase */}
           {phase === "broke" && (
             <View style={styles.middle}>
-              <PigIdleWebView size={70} />
+              <PigIdleWebView size={224} />
               <Text style={styles.brokeTitle}>BROKE</Text>
               <Text style={styles.brokeBody} numberOfLines={3}>{brokeMsg}</Text>
             </View>
@@ -505,7 +514,7 @@ export default function UnlockScreen({ route, navigation }) {
           {/* PEEKING phase — 60 second countdown, no elaborate animation */}
           {phase === "peeking" && (
             <View style={styles.middle}>
-              <PigIdleWebView size={60} />
+              <PigIdleWebView size={224} />
               <Text style={styles.peekTimerLabel}>PEEK WINDOW</Text>
               <Text style={styles.peekTimerValue}>{peekCountdown}</Text>
               <Text style={styles.peekTimerUnit}>seconds</Text>
@@ -604,12 +613,12 @@ export default function UnlockScreen({ route, navigation }) {
                 {state.isProPig ? (
                   <>
                     <GlowButton
-                      title={peekCount === 0 ? "Peek (2 min) \u2014 FREE" : `Peek (2 min) \u2014 ${peekCost} coin${peekCost === 1 ? "" : "s"}`}
+                      title={peekCost === 0 ? "Peek (2 min) \u2014 FREE" : `Peek (2 min) \u2014 ${peekCost} coin${peekCost === 1 ? "" : "s"}`}
                       onPress={handlePeek}
                     />
                     {peekCount > 0 && (
                       <Text style={styles.escalationNote}>
-                        price doubled {peekCount} time{peekCount === 1 ? "" : "s"}
+                        {getPeekPercent(peekCount)}% of a full surrender
                       </Text>
                     )}
                     <View style={{ height: 10 }} />
@@ -619,7 +628,7 @@ export default function UnlockScreen({ route, navigation }) {
                   title={`Surrender \u2014 ${fullFee} coin${fullFee === 1 ? "" : "s"}`}
                   onPress={handleSurrender}
                 />
-                <GlowButton title="Try to Resist" ghost onPress={() => navigation.goBack()} />
+                <GlowButton title="Resist Scrolling" ghost onPress={() => navigation.goBack()} />
               </>
             )}
             {phase === "confirm_peek" && (
@@ -675,21 +684,20 @@ const styles = StyleSheet.create({
   middle: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   roast: {
-    fontSize: 20, fontWeight: "900", color: C.pink,     textAlign: "center", lineHeight: 28, letterSpacing: -0.5, marginBottom: 16,
+    fontSize: 24, fontWeight: "900", color: C.pink, textAlign: "center",
+    lineHeight: 30, letterSpacing: -0.5, marginTop: 8, marginBottom: 24, paddingHorizontal: 4,
   },
 
-  // Lock timer card
-  timerCard: {
-    backgroundColor: C.white, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 20,
-    alignItems: "center", marginBottom: 14, ...CARD_SHADOW,
+  // Lock timer + coin balance, side by side
+  infoCard: {
+    alignSelf: "stretch", flexDirection: "row", alignItems: "center",
+    backgroundColor: C.white, borderRadius: 20, paddingVertical: 18, ...CARD_SHADOW,
   },
-  timerLabel: {
-    fontSize: 11, fontWeight: "800", color: C.textTertiary,
-    letterSpacing: 2, textTransform: "uppercase", marginBottom: 4,
-  },
-  timerValue: {
-    fontSize: 28, fontWeight: "900", color: C.pink, letterSpacing: -1,
-  },
+  infoCol: { flex: 1, alignItems: "center" },
+  infoDivider: { width: 1, alignSelf: "stretch", backgroundColor: "rgba(45,45,45,0.08)" },
+  infoLabel: { fontSize: 11, fontWeight: "800", color: "#2D2D2D", letterSpacing: 1.5, marginBottom: 6 },
+  infoValue: { fontSize: 28, fontWeight: "900", color: C.pink, letterSpacing: -1 },
+  infoCoinRow: { flexDirection: "row", alignItems: "center" },
 
   feeCard: {
     backgroundColor: C.white, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20,
@@ -752,7 +760,7 @@ const styles = StyleSheet.create({
   feastTitleText: {
     fontSize: 26, fontWeight: "900", color: C.pink,
     textAlign: "center", letterSpacing: 3, textTransform: "uppercase",
-    textShadowColor: "rgba(255,105,180,0.6)", textShadowOffset: { width: 0, height: 0 },
+    textShadowColor: "rgba(247,160,178,0.6)", textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
   },
   walletWrap: { position: "absolute", top: 50, zIndex: 5 },
@@ -764,12 +772,12 @@ const styles = StyleSheet.create({
   feastText: {
     fontSize: 11, fontWeight: "900", color: C.pink,
     letterSpacing: 3, marginTop: 2,
-    textShadowColor: "rgba(255,105,180,0.5)", textShadowOffset: { width: 0, height: 0 },
+    textShadowColor: "rgba(247,160,178,0.5)", textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   shade: {
     fontSize: 16, fontWeight: "700", color: "#FFF",     textAlign: "center", lineHeight: 24, position: "absolute", bottom: 10, zIndex: 10,
-    textShadowColor: "rgba(255,105,180,0.8)", textShadowOffset: { width: 0, height: 0 },
+    textShadowColor: "rgba(247,160,178,0.8)", textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 16,
   },
 });

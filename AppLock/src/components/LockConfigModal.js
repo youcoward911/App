@@ -10,11 +10,15 @@ import {
   KeyboardAvoidingView,
   PanResponder,
   Animated,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { C, T, NEU_RAISED, NEU_INSET } from "../utils/theme";
 import { DURATION_PRESETS } from "../context/AppLockContext";
 import GlowButton from "./GlowButton";
 import { lightTap, mediumTap } from "../utils/haptics";
+
+const SCREEN_H = Dimensions.get("window").height;
 
 const CUSTOM_MINUTES = [];
 function addMinute(m) {
@@ -54,7 +58,6 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
       onPanResponderRelease: (_, g) => {
         if (g.dy > 80) {
           onClose();
-          setTimeout(() => swipeY.setValue(0), 300);
         } else {
           Animated.spring(swipeY, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
         }
@@ -99,20 +102,36 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
     ? CUSTOM_MINUTES[customIdx].label
     : DURATION_PRESETS[durationIdx].label;
 
+  // Backdrop fades in place while the sheet slides up (and the reverse on close)
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const sheetY = useRef(new Animated.Value(SCREEN_H)).current;
+  const [mounted, setMounted] = useState(visible);
   React.useEffect(() => {
     if (visible) {
-      Animated.timing(overlayOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-    } else {
+      setMounted(true);
       overlayOpacity.setValue(0);
+      sheetY.setValue(SCREEN_H);
+      Animated.parallel([
+        Animated.timing(overlayOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(sheetY, { toValue: 0, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]).start();
+    } else if (mounted) {
+      Animated.parallel([
+        Animated.timing(overlayOpacity, { toValue: 0, duration: 240, useNativeDriver: true }),
+        Animated.timing(sheetY, { toValue: SCREEN_H, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      ]).start(() => {
+        setMounted(false);
+        swipeY.setValue(0);
+      });
     }
   }, [visible]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
-      <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: swipeY }] }]}>
+    <Modal visible={mounted} transparent animationType="none">
+      <View style={styles.overlay}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: overlayOpacity }]} />
+        <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: Animated.add(sheetY, swipeY) }] }]}>
           <View {...handlePanResponder.panHandlers} style={styles.handleZone}>
             <View style={styles.handle} />
           </View>
@@ -189,7 +208,7 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
           </View>
           </ScrollView>
         </Animated.View>
-      </Animated.View>
+      </View>
     </Modal>
   );
 }
@@ -197,8 +216,10 @@ export default function LockConfigModal({ visible, onClose, onConfirm, appName }
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: C.overlay,
     justifyContent: "flex-end",
+  },
+  backdrop: {
+    backgroundColor: C.overlay,
   },
   sheet: {
     backgroundColor: C.bg,
@@ -289,7 +310,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    backgroundColor: "rgba(255,105,180,0.08)",
+    backgroundColor: "rgba(247,160,178,0.08)",
     borderRadius: 12,
     zIndex: 1,
     pointerEvents: "none",
@@ -318,7 +339,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "rgba(255,105,180,0.08)",
+    backgroundColor: "rgba(247,160,178,0.08)",
   },
   selectedTimeLabel: {
     fontSize: 10,

@@ -11,13 +11,15 @@ if (Platform.OS === "ios") {
   } catch (e) {}
 }
 
-export default function AppIconsRow({ listId = "default", maxIcons = 3, appCount = 0 }) {
+export default function AppIconsRow({ listId = "default", maxIcons = 3, appCount = 0, revision = 0 }) {
   if (NativeAppIconsRow && appCount > 0) {
     const iconsToShow = Math.min(appCount, maxIcons);
     const width = iconsToShow * 28 + (appCount > maxIcons ? 28 : 0) + 16;
     return (
       <View style={{ width, height: 40 }}>
+        {/* The native view only reads the selection on mount, so remount when it changes */}
         <NativeAppIconsRow
+          key={`${listId}:${appCount}:${revision}`}
           listId={listId}
           maxIcons={maxIcons}
           style={{ flex: 1 }}

@@ -65,9 +65,10 @@ export async function trackAppOpen() {
 }
 
 // Call when user pays tribute to unlock an app
-export async function trackUnlock(appId, fee, lockedAt) {
+// `kind` is "peek" or "surrender"; `time` lets block-screen payments keep when they happened
+export async function trackUnlock(appId, fee, lockedAt, { kind = null, time = null } = {}) {
   const data = await loadUsage();
-  const now = Date.now();
+  const now = time || Date.now();
 
   data.totalUnlocks++;
   data.totalCoinsSpent += fee;
@@ -101,11 +102,12 @@ export async function trackUnlock(appId, fee, lockedAt) {
     appId,
     time: now,
     fee,
+    kind,
     caveSeconds: lockedAt ? Math.floor((now - lockedAt) / 1000) : null,
   });
-  if (data.unlockLog.length > 200) {
-    data.unlockLog = data.unlockLog.slice(-200);
-  }
+  // Keep two weeks (this week vs last week in the Weekly Shame Report), capped at 500
+  const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  data.unlockLog = data.unlockLog.filter((e) => e.time >= twoWeeksAgo).slice(-500);
 
   // Streak tracking
   const today = new Date().toISOString().slice(0, 10);
@@ -320,4 +322,11 @@ export function formatCaveTime(seconds) {
   if (m < 60) return `${m}m ${seconds % 60}s`;
   const h = Math.floor(m / 60);
   return `${h}h ${m % 60}m`;
+}
+
+// Unlock log entries from the last `days` days (for the Weekly Shame Report)
+export async function getUnlockLog(days = 14) {
+  const data = await loadUsage();
+  const since = Date.now() - days * 24 * 60 * 60 * 1000;
+  return (data.unlockLog || []).filter((e) => e.time >= since);
 }

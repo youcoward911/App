@@ -7,5 +7,8 @@ struct ScrollPigReportExtension: DeviceActivityReportExtension {
         TotalActivityReport { appUsage in
             AppUsageView(apps: appUsage)
         }
+        TopAppReport { topApp in
+            TopAppView(app: topApp)
+        }
     }
 }

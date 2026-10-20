@@ -122,7 +122,7 @@ export default function BlockListDetailScreen({ route, navigation }) {
         </View>
 
         {/* App list — native view shows real icons + names */}
-        <SelectedAppsList listId={list.id} appCount={list.appCount} />
+        <SelectedAppsList listId={list.id} appCount={list.appCount} revision={list.rev || 0} />
 
         {/* Spacer */}
         <View style={{ flex: 1 }} />

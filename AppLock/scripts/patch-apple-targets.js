@@ -75,4 +75,46 @@ if (fs.existsSync(configListFile)) {
   }
 }
 
+// --- ExtensionKit: the report must be an ExtensionKit extension, not a legacy appex ---
+// iOS refuses to install a device-activity-report built as a legacy appex with no
+// NSExtension dict ("Unable to Install"). Each patch below checks its own marker so it
+// also applies on top of an older patched copy.
+content = fs.readFileSync(targetFile, "utf8");
+if (!content.includes('com.apple.deviceactivityui.report-extension')) {
+  content = content.replace(
+    `"device-activity-report": {
+        frameworks: ["DeviceActivity", "ManagedSettings", "FamilyControls"],`,
+    `"device-activity-report": {
+        productType: "com.apple.product-type.extensionkit-extension",
+        frameworks: ["DeviceActivity", "ManagedSettings", "FamilyControls"],`
+  );
+  content = content.replace(
+    `case "device-activity-report":
+            return {};`,
+    `case "device-activity-report":
+            return {
+                EXAppExtensionAttributes: {
+                    EXExtensionPointIdentifier: "com.apple.deviceactivityui.report-extension",
+                },
+            };`
+  );
+  if (!content.includes('com.apple.deviceactivityui.report-extension')) {
+    console.warn("[patch] WARNING: could not patch device-activity-report as ExtensionKit");
+  }
+  fs.writeFileSync(targetFile, content);
+  console.log("[patch] device-activity-report -> ExtensionKit");
+}
+
+// ExtensionKit products are .appex bundles too; upstream names them .app
+const xcodeChangesFile = path.join(baseDir, "with-xcode-changes.js");
+if (fs.existsSync(xcodeChangesFile)) {
+  let xc = fs.readFileSync(xcodeChangesFile, "utf8");
+  const before = `path: props.name + (isExtension ? ".appex" : ".app"),`;
+  if (xc.includes(before)) {
+    xc = xc.replace(before, `path: props.name + (isExtension || isExtensionKit ? ".appex" : ".app"),`);
+    fs.writeFileSync(xcodeChangesFile, xc);
+    console.log("[patch] ExtensionKit product path -> .appex");
+  }
+}
+
 console.log("[patch] Done");

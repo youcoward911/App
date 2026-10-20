@@ -15,6 +15,7 @@ Sentry.init({
 import { AppLockProvider, useAppLock } from "./src/context/AppLockContext";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import PaywallScreen from "./src/screens/PaywallScreen";
+import WeeklyReportScreen from "./src/screens/WeeklyReportScreen";
 import ScheduleScreen from "./src/screens/ScheduleScreen";
 import BlockListDetailScreen from "./src/screens/BlockListDetailScreen";
 import CustomAlert from "./src/components/CustomAlert";
@@ -34,7 +35,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { lightTap } from "./src/utils/haptics";
 import { PigIcon } from "./src/components/PigMascot";
 import { getMasterCommand } from "./src/data/roastMessages";
-import { getPigWeight, getLevel, checkLevelUp } from "./src/utils/pigWeight";
+import { getPigWeight, getLevel, LEVELS } from "./src/utils/pigWeight";
+import { subscribeNotificationScreens } from "./src/utils/notifications";
+import { TUTORIAL_KEY } from "./src/components/HomeTutorial";
+import { BOARD_INTRO_KEY } from "./src/screens/LeaderboardScreen";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -44,42 +48,48 @@ const Stack = createStackNavigator();
 function TabIcon({ type, focused }) {
   return (
     <View style={styles.tabIconWrap}>
+      <View style={focused && styles.tabIconOutline}>
       {type === "apps" && (
         <View style={[styles.tabBox, focused && styles.tabBoxActive]}>
           <View style={styles.tabBoxInner}>
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.miniSquare, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.miniSquare, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
           </View>
         </View>
       )}
       {type === "shame" && (
         <View style={styles.tabBarIcon}>
           <View style={[styles.barGroup]}>
-            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
+            <View style={[styles.bar, styles.barShort, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.bar, styles.barMed, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.bar, styles.barTall, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
           </View>
         </View>
       )}
       {type === "leaderboard" && (
         <View style={styles.tabBarIcon}>
           <View style={styles.trophyWrap}>
-            <View style={[styles.trophyCup, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.trophyStem, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
-            <View style={[styles.trophyBase, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
+            <View style={styles.trophyTop}>
+              <View style={[styles.trophyHandle, styles.trophyHandleL, { borderColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+              <View style={[styles.trophyHandle, styles.trophyHandleR, { borderColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+              <View style={[styles.trophyCup, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            </View>
+            <View style={[styles.trophyStem, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.trophyNeck, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
+            <View style={[styles.trophyBase, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
           </View>
         </View>
       )}
       {type === "settings" && (
         <View style={[styles.gearWrap]}>
-          <View style={[styles.gearOuter, { borderColor: focused ? "#4A4545" : "#B5AFA8" }]}>
-            <View style={[styles.gearInner, { backgroundColor: focused ? "#4A4545" : "#B5AFA8" }]} />
+          <View style={[styles.gearOuter, { borderColor: focused ? "#F7A0B2" : "#B5AFA8" }]}>
+            <View style={[styles.gearInner, { backgroundColor: focused ? "#F7A0B2" : "#B5AFA8" }]} />
           </View>
         </View>
       )}
-      {focused && <View style={styles.tabDot} />}
+      </View>
     </View>
   );
 }
@@ -158,38 +168,35 @@ function HomeTabs() {
 }
 
 function WeightWatcher({ children, navigationRef }) {
-  const { state } = useAppLock();
-  const prevXP = useRef(state.totalCoinsSpent);
+  const { state, dispatch } = useAppLock();
   const pendingLevelUp = useRef(null);
-  const initialized = useRef(false);
   const [onMainScreen, setOnMainScreen] = useState(true);
 
-  // Detect level-up via XP changes — navigate to LevelUpScreen
+  // Show the level-up screen once per level reached. Comparing against the saved
+  // levelCelebrated (not the previous XP) means loading saved state or a cloud
+  // restore never re-triggers a level-up that was already shown.
   useEffect(() => {
-    const oldXP = prevXP.current;
-    const newXP = state.totalCoinsSpent;
-    if (!initialized.current) {
-      initialized.current = true;
-      prevXP.current = newXP;
-      return;
+    const xp = state.totalCoinsSpent;
+    const current = getLevel(xp);
+    const celebrated = state.levelCelebrated || 1;
+    if (current.level <= celebrated) return;
+    dispatch({ type: "LEVEL_CELEBRATED", payload: current.level });
+    const crossed = LEVELS.filter((l) => l.level > celebrated && l.level <= current.level);
+    const params = {
+      fromLevel: LEVELS.find((l) => l.level === celebrated) || LEVELS[0],
+      toLevel: current,
+      xp,
+      // Every skin unlocked by the levels crossed, not just the final one
+      skins: crossed.map((l) => l.skin).filter(Boolean),
+    };
+    if (onMainScreen && navigationRef?.current) {
+      setTimeout(() => {
+        navigationRef.current.navigate("LevelUp", params);
+      }, 300);
+    } else {
+      pendingLevelUp.current = params;
     }
-    prevXP.current = newXP;
-    const result = checkLevelUp(oldXP, newXP);
-    if (result) {
-      const params = {
-        fromLevel: result.from,
-        toLevel: result.to,
-        xp: newXP,
-      };
-      if (onMainScreen && navigationRef?.current) {
-        setTimeout(() => {
-          navigationRef.current.navigate("LevelUp", params);
-        }, 300);
-      } else {
-        pendingLevelUp.current = params;
-      }
-    }
-  }, [state.totalCoinsSpent, onMainScreen]);
+  }, [state.totalCoinsSpent, state.levelCelebrated]);
 
   // Listen for navigation state changes
   useEffect(() => {
@@ -224,6 +231,27 @@ function App() {
   const textOpacity = useRef(new Animated.Value(0)).current;
   const textTranslateY = useRef(new Animated.Value(30)).current;
   const command = useRef(getMasterCommand()).current;
+  // iOS splits a word mid-way when it's wider than the line ("encourageme / nt?"), and
+  // adjustsFontSizeToFit only shrinks for line count, so size the text so the longest
+  // word always fits on one line (heavy glyphs average ~0.72em wide, with margin)
+  const splashFontSize = useRef((() => {
+    const longest = Math.max(...command.split(/\s+/).map((w) => w.length));
+    const available = SCREEN_W - 2 * 28;
+    return Math.max(24, Math.min(36, Math.floor(available / (longest * 0.72))));
+  })()).current;
+  const pendingScreen = useRef(null);
+
+  // Notification taps that name a screen (block-screen PRO upsell → Paywall)
+  const openPendingScreen = () => {
+    if (pendingScreen.current && navigationRef.isReady()) {
+      navigationRef.navigate(pendingScreen.current);
+      pendingScreen.current = null;
+    }
+  };
+  useEffect(() => subscribeNotificationScreens((screen) => {
+    pendingScreen.current = screen;
+    openPendingScreen();
+  }), []);
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDED_KEY).then((val) => {
@@ -234,6 +262,9 @@ function App() {
 
   const handleOnboardingComplete = async () => {
     await AsyncStorage.setItem(ONBOARDED_KEY, "1");
+    // Only fresh installs reach this, so the Home walkthrough shows once and never for existing players
+    await AsyncStorage.setItem(TUTORIAL_KEY, "pending");
+    await AsyncStorage.setItem(BOARD_INTRO_KEY, "pending");
     setShowOnboarding(false);
   };
 
@@ -275,7 +306,7 @@ function App() {
         <OnboardingScreen onComplete={handleOnboardingComplete} />
       ) : (
       <WeightWatcher navigationRef={navigationRef}>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer ref={navigationRef} onReady={openPendingScreen}>
         <StatusBar style="dark" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Main" component={HomeTabs} />
@@ -292,6 +323,11 @@ function App() {
           <Stack.Screen
             name="Paywall"
             component={PaywallScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="WeeklyReport"
+            component={WeeklyReportScreen}
             options={{ presentation: "modal" }}
           />
           <Stack.Screen
@@ -334,8 +370,12 @@ function App() {
               <Animated.Text
                 style={[
                   styles.splashText,
+                  { fontSize: splashFontSize, lineHeight: Math.round(splashFontSize * 1.12) },
                   { opacity: textOpacity, transform: [{ translateY: textTranslateY }] },
                 ]}
+                numberOfLines={4}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
               >
                 {command}
               </Animated.Text>
@@ -363,25 +403,32 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 36,
+    paddingHorizontal: 28,
   },
   splashText: {
-    color: "#4A4545",
-    fontSize: 34,
+    color: "#F7A0B2",
+    textShadowColor: "#FFFFFF",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 2,
+    fontSize: 36,
+    // Same voice as the ScrollPig pill logo: black weight, tight spacing
     fontWeight: "900",
     textAlign: "center",
-    lineHeight: 46,
-    letterSpacing: -1,
+    lineHeight: 40,
+    // iOS under-measures heavy text with tight negative spacing, which pushed the last
+    // glyph ("?") onto its own line or clipped it; keep spacing mild and use the full width
+    letterSpacing: -0.6,
+    alignSelf: "stretch",
   },
   tabIconWrap: {
     alignItems: "center",
   },
-  tabDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "#4A4545",
-    marginTop: 4,
+  // Thin white outline around the active (pink) icon — iOS shadows follow the icon's shape
+  tabIconOutline: {
+    shadowColor: "#FFFFFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 1.5,
   },
   // Apps grid icon
   tabBox: {
@@ -428,19 +475,49 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     height: 22,
   },
+  trophyTop: {
+    width: 22,
+    alignItems: "center",
+  },
   trophyCup: {
-    width: 14,
-    height: 10,
-    borderRadius: 3,
-    borderBottomLeftRadius: 7,
-    borderBottomRightRadius: 7,
+    width: 13,
+    height: 11,
+    borderTopLeftRadius: 1.5,
+    borderTopRightRadius: 1.5,
+    borderBottomLeftRadius: 6.5,
+    borderBottomRightRadius: 6.5,
+  },
+  trophyHandle: {
+    position: "absolute",
+    top: 1.5,
+    width: 6,
+    height: 7,
+    borderWidth: 2,
+  },
+  trophyHandleL: {
+    left: 0,
+    borderRightWidth: 0,
+    borderTopLeftRadius: 3.5,
+    borderBottomLeftRadius: 3.5,
+  },
+  trophyHandleR: {
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopRightRadius: 3.5,
+    borderBottomRightRadius: 3.5,
   },
   trophyStem: {
-    width: 4,
-    height: 4,
+    width: 3,
+    height: 3,
+  },
+  trophyNeck: {
+    width: 8,
+    height: 2,
+    borderTopLeftRadius: 1,
+    borderTopRightRadius: 1,
   },
   trophyBase: {
-    width: 12,
+    width: 13,
     height: 2.5,
     borderRadius: 1,
   },

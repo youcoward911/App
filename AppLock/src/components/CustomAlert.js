@@ -15,8 +15,9 @@ const { width: SCREEN_W } = Dimensions.get("window");
 
 let globalShow = null;
 
-export function showAlert(title, body, buttons) {
-  if (globalShow) globalShow(title, body, buttons);
+// options: { titleColor, bodyColor } to tint this alert's text only
+export function showAlert(title, body, buttons, options) {
+  if (globalShow) globalShow(title, body, buttons, options);
 }
 
 export default function CustomAlert() {
@@ -24,12 +25,16 @@ export default function CustomAlert() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [buttons, setButtons] = useState([]);
+  const [titleColor, setTitleColor] = useState(null);
+  const [bodyColor, setBodyColor] = useState(null);
   const scale = useRef(new Animated.Value(0.85)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
-  const show = useCallback((t, b, btns) => {
+  const show = useCallback((t, b, btns, opts) => {
     setTitle(t || "");
     setBody(b || "");
+    setTitleColor(opts?.titleColor || null);
+    setBodyColor(opts?.bodyColor || null);
     setButtons(btns || [{ text: "OK" }]);
     setVisible(true);
     scale.setValue(0.85);
@@ -63,8 +68,8 @@ export default function CustomAlert() {
     <Modal visible transparent animationType="none" statusBarTranslucent>
       <Animated.View style={[styles.overlay, { opacity }]}>
         <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
-          {title ? <Text style={styles.title}>{title}</Text> : null}
-          {body ? <Text style={styles.body}>{body}</Text> : null}
+          {title ? <Text style={[styles.title, titleColor && { color: titleColor }]}>{title}</Text> : null}
+          {body ? <Text style={[styles.body, bodyColor && { color: bodyColor }]}>{body}</Text> : null}
           <View style={styles.btnRow}>
             {buttons.map((btn, i) => {
               const isCancel = btn.style === "cancel";

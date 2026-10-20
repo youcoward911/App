@@ -9,13 +9,15 @@ try {
   }
 } catch (e) {}
 
-export default function SelectedAppsList({ listId = "default", appCount = 0 }) {
+export default function SelectedAppsList({ listId = "default", appCount = 0, revision = 0 }) {
   if (NativeSelectedApps && appCount > 0) {
     // Estimate height: ~72px per app row
     const estimatedHeight = Math.max(appCount * 72, 100);
     return (
       <View style={[styles.container, { height: estimatedHeight }]}>
+        {/* The native view only reads the selection on mount, so remount when it changes */}
         <NativeSelectedApps
+          key={`${listId}:${appCount}:${revision}`}
           listId={listId}
           style={{ flex: 1 }}
         />

@@ -6,17 +6,19 @@ import { useAppLock } from "../context/AppLockContext";
 import { getSkinById } from "../data/pigSkins";
 import { SKIN_CSS, SKIN_EXTRAS_HTML, SKIN_CLASS } from "../data/pigSkinHTML";
 import { heavyTap, successTap } from "../utils/haptics";
+import { getLevel, getPigScale } from "../utils/pigWeight";
 import CloseButton from "../components/CloseButton";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
-function buildCrateHTML(skin) {
+function buildCrateHTML(skin, level) {
+  const ps = getPigScale(level);
   const rc = {
-    common: { glow: "#FFB6C1", bar: "#2D2D2D", barEnd: "#FF8AC6" },
+    common: { glow: "#F7A0B2", bar: "#2D2D2D", barEnd: "#F7A0B2" },
     rare: { glow: "#4A93D6", bar: "#4A93D6", barEnd: "#6BB5F0" },
     epic: { glow: "#9C6FE0", bar: "#9C6FE0", barEnd: "#C9A4F5" },
     legendary: { glow: "#F0A93A", bar: "#F0A93A", barEnd: "#FFD86B" },
-  }[skin.rarity] || { glow: "#FFB6C1", bar: "#2D2D2D", barEnd: "#FF8AC6" };
+  }[skin.rarity] || { glow: "#F7A0B2", bar: "#2D2D2D", barEnd: "#F7A0B2" };
 
   const skinCSS = SKIN_CSS[skin.id] || "";
   const skinClass = SKIN_CLASS[skin.id] || "";
@@ -118,8 +120,8 @@ html,body{width:100%;height:100%;overflow:hidden;
 .pig-wrap{position:absolute;z-index:5;visibility:hidden}
 .pigA{width:160px;height:150px;position:relative;animation:idle 3.6s ease-in-out infinite;transform-origin:50% 100%}
 @keyframes idle{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97) translateY(2px)}}
-.pigA .head{position:absolute;inset:0;border-radius:46% 46% 44% 44%/50% 50% 46% 46%;
-  background:radial-gradient(circle at 34% 26%,#FFE4DE,#F7A0B2 30%,#F6ABA0 62%,#E98D82);
+.pigA .head{position:absolute;inset:0 -8px;border-radius:48% 48% 46% 46%/50% 50% 48% 48%;
+  background:radial-gradient(circle at 34% 26%,#FFE4DE 0%,#FDC9C0 30%,#F6ABA0 62%,#E98D82 100%);
   box-shadow:inset 8px 12px 22px rgba(255,255,255,.75),inset -12px -18px 28px rgba(190,90,80,.38),
     inset 0 -4px 8px rgba(255,255,255,.2),0 14px 28px rgba(140,50,42,.28)}
 .pigA .head::before{content:"";position:absolute;top:10px;left:23px;width:66px;height:40px;border-radius:50%;
@@ -130,7 +132,7 @@ html,body{width:100%;height:100%;overflow:hidden;
   box-shadow:inset 6px 8px 12px rgba(255,255,255,.5),inset -6px -8px 14px rgba(190,90,80,.35),0 4px 10px rgba(140,50,42,.15);transform-origin:50% 90%}
 .pigA .ear::after{content:"";position:absolute;top:12px;left:14px;width:24px;height:28px;
   border-radius:70% 30% 60% 40%/78% 78% 22% 22%;background:radial-gradient(circle at 45% 40%,#F49A93,#E37B72);filter:blur(1px)}
-.pigA .ear.l{left:7px;transform:rotate(-14deg)}.pigA .ear.r{right:7px;transform:rotate(14deg) scaleX(-1)}
+.pigA .ear.l{left:2px;transform:rotate(-14deg)}.pigA .ear.r{right:2px;transform:rotate(14deg) scaleX(-1)}
 .eye{position:absolute;width:12px;height:13px;top:56px;background:#000;border-radius:50%}
 .eye.l{left:38px}.eye.r{right:38px}
 .pigA .snout{position:absolute;top:68px;left:50%;transform:translateX(-50%);width:70px;height:50px;border-radius:48%;
@@ -180,7 +182,7 @@ ${skinCSS}
   <div class="hint" id="hint">TAP TO BREAK</div>
   <div class="light-burst" id="burst"></div>
   <div class="pig-wrap" id="pigWrap">
-    <div class="pigA ${skinClass}">
+    <div class="pigA ${skinClass}" style="scale:${ps.x} ${ps.y}">
       <div class="ear l"></div><div class="ear r"></div>
       <div class="head"></div>
       <div class="eye l"></div><div class="eye r"></div>
@@ -324,13 +326,14 @@ crate.addEventListener('click',function(){
         var bub=document.createElement('div');bub.className='bubble';
         bub.textContent='${skin.tagline}';
         scene.appendChild(bub);
+        // Bouncy pop-in only; a whole-animation overshoot easing pushed the exit past scale 0
+        // (flipping the bubble upside down) and past its end point (floating it off the top)
         bub.animate([
-          {transform:'translate(-50%,10px) scale(0)'},
-          {transform:'translate(-50%,0) scale(1.1)',offset:.28},
-          {transform:'translate(-50%,0) scale(1)',offset:.48},
-          {transform:'translate(-50%,0) scale(1)',offset:.78},
-          {transform:'translate(-50%,-16px) scale(0)'}
-        ],{duration:1400,easing:'cubic-bezier(.34,1.4,.5,1)'}).onfinish=function(){bub.remove()};
+          {transform:'translate(-50%,10px) scale(0)',opacity:1,easing:'cubic-bezier(.34,1.56,.64,1)'},
+          {transform:'translate(-50%,0) scale(1)',opacity:1,offset:.18},
+          {transform:'translate(-50%,0) scale(1)',opacity:1,offset:.85,easing:'ease-in'},
+          {transform:'translate(-50%,-6px) scale(.85)',opacity:0}
+        ],{duration:2600,fill:'forwards'}).onfinish=function(){bub.remove()};
         try{window.ReactNativeWebView.postMessage(JSON.stringify({type:'revealed'}))}catch(e){}
       },200);
 
@@ -356,7 +359,9 @@ setInterval(function(){
 }
 
 export default function SkinUnlockScreen({ navigation, route }) {
-  const { dispatch } = useAppLock();
+  const { state, dispatch } = useAppLock();
+  // Show the new skin on the pig at its current size
+  const level = getLevel(state.totalCoinsSpent).level;
   const skinId = route.params?.skinId || "pirate";
   const skin = getSkinById(skinId);
   const webRef = useRef(null);
@@ -376,7 +381,7 @@ export default function SkinUnlockScreen({ navigation, route }) {
     <View style={styles.container}>
       <WebView
         ref={webRef}
-        source={{ html: buildCrateHTML(skin) }}
+        source={{ html: buildCrateHTML(skin, level) }}
         style={styles.webview}
         scrollEnabled={false}
         bounces={false}
@@ -389,7 +394,14 @@ export default function SkinUnlockScreen({ navigation, route }) {
         allowsInlineMediaPlayback={true}
       />
       <SafeAreaView style={styles.closeWrap} pointerEvents="box-none">
-        <CloseButton onPress={() => navigation.goBack()} style={styles.closeBtn} />
+        <CloseButton
+          onPress={() => {
+            const queue = route.params?.queue || [];
+            if (queue.length) navigation.replace("SkinUnlock", { skinId: queue[0], queue: queue.slice(1) });
+            else navigation.goBack();
+          }}
+          style={styles.closeBtn}
+        />
       </SafeAreaView>
     </View>
   );

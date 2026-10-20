@@ -90,7 +90,7 @@ export async function setPigName(newName) {
 export { getPigName };
 
 // Update user's leaderboard entry after a tribute
-export async function updateLeaderboard(totalCoinsSpent, totalUnlocks) {
+export async function updateLeaderboard(totalCoinsSpent, totalUnlocks, totalSurrenders = 0) {
   try {
     const user = await ensureAuth();
     if (!user) return;
@@ -104,6 +104,7 @@ export async function updateLeaderboard(totalCoinsSpent, totalUnlocks) {
       pigName,
       totalCoinsSpent,
       totalUnlocks,
+      totalSurrenders,
       weightKey: weight.key,
       weightLabel: weight.label,
       weightEmoji: weight.emoji,

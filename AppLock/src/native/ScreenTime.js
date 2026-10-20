@@ -54,6 +54,26 @@ export async function deleteBlockList(listId) {
   return ScreenTimeModule.deleteBlockList(listId);
 }
 
+export async function setLockState(lockState) {
+  if (!isAvailable || !ScreenTimeModule.setLockState) return { status: "unavailable" };
+  return ScreenTimeModule.setLockState(lockState);
+}
+
+export async function startPeek(seconds) {
+  if (!isAvailable || !ScreenTimeModule.startPeek) return { status: "unavailable" };
+  return ScreenTimeModule.startPeek(seconds);
+}
+
+export async function consumeShieldEvents() {
+  if (!isAvailable || !ScreenTimeModule.consumeShieldEvents) return [];
+  return ScreenTimeModule.consumeShieldEvents();
+}
+
+export async function getListCounts(listIds) {
+  if (!isAvailable || !ScreenTimeModule.getListCounts) return {};
+  return ScreenTimeModule.getListCounts(listIds);
+}
+
 export async function createSchedule(scheduleId, startHour, startMinute, endHour, endMinute) {
   if (!isAvailable) return { status: "unavailable" };
   return ScreenTimeModule.createSchedule(scheduleId, startHour, startMinute, endHour, endMinute);

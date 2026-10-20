@@ -4,7 +4,7 @@ import { WebView } from "react-native-webview";
 import { mediumTap } from "../utils/haptics";
 import { buildPigSkinHTML } from "../data/pigSkinHTML";
 
-export default function PigIdleWebView({ level = 1, size = 224, skin = "default", centered = false, bgColor = null, idleMessages = null }) {
+export default function PigIdleWebView({ level = 1, size = 224, skin = "default", centered = false, bgColor = null, idleMessages = null, silent = false }) {
   const webRef = useRef(null);
 
   const handleTap = useCallback(() => {
@@ -32,7 +32,7 @@ export default function PigIdleWebView({ level = 1, size = 224, skin = "default"
         }}>
           <WebView
             ref={webRef}
-            source={{ html: buildPigSkinHTML(skin, Math.max(1, Math.min(level, 5)), size, centered, idleMessages) }}
+            source={{ html: buildPigSkinHTML(skin, Math.max(1, level), size, centered, idleMessages, silent) }}
             style={styles.webview}
             scrollEnabled={false}
             bounces={false}

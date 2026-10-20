@@ -1,15 +1,16 @@
-import React, { createContext, useContext, useReducer, useEffect, useRef } from "react";
-import { Platform, AppState } from "react-native";
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification, notifyPeekExpired, schedulePeekExpiryNotification, notifySurrender } from "../utils/notifications";
+import { requestPermissions, refreshNotifications, onTributePaid, scheduleLockExpiry, scheduleLockExpiryNotification, notifyPeekExpired, schedulePeekExpiryNotification, notifySurrender, cancelNagNotifications, scheduleWeeklyReport, cancelWeeklyReport } from "../utils/notifications";
 import { trackAppOpen, trackUnlock } from "../utils/usageTracker";
 import { updateLeaderboard } from "../utils/leaderboard";
 import { syncUserToFirestore, loadUserFromFirestore, shouldSync } from "../utils/userSync";
 import { logEvent } from "../utils/analytics";
+import { getLevel } from "../utils/pigWeight";
+import { getPeekCost } from "../utils/peekPricing";
 import {
   syncToAppGroup,
-  syncFromAppGroup,
   isScreenTimeAvailable,
   requestAuthorization,
   getAuthorizationStatus,
@@ -18,6 +19,8 @@ import {
   blockLists as blockListsNative,
   unblockApp,
   clearAllBlocks,
+  setLockState as setLockStateNative,
+  consumeShieldEvents,
 } from "../native/ScreenTime";
 
 const AppLockContext = createContext();
@@ -66,7 +69,7 @@ const initialState = {
     { id: "default", name: "Slop List", appCount: 0, isActive: true },
   ],
   schedules: [],
-  piggyCoins: 50,
+  piggyCoins: 0, // new players get WELCOME_BONUS_COINS once per device
   totalCoinsSpent: 0,
   totalCoinsPurchased: 0,
   totalMoneySpent: 0,
@@ -81,6 +84,8 @@ const initialState = {
   isProPig: false,
   proPigSince: null,
   activeSkin: "default",
+  // Highest level whose level-up screen has been shown
+  levelCelebrated: 1,
   settings: {
     defaultPeekFee: 1,
     defaultFullFee: 10,
@@ -134,7 +139,14 @@ function reducer(state, action) {
   switch (action.type) {
     case "LOAD_STATE": {
       const migrated = migrateState(action.payload);
-      return { ...initialState, ...migrated };
+      // Merge settings per field so keys added in newer versions get their defaults
+      return {
+        ...initialState,
+        ...migrated,
+        settings: { ...initialState.settings, ...migrated.settings },
+        // Saves from before levelCelebrated existed: treat the current level as already shown
+        levelCelebrated: migrated.levelCelebrated ?? getLevel(migrated.totalCoinsSpent || 0).level,
+      };
     }
 
     case "LOCK_SLOP": {
@@ -164,9 +176,7 @@ function reducer(state, action) {
       const lock = state.slopLock;
       if (!lock.isLocked) return state;
 
-      const baseFee = lock.peekFee || 1;
-      const isFreePeek = state.isProPig && lock.peekCount === 0;
-      const cost = isFreePeek ? 0 : baseFee * Math.pow(2, lock.peekCount);
+      const cost = getPeekCost(lock.peekCount || 0, lock.fullFee || state.settings.defaultFullFee, state.isProPig);
       const today = new Date().toDateString();
       const isTodaySame = state.tributesTodayDate === today;
 
@@ -220,7 +230,8 @@ function reducer(state, action) {
     case "SLOP_LOCK_EXPIRED": {
       const lock = state.slopLock;
       const wasPeeked = lock.peekCount > 0;
-      const newStreak = wasPeeked ? 1 : (state.ironSnoutStreak || 0) + 1;
+      // A peeked lock doesn't count toward the streak (the peek already reset it to 0)
+      const newStreak = wasPeeked ? 0 : (state.ironSnoutStreak || 0) + 1;
       const best = Math.max(state.bestIronSnout || 0, newStreak);
 
       return {
@@ -252,7 +263,8 @@ function reducer(state, action) {
       const targetId = action.payload.listId || "default";
       const count = action.payload.count;
       const updatedLists = (state.blockLists || []).map((l) =>
-        l.id === targetId ? { ...l, appCount: count } : l
+        // rev bumps on every picker save so native icon views remount and reload the selection
+        l.id === targetId ? { ...l, appCount: count, rev: (l.rev || 0) + 1 } : l
       );
       const totalActive = updatedLists.filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
       return {
@@ -368,11 +380,55 @@ function reducer(state, action) {
       };
     }
 
+    case "SHIELD_EVENT": {
+      // Peek/unlock paid on the iOS block screen. The extension already took the coins
+      // from the App Group balance; mirror that here and count it like an in-app payment.
+      const { type, cost = 0, at = Date.now() } = action.payload;
+      const day = new Date(at).toDateString();
+      const isTodaySame = state.tributesTodayDate === day;
+      const lock = state.slopLock;
+      const paid = {
+        ...state,
+        piggyCoins: Math.max(0, state.piggyCoins - cost),
+        totalCoinsSpent: state.totalCoinsSpent + cost,
+        totalUnlocks: state.totalUnlocks + 1,
+        tributesToday: isTodaySame ? (state.tributesToday || 0) + 1 : 1,
+        tributesTodayDate: day,
+        lastTributeTime: at,
+        ironSnoutStreak: 0,
+      };
+      if (type === "peek") {
+        return {
+          ...paid,
+          totalPeeks: (state.totalPeeks || 0) + 1,
+          slopLock: lock.isLocked
+            ? { ...lock, peekCount: lock.peekCount + 1, peekExpiresAt: Math.max(lock.peekExpiresAt || 0, at + 2 * 60 * 1000) }
+            : lock,
+        };
+      }
+      return {
+        ...paid,
+        totalSurrenders: (state.totalSurrenders || 0) + 1,
+        slopLock: {
+          ...lock,
+          isLocked: false,
+          lockedAt: null,
+          lockExpiresAt: null,
+          peekExpiresAt: null,
+          peekCount: 0,
+        },
+      };
+    }
+
     case "SYNC_COINS_FROM_EXTENSION": {
       return {
         ...state,
         piggyCoins: action.payload.piggyCoins,
       };
+    }
+
+    case "LEVEL_CELEBRATED": {
+      return { ...state, levelCelebrated: Math.max(state.levelCelebrated || 1, action.payload) };
     }
 
     case "SET_SKIN": {
@@ -407,6 +463,23 @@ function reducer(state, action) {
 export function AppLockProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const stateLoaded = useRef(false);
+  // Mirrors stateLoaded so the App Group sync effects also run once loading finishes,
+  // even when the loaded state didn't change their deps (e.g. a fresh install)
+  const [loaded, setLoaded] = useState(false);
+
+  const applyShieldEvents = async () => {
+    if (!isScreenTimeAvailable()) return;
+    try {
+      const events = await consumeShieldEvents();
+      (events || []).forEach((e) => {
+        dispatch({ type: "SHIELD_EVENT", payload: e });
+        trackUnlock("blockscreen", e.cost || 0, null, {
+          kind: e.type === "peek" ? "peek" : "surrender",
+          time: e.at,
+        }).catch(() => {});
+      });
+    } catch (e) {}
+  };
 
   useEffect(() => {
     (async () => {
@@ -415,8 +488,7 @@ export function AppLockProvider({ children }) {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         await requestPermissions();
         try {
-          const Notifs = require("expo-notifications");
-          await Notifs.cancelAllScheduledNotificationsAsync();
+          await cancelNagNotifications();
         } catch (e) {}
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -426,23 +498,32 @@ export function AppLockProvider({ children }) {
         } else {
           stateLoaded.current = true;
         }
+        setLoaded(true);
+        await applyShieldEvents();
 
         if (!stored) {
           // Fresh install — try restoring from Firestore (returning user)
+          let restored = false;
           try {
             const cloudData = await loadUserFromFirestore();
             if (cloudData) {
               dispatch({ type: "LOAD_STATE", payload: cloudData });
-              stateLoaded.current = true;
+              restored = true;
             }
           } catch (e) {
             console.warn("Firestore restore failed:", e);
           }
 
-          // Grant welcome bonus only if no cloud restore happened
-          if (!stateLoaded.current) {
-            dispatch({ type: "WELCOME_BONUS" });
-            if (Platform.OS === "ios") {
+          // Grant the welcome bonus only if no cloud restore happened. The iOS
+          // Keychain survives uninstall, so reinstalling doesn't grant it again
+          // (Android's SecureStore doesn't persist past uninstall).
+          if (!restored) {
+            let alreadyClaimed = false;
+            try {
+              alreadyClaimed = !!(await SecureStore.getItemAsync(WELCOME_BONUS_KEY));
+            } catch (e) {}
+            if (!alreadyClaimed) {
+              dispatch({ type: "WELCOME_BONUS" });
               try {
                 await SecureStore.setItemAsync(WELCOME_BONUS_KEY, "1");
               } catch (e) {}
@@ -507,7 +588,7 @@ export function AppLockProvider({ children }) {
   useEffect(() => {
     if (state.lastTributeTime) {
       onTributePaid().catch(() => {});
-      updateLeaderboard(state.totalCoinsSpent, state.totalUnlocks).catch(() => {});
+      updateLeaderboard(state.totalCoinsSpent, state.totalUnlocks, state.totalSurrenders || 0).catch(() => {});
     }
   }, [state.lastTributeTime]);
 
@@ -520,29 +601,45 @@ export function AppLockProvider({ children }) {
 
   // Sync coin balance + fee settings to App Group
   useEffect(() => {
-    if (isScreenTimeAvailable()) {
+    if (stateLoaded.current && isScreenTimeAvailable()) {
       syncToAppGroup(
         state.piggyCoins,
         state.settings.defaultPeekFee,
         state.settings.defaultFullFee
       ).catch(() => {});
     }
-  }, [state.piggyCoins, state.settings.defaultPeekFee, state.settings.defaultFullFee]);
+  }, [loaded, state.piggyCoins, state.settings.defaultPeekFee, state.settings.defaultFullFee]);
 
-  // On app foreground, pull latest state from App Group
+  // Weekly Shame Report notification is a Pro perk
+  useEffect(() => {
+    if (!loaded) return;
+    (state.isProPig ? scheduleWeeklyReport() : cancelWeeklyReport()).catch(() => {});
+  }, [loaded, state.isProPig]);
+
+  // On app foreground, count any peeks/unlocks paid on the block screen
   useEffect(() => {
     if (!isScreenTimeAvailable()) return;
     const sub = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") {
-        syncFromAppGroup().then((data) => {
-          if (data && data.piggyCoins !== state.piggyCoins) {
-            dispatch({ type: "SYNC_COINS_FROM_EXTENSION", payload: { piggyCoins: data.piggyCoins } });
-          }
-        }).catch(() => {});
-      }
+      if (nextState === "active" && stateLoaded.current) applyShieldEvents();
     });
     return () => sub.remove();
-  }, [state.piggyCoins]);
+  }, []);
+
+  // Mirror the lock to the App Group so the block screen can price peeks and the
+  // monitor extension can re-block after a peek / unblock when the lock ends
+  useEffect(() => {
+    if (!stateLoaded.current || !isScreenTimeAvailable()) return;
+    const lock = state.slopLock;
+    setLockStateNative({
+      isLocked: !!lock.isLocked,
+      lockExpiresAt: lock.lockExpiresAt || 0,
+      peekCount: lock.peekCount || 0,
+      peekFee: lock.peekFee || state.settings.defaultPeekFee,
+      fullFee: lock.fullFee || state.settings.defaultFullFee,
+      listIds: lock.activeListIds || ["default"],
+      isPro: !!state.isProPig,
+    }).catch(() => {});
+  }, [loaded, state.slopLock.isLocked, state.slopLock.lockExpiresAt, state.slopLock.peekCount, state.isProPig]);
 
   // Debounced Firestore sync — backs up meaningful state changes
   const prevSyncState = useRef(state);

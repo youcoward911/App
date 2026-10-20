@@ -47,21 +47,33 @@ export function getWeightProgress(totalCoinsSpent) {
 
 export const LEVELS = [
   { level: 1,  xpRequired: 0,     tier: "Runt",           skin: null },
-  { level: 2,  xpRequired: 20,    tier: "Scrawny Pig",    skin: null },
-  { level: 3,  xpRequired: 60,    tier: "Lean Pig",       skin: "pirate" },
-  { level: 4,  xpRequired: 120,   tier: "Chonky Pig",     skin: "baller" },
-  { level: 5,  xpRequired: 200,   tier: "Mega Hog",       skin: null },
-  { level: 6,  xpRequired: 350,   tier: "Thicc Boar",     skin: "ghost" },
+  { level: 2,  xpRequired: 20,    tier: "Scrawny Pig",    skin: "pirate" },
+  { level: 3,  xpRequired: 60,    tier: "Lean Pig",       skin: "baller" },
+  { level: 4,  xpRequired: 120,   tier: "Chonky Pig",     skin: null },
+  { level: 5,  xpRequired: 200,   tier: "Mega Hog",       skin: "ghost" },
+  { level: 6,  xpRequired: 350,   tier: "Thicc Boar",     skin: null },
   { level: 7,  xpRequired: 550,   tier: "Absolute Unit",  skin: "zombie" },
   { level: 8,  xpRequired: 800,   tier: "Slop Lord",      skin: null },
-  { level: 9,  xpRequired: 1100,  tier: "Hog God",        skin: "punk" },
-  { level: 10, xpRequired: 1500,  tier: "Supreme Swine",  skin: "cowboy" },
+  { level: 9,  xpRequired: 1100,  tier: "Hog God",        skin: "devil" },
+  { level: 10, xpRequired: 1500,  tier: "Supreme Swine",  skin: null },
   { level: 11, xpRequired: 2000,  tier: "Elder Hog",      skin: null },
-  { level: 12, xpRequired: 2800,  tier: "Overlord Pig",   skin: "devil" },
-  { level: 13, xpRequired: 3800,  tier: "Mythic Boar",    skin: "astro" },
-  { level: 14, xpRequired: 5000,  tier: "Pig Royale",     skin: "king" },
-  { level: 15, xpRequired: 7500,  tier: "LEGENDARY",      skin: null },
+  { level: 12, xpRequired: 2800,  tier: "Overlord Pig",   skin: "punk" },
+  { level: 13, xpRequired: 3800,  tier: "Mythic Boar",    skin: "cowboy" },
+  { level: 14, xpRequired: 5000,  tier: "Pig Royale",     skin: "astro" },
+  { level: 15, xpRequired: 7500,  tier: "LEGENDARY",      skin: "king" },
 ];
+
+// Pig body size per level, shared by every pig renderer (skins are just a look on top).
+// Compounds ~4.4% per level from 0.8 at Lv.1 to 1.45 at the top level, and gets
+// slightly wider than tall as the pig fattens.
+const PIG_SCALE_MIN = 0.8;
+const PIG_SCALE_MAX = 1.45;
+export function getPigScale(level) {
+  const steps = LEVELS.length - 1;
+  const l = Math.max(1, Math.min(level || 1, LEVELS.length));
+  const size = PIG_SCALE_MIN * Math.pow(PIG_SCALE_MAX / PIG_SCALE_MIN, (l - 1) / steps);
+  return { x: +(size * (1 + 0.008 * (l - 1))).toFixed(3), y: +size.toFixed(3) };
+}
 
 export function getLevel(xp) {
   let lvl = LEVELS[0];

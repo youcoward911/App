@@ -373,7 +373,7 @@ export default function GlassBreakAnimation({ visible, fromLevel, toLevel, onCom
                 { rotate: badgeRotate.interpolate({ inputRange: [-20, 0], outputRange: ["-20deg", "0deg"] }) },
               ],
             }]}>
-              <LinearGradient colors={["#2D2D2D", "#FF8AC6"]} style={styles.badgeGrad}>
+              <LinearGradient colors={["#2D2D2D", "#F7A0B2"]} style={styles.badgeGrad}>
                 <Text style={styles.badgeText}>✦ LEVEL {toLevel?.level || "?"} ✦</Text>
               </LinearGradient>
             </Animated.View>
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: "rgba(255,105,180,0.3)",
+    backgroundColor: "rgba(247,160,178,0.3)",
   },
   pigWrap: {
     position: "absolute",
@@ -493,14 +493,14 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#FFFFFF",
     letterSpacing: 2,
-    textShadowColor: "rgba(255,105,180,0.8)",
+    textShadowColor: "rgba(247,160,178,0.8)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
   },
   labelTier: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#FF8AC6",
+    color: "#F7A0B2",
     marginTop: 4,
   },
 
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#2D2D2D",
     letterSpacing: 1,
-    textShadowColor: "rgba(255,105,180,0.6)",
+    textShadowColor: "rgba(247,160,178,0.6)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },

@@ -20,33 +20,25 @@ struct TotalActivityReport: DeviceActivityReportScene {
     func makeConfiguration(
         representing data: DeviceActivityResults<DeviceActivityData>
     ) async -> [AppUsageEntry] {
-        var apps: [AppUsageEntry] = []
-        var seen = Set<String>()
+        var totals: [String: (duration: TimeInterval, token: ApplicationToken?)] = [:]
 
         for await activityData in data {
             for await segment in activityData.activitySegments {
                 for await category in segment.categories {
                     for await app in category.applications {
                         let name = app.application.localizedDisplayName ?? "Unknown"
-                        let duration = app.totalActivityDuration
-
-                        // Skip apps with negligible usage
-                        guard duration >= 60 else { continue }
-
-                        // Deduplicate by name
-                        guard !seen.contains(name) else { continue }
-                        seen.insert(name)
-
-                        apps.append(AppUsageEntry(
-                            name: name,
-                            duration: duration,
-                            token: app.application.token
-                        ))
+                        let prev = totals[name]
+                        totals[name] = ((prev?.duration ?? 0) + app.totalActivityDuration,
+                                        prev?.token ?? app.application.token)
                     }
                 }
             }
         }
 
-        return apps.sorted { $0.duration > $1.duration }
+        // Skip apps with negligible usage
+        return totals
+            .filter { $0.value.duration >= 60 }
+            .map { AppUsageEntry(name: $0.key, duration: $0.value.duration, token: $0.value.token) }
+            .sorted { $0.duration > $1.duration }
     }
 }

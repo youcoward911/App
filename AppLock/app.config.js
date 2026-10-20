@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "Scroll Pig",
     slug: "PayPig",
-    version: "1.0.6",
+    version: "1.1.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -20,9 +20,13 @@ export default {
           "Scroll Pig uses your location to show your city name on the city leaderboard. For example, if you're in Brooklyn, your stats appear on the Brooklyn leaderboard alongside other users in Brooklyn. Location is used only to derive the city name and is never stored or shared.",
         ITSAppUsesNonExemptEncryption: false,
       },
-      buildNumber: "7",
+      buildNumber: "8",
       usesAppleSignIn: true,
       appleTeamId: "78KK2B4DTZ",
+      entitlements: {
+        // Shared with the block-screen and monitor extensions (see SharedDefaults.swift)
+        "com.apple.security.application-groups": ["group.com.paypig.app"],
+      },
     },
     android: {
       adaptiveIcon: {
@@ -48,7 +52,9 @@ export default {
         },
       ],
       "expo-apple-authentication",
-      "@bacons/apple-targets",
+      // targets/report builds as an ExtensionKit extension (scripts/patch-apple-targets.js);
+      // as a legacy appex iOS refused to install it ("Unable to Install")
+      ["@bacons/apple-targets", { match: "{shield-action,shield-config,activity-monitor,report}" }],
     ],
     extra: {
       eas: {

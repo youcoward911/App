@@ -1,10 +1,11 @@
 import React, { useRef, useCallback } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import { WebView } from "react-native-webview";
+import { LEVELS, getPigScale } from "../utils/pigWeight";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
-function buildHTML(fromLevel, toLevel, coinCount) {
+function buildHTML(fromLevel, toLevel, coinCount, titles) {
   // coinCount controls how many coins get vacuumed per feed round
   const coinsPerFeed = Math.max(4, Math.min(coinCount || 8, 20));
   return `<!DOCTYPE html>
@@ -16,7 +17,7 @@ function buildHTML(fromLevel, toLevel, coinCount) {
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",sans-serif;
-  background:linear-gradient(180deg,#F7B3A8,#F09A8D);
+  background:transparent;
   width:100%;height:100%;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
@@ -58,9 +59,9 @@ html,body{
 
 .pigA{width:180px;height:168px;position:relative}
 .pigA .head{
-  position:absolute;inset:0;
-  border-radius:46% 46% 44% 44%/50% 50% 46% 46%;
-  background:radial-gradient(circle at 34% 26%,#FFE4DE 0%,#F7A0B2 30%,#F6ABA0 62%,#E98D82 100%);
+  position:absolute;inset:0 -8px;
+  border-radius:48% 48% 46% 46%/50% 50% 48% 48%;
+  background:radial-gradient(circle at 34% 26%,#FFE4DE 0%,#FDC9C0 30%,#F6ABA0 62%,#E98D82 100%);
   box-shadow:inset 8px 12px 22px rgba(255,255,255,.75),inset -12px -18px 28px rgba(190,90,80,.38),
     inset 0 -4px 8px rgba(255,255,255,.2),0 14px 28px rgba(140,50,42,.28);
 }
@@ -97,12 +98,11 @@ html,body{
 .cheekB.l{left:10px}.cheekB.r{right:10px}
 
 /* ===== coin ===== */
-.coin{position:absolute;pointer-events:none;will-change:transform;z-index:5;border-radius:50%;
-  background:radial-gradient(circle at 38% 30%,#FFE9A0,#FFD54F 40%,#FFB300 75%,#E69500);
-  box-shadow:inset 2px 3px 5px rgba(255,255,255,.6),inset -2px -3px 4px rgba(180,120,0,.4),
-    0 3px 8px rgba(120,70,0,.35)}
+.coin{position:absolute;pointer-events:none;will-change:transform;z-index:5;border-radius:50%;box-sizing:border-box;
+  background:#FFFFFF;border:solid #F7A0B2;box-shadow:0 3px 8px rgba(247,160,178,.45)}
+/* matches the app's P coin logo: white coin, pink ring, heavy pink P */
 .coin::after{content:"P";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:inherit;font-weight:900;color:rgba(160,100,0,.7);text-shadow:0 1px 0 rgba(255,255,255,.4)}
+  font-size:inherit;font-weight:800;color:#F7A0B2;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
 
 .stream{position:absolute;pointer-events:none;z-index:5;will-change:transform;
   border-radius:45% 55% 48% 52%/28% 26% 72% 74%;
@@ -118,11 +118,20 @@ html,body{
   pointer-events:none;opacity:0;z-index:7;white-space:nowrap}
 
 .hud{display:flex;flex-direction:column;align-items:center;gap:7px;padding-bottom:16px}
-.lvl{font-size:20px;font-weight:800;color:#7E362E}
-.lvl b{color:#fff;text-shadow:0 1px 3px rgba(150,50,40,.35)}
-.bar{width:220px;height:12px;border-radius:8px;background:rgba(255,255,255,.35);overflow:hidden;box-shadow:inset 0 2px 4px rgba(150,50,40,.2)}
-.fill{height:100%;width:0%;border-radius:8px;background:linear-gradient(90deg,#FFE1A6,#FFB84D);transition:width .4s cubic-bezier(.34,1.56,.64,1)}
-.hint{font-size:12px;color:#8A423A;opacity:.65;font-weight:700;min-height:16px}
+.lvl{font-size:20px;font-weight:800;color:#2D2D2D}
+.lvl b{color:#F7A0B2;text-shadow:0 0 2px #fff}
+/* matches XPBar on Home/Stats: light track, white edge, pink glow, glossy gradient fill */
+.bar{width:220px;height:10px;border-radius:5px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);overflow:hidden;
+  box-shadow:0 0 5px rgba(247,160,178,.45);transition:box-shadow .3s ease}
+.bar.glowing{box-shadow:0 0 11px rgba(247,160,178,.95)}
+.fill{position:relative;height:100%;width:0%;min-width:8px;border-radius:5px;overflow:hidden;
+  background:linear-gradient(90deg,#FBC3CF,#F7A0B2,#F48DA4);transition:width 1.1s cubic-bezier(.33,1,.68,1)}
+.fill::before{content:"";position:absolute;top:0;left:0;right:0;height:45%;background:rgba(255,255,255,.35)}
+.fill::after{content:"";position:absolute;top:0;bottom:0;left:-40px;width:40px;opacity:0;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85),rgba(255,255,255,0))}
+.bar.glowing .fill::after{animation:sheen 1.1s ease-in-out}
+@keyframes sheen{0%{left:-40px;opacity:1}100%{left:100%;opacity:1}}
+.hint{font-size:12px;color:#2D2D2D;opacity:.65;font-weight:700;min-height:16px}
 
 @media (prefers-reduced-motion:reduce){.wrap,.pigA .ear.l,.pigA .ear.r{animation:none}}
 </style>
@@ -157,21 +166,54 @@ var FROM_LEVEL=${fromLevel},TO_LEVEL=${toLevel},COINS_PER_FEED=${coinsPerFeed};
 var stage=document.getElementById('stage'),wrap=document.getElementById('wrap'),
   snoutEl=document.getElementById('snout'),nosL=document.getElementById('nosL'),
   nosR=document.getElementById('nosR'),floorShadow=document.getElementById('floorShadow'),
-  fill=document.getElementById('fill'),lvlNum=document.getElementById('lvlNum'),
+  fill=document.getElementById('fill'),barEl=fill.parentNode,lvlNum=document.getElementById('lvlNum'),
   lvlTitle=document.getElementById('lvlTitle'),hint=document.getElementById('hint'),
   burstText=document.getElementById('burstText');
 
-var level=FROM_LEVEL,feeds=0,feedsNeeded=3,busy=false,playing=false,lastSide='r';
-var titles=['Piglet','Snacker','Muncher','Chonker','MAX SLOP'];
-var scales=[{x:.92,y:1.0},{x:1.06,y:1.06},{x:1.22,y:1.12},{x:1.4,y:1.19},{x:1.6,y:1.27}];
+var level=FROM_LEVEL,feeds=0,feedsNeeded=2,busy=false,playing=false,lastSide='r';
+var titles=${JSON.stringify(titles)};
+var scales=${JSON.stringify(LEVELS.map((l) => getPigScale(l.level)))};
 
+function sizeFor(lv){return scales[Math.min(lv,scales.length)-1];}
+var cur=sizeFor(level);
+function setSize(sz){
+  cur={x:sz.x,y:sz.y};
+  wrap.style.scale=sz.x+' '+sz.y;
+  floorShadow.style.width=150*sz.x+'px';
+}
 function applySize(){
-  var s=scales[level-1];
-  wrap.style.scale=s.x+' '+s.y;
-  floorShadow.style.width=150*s.x+'px';
-  lvlTitle.textContent=titles[level-1];
+  setSize(sizeFor(level));
+  lvlTitle.textContent=titles[level-1]||'';
 }
 applySize();
+
+/* Each mouthful plumps the pig a little toward its next size */
+function growFromFeed(frac){
+  if(level>=TO_LEVEL)return;
+  var a=sizeFor(level),b=sizeFor(level+1),k=.35*frac;
+  setSize({x:a.x+(b.x-a.x)*k*1.4,y:a.y+(b.y-a.y)*k});
+}
+
+/* Level-up: inflate in gulps, overshoot the new size, then jiggle to rest */
+function plumpTo(to){
+  var f=cur,sc=function(x,y){return x.toFixed(3)+' '+y.toFixed(3)};
+  var mx=function(t){return f.x+(to.x-f.x)*t},my=function(t){return f.y+(to.y-f.y)*t};
+  wrap.style.transition='none';
+  var anim=wrap.animate([
+    {scale:sc(f.x,f.y)},
+    {scale:sc(f.x*1.05,f.y*.96),offset:.12},
+    {scale:sc(mx(.45)*1.07,my(.45)*1.01),offset:.26},
+    {scale:sc(mx(.45)*1.02,my(.45)*.98),offset:.36},
+    {scale:sc(mx(.85)*1.08,my(.85)*1.02),offset:.5},
+    {scale:sc(to.x*1.16,to.y*1.07),offset:.64},
+    {scale:sc(to.x*.95,to.y*1.03),offset:.76},
+    {scale:sc(to.x*1.04,to.y*.98),offset:.87},
+    {scale:sc(to.x,to.y)}
+  ],{duration:1250,easing:'ease-out'});
+  floorShadow.style.width=150*to.x+'px';
+  anim.onfinish=function(){setSize(to);wrap.style.transition='';};
+  cur={x:to.x,y:to.y};
+}
 setInterval(function(){wrap.classList.add('blinking');setTimeout(function(){wrap.classList.remove('blinking')},200)},2400+Math.random()*2000);
 
 var stageRect=null;
@@ -186,7 +228,8 @@ function makeCoin(size){
   var c=document.createElement('div');
   c.className='coin';
   c.style.width=size+'px';c.style.height=size+'px';
-  c.style.fontSize=Math.round(size*.5)+'px';
+  c.style.fontSize=Math.round(size*.46)+'px';
+  c.style.borderWidth=Math.max(1.5,size*.11)+'px';
   stage.appendChild(c);
   return c;
 }
@@ -319,23 +362,33 @@ function showBurst(txt){
 }
 
 function levelUp(){
-  if(busy||level>=5)return;
+  if(busy||level>=TO_LEVEL)return;
   busy=true;
-  level++;feeds=0;fill.style.width='0%';
-  wrap.classList.remove('t-hop','inhale','feast');void wrap.offsetWidth;
-  wrap.classList.add('t-hop');
-  sparkles(10+level*5);
+  level++;feeds=0;resetFill();
+  wrap.classList.remove('t-hop','inhale','feast');
+  plumpTo(sizeFor(level));
+  setTimeout(function(){sparkles(10+level*5);},700);
   setTimeout(function(){
-    applySize();lvlNum.textContent=level;
-    showBurst(level>=5?'\\u{1F451} MAX SLOP':'LEVEL '+level+' \\u00B7 '+titles[level-1].toUpperCase());
+    lvlTitle.textContent=titles[level-1]||'';lvlNum.textContent=level;
+    showBurst('LEVEL '+level+(titles[level-1]?' \\u00B7 '+titles[level-1].toUpperCase():''));
   },320);
   setTimeout(function(){
-    wrap.classList.remove('t-hop');busy=false;
-    hint.textContent=level>=5?'Final form \\u{1F3C6}':'';
+    busy=false;
+    hint.textContent='';
     if(level>=TO_LEVEL){
       try{window.ReactNativeWebView.postMessage(JSON.stringify({type:'done',level:level}))}catch(e){}
     }
-  },1200);
+  },1400);
+}
+
+/* Bar glow + shine while filling; the reset to empty after a level-up is instant */
+var glowTimer=null;
+function glowBar(){
+  barEl.classList.remove('glowing');void barEl.offsetWidth;barEl.classList.add('glowing');
+  clearTimeout(glowTimer);glowTimer=setTimeout(function(){barEl.classList.remove('glowing')},1100);
+}
+function resetFill(){
+  fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;fill.style.transition='';
 }
 
 /* Auto-play: vacuum coins, fill bar, level up */
@@ -346,12 +399,13 @@ async function autoPlay(){
   for(var L=FROM_LEVEL;L<TO_LEVEL;L++){
     for(var f=0;f<feedsNeeded;f++){
       feedVacuum();
-      feeds=f+1;fill.style.width=(feeds/feedsNeeded*100)+'%';
+      feeds=f+1;fill.style.width=(feeds/feedsNeeded*100)+'%';glowBar();
+      setTimeout(function(fr){return function(){growFromFeed(fr);};}(feeds/feedsNeeded),900);
       await wait(1900);
     }
     await wait(200);
     levelUp();
-    await wait(1650);
+    await wait(1900);
   }
   playing=false;
 }
@@ -370,6 +424,7 @@ export default function ScrollPigAnimation({
   fromLevel = 1,
   toLevel = 2,
   coinCount = 8,
+  titles = ["Piglet", "Snacker", "Muncher", "Chonker", "MAX SLOP"],
   onAnimationComplete,
 }) {
   var webViewRef = useRef(null);
@@ -383,14 +438,14 @@ export default function ScrollPigAnimation({
     } catch (e) {}
   }, [onAnimationComplete]);
 
-  var clampedFrom = Math.max(1, Math.min(fromLevel, 4));
-  var clampedTo = Math.max(2, Math.min(toLevel, 5));
+  var clampedFrom = Math.max(1, fromLevel);
+  var clampedTo = Math.max(clampedFrom + 1, toLevel);
 
   return (
     <View style={styles.container}>
       <WebView
         ref={webViewRef}
-        source={{ html: buildHTML(clampedFrom, clampedTo, coinCount) }}
+        source={{ html: buildHTML(clampedFrom, clampedTo, coinCount, titles) }}
         style={styles.webview}
         scrollEnabled={false}
         bounces={false}

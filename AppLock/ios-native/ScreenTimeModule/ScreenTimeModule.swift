@@ -130,6 +130,7 @@ class ScreenTimeModule: RCTEventEmitter {
                   rejecter reject: RCTPromiseRejectBlock) {
     let keys = listIds.map { $0.hasPrefix("blocklist_") ? $0 : "blocklist_\($0)" }
     NSLog("[ScrollPig] blockLists called with keys: \(keys)")
+    shared.activeListKeys = keys
 
     let merged = shared.mergedTokens(forKeys: keys)
     NSLog("[ScrollPig] merged apps: \(merged.apps.count), categories: \(merged.categories.count)")
@@ -182,6 +183,79 @@ class ScreenTimeModule: RCTEventEmitter {
     let key = listId.hasPrefix("blocklist_") ? listId : "blocklist_\(listId)"
     shared.deleteSelection(forKey: key)
     resolve(["status": "deleted"])
+  }
+
+  // MARK: - Lock state for the block-screen and monitor extensions
+
+  @objc
+  func setLockState(_ lockState: NSDictionary,
+                    resolve: RCTPromiseResolveBlock,
+                    rejecter reject: RCTPromiseRejectBlock) {
+    let isLocked = lockState["isLocked"] as? Bool ?? false
+    let expiresAt = (lockState["lockExpiresAt"] as? Double ?? 0) / 1000
+
+    shared.isPro = lockState["isPro"] as? Bool ?? false
+    shared.peekCount = lockState["peekCount"] as? Int ?? 0
+    if let fee = lockState["peekFee"] as? Int { shared.lockPeekFee = fee }
+    if let fee = lockState["fullFee"] as? Int { shared.lockFullFee = fee }
+    if let ids = lockState["listIds"] as? [String], !ids.isEmpty {
+      shared.activeListKeys = ids.map { $0.hasPrefix("blocklist_") ? $0 : "blocklist_\($0)" }
+    }
+
+    if isLocked && expiresAt > Date().timeIntervalSince1970 {
+      let needsSchedule = !shared.isLocked || shared.lockExpiresAt != expiresAt
+      shared.isLocked = true
+      shared.lockExpiresAt = expiresAt
+      if needsSchedule {
+        do {
+          try shared.scheduleWindow(SharedDefaults.lockActivity, endingAt: Date(timeIntervalSince1970: expiresAt))
+        } catch {
+          NSLog("[ScrollPig] lock schedule failed: \(error)")
+        }
+      }
+    } else {
+      shared.isLocked = false
+      shared.lockExpiresAt = 0
+      shared.peekExpiresAt = 0
+      shared.stopWindows([SharedDefaults.lockActivity, SharedDefaults.peekActivity])
+    }
+    resolve(["status": "ok"])
+  }
+
+  // Schedules the re-block for an in-app peek, so it happens even if the app is suspended
+  @objc
+  func startPeek(_ seconds: Double,
+                 resolve: RCTPromiseResolveBlock,
+                 rejecter reject: RCTPromiseRejectBlock) {
+    let end = Date().addingTimeInterval(seconds)
+    shared.peekExpiresAt = end.timeIntervalSince1970
+    do {
+      try shared.scheduleWindow(SharedDefaults.peekActivity, endingAt: end)
+      resolve(["status": "scheduled"])
+    } catch {
+      reject("PEEK_SCHEDULE_ERROR", error.localizedDescription, error)
+    }
+  }
+
+  @objc
+  func consumeShieldEvents(_ resolve: RCTPromiseResolveBlock,
+                           rejecter reject: RCTPromiseRejectBlock) {
+    resolve(shared.consumeShieldEvents())
+  }
+
+  // MARK: - Read saved selection counts
+
+  @objc
+  func getListCounts(_ listIds: [String],
+                     resolve: RCTPromiseResolveBlock,
+                     rejecter reject: RCTPromiseRejectBlock) {
+    var counts: [String: Int] = [:]
+    for listId in listIds {
+      let key = listId.hasPrefix("blocklist_") ? listId : "blocklist_\(listId)"
+      let selection = shared.loadSelection(forKey: key)
+      counts[listId] = (selection?.applicationTokens.count ?? 0) + (selection?.categoryTokens.count ?? 0)
+    }
+    resolve(counts)
   }
 
   // MARK: - Scheduled Locks

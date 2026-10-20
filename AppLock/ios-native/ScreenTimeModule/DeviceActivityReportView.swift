@@ -5,6 +5,11 @@ import React
 class DeviceActivityReportHostView: UIView {
     private var hostingController: UIViewController?
 
+    // "TotalActivity" (today's apps) or "TopAppWeek" (the most-used app over the last 7 days)
+    @objc var reportContext: NSString = "TotalActivity" {
+        didSet { setupReport() }
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupReport()
@@ -16,15 +21,20 @@ class DeviceActivityReportHostView: UIView {
     }
 
     private func setupReport() {
-        // Filter for today's activity
+        hostingController?.view.removeFromSuperview()
+        hostingController = nil
+
         let now = Date()
         let startOfDay = Calendar.current.startOfDay(for: now)
+        let isWeek = (reportContext as String) == "TopAppWeek"
+        // Today for the Stats list; the last 7 days (by day) for the weekly top app
+        let start = isWeek ? Calendar.current.date(byAdding: .day, value: -6, to: startOfDay)! : startOfDay
         let filter = DeviceActivityFilter(
-            segment: .daily(during: DateInterval(start: startOfDay, end: now))
+            segment: .daily(during: DateInterval(start: start, end: now))
         )
 
         let reportView = DeviceActivityReport(
-            DeviceActivityReport.Context("TotalActivity"),
+            DeviceActivityReport.Context(reportContext as String),
             filter: filter
         )
 

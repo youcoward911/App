@@ -40,7 +40,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     overflow: "hidden",
-    minHeight: 200,
+    // The report is drawn by the extension and can't tell us its height, so the box is
+    // sized for its full content: the total plus the top 5 apps (targets/report/AppUsageView)
+    height: 380,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.9)",
     shadowColor: "#C9A0B0",
@@ -51,7 +53,6 @@ const styles = StyleSheet.create({
   },
   report: {
     flex: 1,
-    minHeight: 200,
   },
   fallback: {
     padding: 20,
@@ -63,3 +64,14 @@ const styles = StyleSheet.create({
     color: "#2D2D2D",
   },
 });
+
+// The single most-used app over the last 7 days (icon, name, total time), drawn by the
+// report extension's "TopAppWeek" scene. Renders nothing in builds without the extension.
+export function TopAppWeek({ style }) {
+  if (!NativeReportView) return null;
+  return (
+    <View style={[{ height: 76 }, style]}>
+      <NativeReportView reportContext="TopAppWeek" style={{ flex: 1 }} />
+    </View>
+  );
+}

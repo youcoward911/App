@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -23,44 +24,46 @@ import { ensureAuth } from "../utils/firebase";
 import { lightTap } from "../utils/haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
+import PCoin from "../components/PCoin";
 
+export const BOARD_INTRO_KEY = "@scrollpig_board_intro";
 const DEMO_UID = "demo-you";
 
-function buildDemoData(myName, myCoins, myUnlocks) {
+function buildDemoData(myName, myCoins, myUnlocks, mySurrenders) {
   const myWeight = getPigWeight(myCoins).label;
   const myLevel = getLevel(myCoins).level;
 
   // Fake city users — spread across weight tiers
   const cityEntries = [
-    { uid: "u1", pigName: "Greasy Oinker #14", totalCoinsSpent: 8420, totalUnlocks: 312, weightLabel: "Legendary" },
-    { uid: "u2", pigName: "Sloppy Trotter #67", totalCoinsSpent: 5890, totalUnlocks: 245, weightLabel: "Legendary" },
-    { uid: "u3", pigName: "Muddy Scroll-Hog #3", totalCoinsSpent: 4210, totalUnlocks: 198, weightLabel: "Massive" },
-    { uid: "u4", pigName: "Filthy Porker #88", totalCoinsSpent: 2780, totalUnlocks: 134, weightLabel: "Massive" },
-    { uid: "u5", pigName: "Chunky Slop-Lord #21", totalCoinsSpent: 1950, totalUnlocks: 98, weightLabel: "Obese" },
-    { uid: "u6", pigName: "Stinky Mud-Roller #55", totalCoinsSpent: 1420, totalUnlocks: 76, weightLabel: "Obese" },
-    { uid: "u7", pigName: "Wobbly Coin-Pig #9", totalCoinsSpent: 980, totalUnlocks: 52, weightLabel: "Fat" },
-    { uid: "u8", pigName: "Pudgy Oink-Machine #33", totalCoinsSpent: 720, totalUnlocks: 41, weightLabel: "Chubby" },
-    { uid: "u9", pigName: "Grimy Feed-Beast #71", totalCoinsSpent: 540, totalUnlocks: 29, weightLabel: "Chubby" },
-    { uid: "u10", pigName: "Soggy Trough-Face #18", totalCoinsSpent: 380, totalUnlocks: 22, weightLabel: "Plump" },
-    { uid: "u11", pigName: "Drippy Pay-Pig #45", totalCoinsSpent: 210, totalUnlocks: 14, weightLabel: "Plump" },
-    { uid: "u12", pigName: "Lumpy Piggy #62", totalCoinsSpent: 85, totalUnlocks: 8, weightLabel: "Lean" },
+    { uid: "u1", pigName: "Greasy Oinker #14", totalCoinsSpent: 8420, totalUnlocks: 312, totalSurrenders: 34, weightLabel: "Legendary" },
+    { uid: "u2", pigName: "Sloppy Trotter #67", totalCoinsSpent: 5890, totalUnlocks: 245, totalSurrenders: 27, weightLabel: "Legendary" },
+    { uid: "u3", pigName: "Muddy Scroll-Hog #3", totalCoinsSpent: 4210, totalUnlocks: 198, totalSurrenders: 22, weightLabel: "Massive" },
+    { uid: "u4", pigName: "Filthy Porker #88", totalCoinsSpent: 2780, totalUnlocks: 134, totalSurrenders: 14, weightLabel: "Massive" },
+    { uid: "u5", pigName: "Chunky Slop-Lord #21", totalCoinsSpent: 1950, totalUnlocks: 98, totalSurrenders: 10, weightLabel: "Obese" },
+    { uid: "u6", pigName: "Stinky Mud-Roller #55", totalCoinsSpent: 1420, totalUnlocks: 76, totalSurrenders: 8, weightLabel: "Obese" },
+    { uid: "u7", pigName: "Wobbly Coin-Pig #9", totalCoinsSpent: 980, totalUnlocks: 52, totalSurrenders: 5, weightLabel: "Fat" },
+    { uid: "u8", pigName: "Pudgy Oink-Machine #33", totalCoinsSpent: 720, totalUnlocks: 41, totalSurrenders: 4, weightLabel: "Chubby" },
+    { uid: "u9", pigName: "Grimy Feed-Beast #71", totalCoinsSpent: 540, totalUnlocks: 29, totalSurrenders: 3, weightLabel: "Chubby" },
+    { uid: "u10", pigName: "Soggy Trough-Face #18", totalCoinsSpent: 380, totalUnlocks: 22, totalSurrenders: 2, weightLabel: "Plump" },
+    { uid: "u11", pigName: "Drippy Pay-Pig #45", totalCoinsSpent: 210, totalUnlocks: 14, totalSurrenders: 1, weightLabel: "Plump" },
+    { uid: "u12", pigName: "Lumpy Piggy #62", totalCoinsSpent: 85, totalUnlocks: 8, totalSurrenders: 1, weightLabel: "Lean" },
   ];
 
   // Insert the real user into sorted position
-  const me = { uid: DEMO_UID, pigName: myName, totalCoinsSpent: myCoins, totalUnlocks: myUnlocks, weightLabel: myWeight };
+  const me = { uid: DEMO_UID, pigName: myName, totalCoinsSpent: myCoins, totalUnlocks: myUnlocks, totalSurrenders: mySurrenders, weightLabel: myWeight };
   const allCity = [...cityEntries, me].sort((a, b) => b.totalCoinsSpent - a.totalCoinsSpent);
 
   // Global — bigger fish + some city users
   const globalExtras = [
-    { uid: "g1", pigName: "Nasty Wallow-King #1", totalCoinsSpent: 24500, totalUnlocks: 890, weightLabel: "Legendary" },
-    { uid: "g2", pigName: "Slobbery Hog #99", totalCoinsSpent: 18200, totalUnlocks: 720, weightLabel: "Legendary" },
-    { uid: "g3", pigName: "Mucky Swine #7", totalCoinsSpent: 14800, totalUnlocks: 612, weightLabel: "Legendary" },
-    { uid: "g4", pigName: "Scruffy Boar #44", totalCoinsSpent: 11350, totalUnlocks: 498, weightLabel: "Legendary" },
-    { uid: "g5", pigName: "Gooey Snout #26", totalCoinsSpent: 9100, totalUnlocks: 387, weightLabel: "Legendary" },
-    { uid: "g7", pigName: "Sweaty Slop-Eater #83", totalCoinsSpent: 7200, totalUnlocks: 291, weightLabel: "Legendary" },
-    { uid: "g8", pigName: "Grubby Porker #38", totalCoinsSpent: 6100, totalUnlocks: 258, weightLabel: "Legendary" },
-    { uid: "g10", pigName: "Messy Piglet #52", totalCoinsSpent: 4900, totalUnlocks: 211, weightLabel: "Massive" },
-    { uid: "g12", pigName: "Mushy Oink-Machine #15", totalCoinsSpent: 3600, totalUnlocks: 165, weightLabel: "Massive" },
+    { uid: "g1", pigName: "Nasty Wallow-King #1", totalCoinsSpent: 24500, totalUnlocks: 890, totalSurrenders: 98, weightLabel: "Legendary" },
+    { uid: "g2", pigName: "Slobbery Hog #99", totalCoinsSpent: 18200, totalUnlocks: 720, totalSurrenders: 80, weightLabel: "Legendary" },
+    { uid: "g3", pigName: "Mucky Swine #7", totalCoinsSpent: 14800, totalUnlocks: 612, totalSurrenders: 68, weightLabel: "Legendary" },
+    { uid: "g4", pigName: "Scruffy Boar #44", totalCoinsSpent: 11350, totalUnlocks: 498, totalSurrenders: 55, weightLabel: "Legendary" },
+    { uid: "g5", pigName: "Gooey Snout #26", totalCoinsSpent: 9100, totalUnlocks: 387, totalSurrenders: 43, weightLabel: "Legendary" },
+    { uid: "g7", pigName: "Sweaty Slop-Eater #83", totalCoinsSpent: 7200, totalUnlocks: 291, totalSurrenders: 32, weightLabel: "Legendary" },
+    { uid: "g8", pigName: "Grubby Porker #38", totalCoinsSpent: 6100, totalUnlocks: 258, totalSurrenders: 28, weightLabel: "Legendary" },
+    { uid: "g10", pigName: "Messy Piglet #52", totalCoinsSpent: 4900, totalUnlocks: 211, totalSurrenders: 23, weightLabel: "Massive" },
+    { uid: "g12", pigName: "Mushy Oink-Machine #15", totalCoinsSpent: 3600, totalUnlocks: 165, totalSurrenders: 18, weightLabel: "Massive" },
   ];
   const allGlobal = [...globalExtras, ...allCity].sort((a, b) => b.totalCoinsSpent - a.totalCoinsSpent);
   // Dedupe by uid
@@ -90,11 +93,11 @@ export default function LeaderboardScreen() {
   const [nameInput, setNameInput] = useState("");
 
   const rebuildDemo = useCallback((name) => {
-    const demo = buildDemoData(name, state.totalCoinsSpent, state.totalUnlocks);
+    const demo = buildDemoData(name, state.totalCoinsSpent, state.totalUnlocks, state.totalSurrenders || 0);
     setCityData(demo.cityData);
     setGlobalData(demo.globalData);
     setUserRank(demo.userRank);
-  }, [state.totalCoinsSpent, state.totalUnlocks]);
+  }, [state.totalCoinsSpent, state.totalUnlocks, state.totalSurrenders]);
 
   const loadData = useCallback(async () => {
     // Load saved pig name
@@ -119,8 +122,9 @@ export default function LeaderboardScreen() {
           getUserRank(),
         ]);
 
-        // If we got real data, use it
-        if ((city.entries && city.entries.length > 0) || (global && global.length > 0)) {
+        // Real data, even a near-empty board, in App Store builds; sample players are dev-only
+        const hasData = (city.entries && city.entries.length > 0) || (global && global.length > 0);
+        if (hasData || !__DEV__) {
           setCityData(city);
           setGlobalData(global);
           setUserRank(rank);
@@ -133,7 +137,14 @@ export default function LeaderboardScreen() {
       console.warn("Firebase leaderboard unavailable, using demo data:", e.message);
     }
 
-    // Fallback: demo data seeded with real user stats
+    // Never show made-up players to real users: an empty board shows the "be the first" state
+    if (!__DEV__) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
+    // Development fallback: demo data seeded with real user stats
     setUid(DEMO_UID);
     rebuildDemo(pigName);
     setLoading(false);
@@ -156,7 +167,7 @@ export default function LeaderboardScreen() {
     if (uid === DEMO_UID && myName) {
       rebuildDemo(myName);
     }
-  }, [state.totalCoinsSpent, state.totalUnlocks]);
+  }, [state.totalCoinsSpent, state.totalUnlocks, state.totalSurrenders]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -200,6 +211,57 @@ export default function LeaderboardScreen() {
 
   const entries = tab === "city" ? cityData.entries : globalData;
 
+  // Amount column grows to the widest rendered number so the coin icons line up
+  const [amountWidth, setAmountWidth] = useState(0);
+  useEffect(() => setAmountWidth(0), [tab]);
+  const onAmountLayout = (e) => {
+    const w = Math.ceil(e.nativeEvent.layout.width);
+    setAmountWidth((cur) => (w > cur ? w : cur));
+  };
+
+  // Opening the tab (or switching City/Global) glides the list to your own row
+  const listRef = useRef(null);
+  const pendingScroll = useRef(true);
+  const scrollTimer = useRef(null);
+  // One-time explainer the first time the Board tab is opened on a fresh install
+  // (onboarding marks it "pending"; existing players never get the flag)
+  useEffect(() => {
+    AsyncStorage.getItem(BOARD_INTRO_KEY).then((val) => {
+      if (val !== "pending") return;
+      AsyncStorage.setItem(BOARD_INTRO_KEY, "done").catch(() => {});
+      setTimeout(() => showAlert(
+        "The Pig Board",
+        "See how big of a pig you are compared to everyone else. Spend coins, climb the ranks.",
+        [{ text: "Oink." }],
+        { titleColor: "#F7A0B2", bodyColor: "#2D2D2D" }
+      ), 500);
+    }).catch(() => {});
+  }, []);
+
+  useFocusEffect(useCallback(() => {
+    pendingScroll.current = true;
+    return () => clearTimeout(scrollTimer.current);
+  }, []));
+  useEffect(() => { pendingScroll.current = true; }, [tab, uid]);
+  useEffect(() => {
+    if (!pendingScroll.current || !entries.length || !listRef.current) return;
+    const index = entries.findIndex((e) => e.uid === uid);
+    if (index < 0) return;
+    pendingScroll.current = false;
+    listRef.current.scrollToOffset({ offset: 0, animated: false });
+    clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => {
+      listRef.current?.scrollToIndex({ index, viewPosition: 0.4, animated: true });
+    }, 350);
+  });
+  const onScrollToIndexFailed = (info) => {
+    // Row not rendered yet: jump near it, then glide the rest of the way
+    listRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
+    scrollTimer.current = setTimeout(() => {
+      listRef.current?.scrollToIndex({ index: info.index, viewPosition: 0.4, animated: true });
+    }, 250);
+  };
+
   const renderEntry = ({ item, index }) => {
     const isMe = item.uid === uid;
     const rank = index + 1;
@@ -211,15 +273,15 @@ export default function LeaderboardScreen() {
         <View style={styles.rowInfo}>
           <Text style={[styles.rowName, isMe && styles.rowNameMe]}>
             {item.pigName || "Anonymous Pig"}
-            {isMe ? " (YOU)" : ""}
+            {isMe ? <Text style={styles.youTag}> (YOU)</Text> : null}
           </Text>
           <Text style={styles.rowSub}>
-            {item.weightLabel || getPigWeight(item.totalCoinsSpent || 0).label} · {item.totalUnlocks || 0} tribute{(item.totalUnlocks || 0) === 1 ? "" : "s"}
+            {item.weightLabel || getPigWeight(item.totalCoinsSpent || 0).label} · {item.totalSurrenders || 0} surrender{(item.totalSurrenders || 0) === 1 ? "" : "s"}
           </Text>
         </View>
         <View style={styles.coinWrap}>
-          <View style={styles.coinIcon}><Text style={styles.coinP}>P</Text></View>
-          <Text style={styles.coinAmount}>{item.totalCoinsSpent || 0}</Text>
+          <PCoin size={20} style={styles.coinIcon} />
+          <Text style={[styles.coinAmount, { minWidth: amountWidth }]} onLayout={onAmountLayout}>{item.totalCoinsSpent || 0}</Text>
         </View>
       </View>
     );
@@ -228,7 +290,7 @@ export default function LeaderboardScreen() {
   if (loading) {
     return (
       <LinearGradient colors={["#EDE8E4", "#F5CCD5"]} style={styles.gradient}>
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={C.pink} />
           <Text style={styles.loadingText}>Loading the trough...</Text>
@@ -240,7 +302,7 @@ export default function LeaderboardScreen() {
 
   return (
     <LinearGradient colors={["#EDE8E4", "#F5CCD5"]} style={styles.gradient}>
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Leaderboard</Text>
       </View>
@@ -288,7 +350,7 @@ export default function LeaderboardScreen() {
           style={[styles.tab, tab === "city" && styles.tabActive]}
           onPress={() => setTab("city")}
         >
-          <Text style={[styles.tabText, tab === "city" && styles.tabTextActive]}>
+          <Text style={[styles.tabText, styles.textOutline, tab === "city" && styles.tabTextActive]}>
             {cityData.city || "City"}
           </Text>
         </TouchableOpacity>
@@ -296,7 +358,7 @@ export default function LeaderboardScreen() {
           style={[styles.tab, tab === "global" && styles.tabActive]}
           onPress={() => setTab("global")}
         >
-          <Text style={[styles.tabText, tab === "global" && styles.tabTextActive]}>
+          <Text style={[styles.tabText, styles.textOutline, tab === "global" && styles.tabTextActive]}>
             Global
           </Text>
         </TouchableOpacity>
@@ -314,6 +376,8 @@ export default function LeaderboardScreen() {
         </View>
       ) : (
         <FlatList
+          ref={listRef}
+          onScrollToIndexFailed={onScrollToIndexFailed}
           data={entries}
           keyExtractor={(item, i) => item.uid || `${i}`}
           renderItem={renderEntry}
@@ -377,45 +441,42 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
+    // Same border width on both tabs so switching doesn't shift the text
+    borderWidth: 3,
+    borderColor: "transparent",
   },
-  tabActive: { borderWidth: 1.5, borderColor: "#2D2D2D" },
+  tabActive: { borderColor: "#F7A0B2" },
   tabText: { fontSize: 13, fontWeight: "700", color: "#2D2D2D", textTransform: "uppercase", letterSpacing: 0.5 },
-  tabTextActive: { color: "#2D2D2D" },
+  tabTextActive: { color: "#F7A0B2" },
+  textOutline: { textShadowColor: "#FFFFFF", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 },
 
   // List
   list: { paddingHorizontal: 24, paddingBottom: 40 },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: C.bg,
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     marginBottom: 6,
+    // Same border on every row so your highlighted row isn't taller than the rest
+    borderWidth: 2,
+    borderColor: "transparent",
   },
   rowMe: {
-    borderWidth: 2,
     borderColor: C.pink,
-    backgroundColor: C.bg,
   },
-  rank: { fontSize: 18, fontWeight: "400", width: 36, textAlign: "center", color: "#2D2D2D" },
+  rank: { fontSize: 16, fontWeight: "500", width: 34, textAlign: "center", color: "#2D2D2D" },
   rowInfo: { flex: 1, marginLeft: 8 },
-  rowName: { ...T.bodyBold, fontSize: 14, color: "#2D2D2D" },
+  // White outline around the pink name (RN has no text stroke; a tight white glow reads as one)
+  rowName: { ...T.bodyBold, fontSize: 14, color: "#F7A0B2", textShadowColor: "#FFFFFF", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 },
+  youTag: { color: "#2D2D2D", fontWeight: "900" },
   rowNameMe: { color: C.pink },
-  rowSub: { ...T.caption, marginTop: 2 },
-  coinWrap: { flexDirection: "row", alignItems: "center" },
-  coinIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,144,172,0.4)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 4,
-    marginTop: 1,
-  },
-  coinP: { color: "#F7A0B2", fontSize: 10, fontWeight: "300" },
-  coinAmount: { fontSize: 18, fontWeight: "900", color: "#F7A0B2" },
+  rowSub: { ...T.caption, marginTop: 0 },
+  coinWrap: { flexDirection: "row", alignItems: "center", flexShrink: 0 },
+  coinIcon: { marginRight: 4, marginTop: 1 },
+  coinAmount: { fontSize: 18, fontWeight: "900", color: "#F7A0B2", fontVariant: ["tabular-nums"], textAlign: "left", textShadowColor: "#FFFFFF", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 },
 
   // Edit name modal
   modalOverlay: {

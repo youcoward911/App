@@ -1,3 +1,4 @@
+import { getPigScale } from "../utils/pigWeight";
 // Builds the full HTML for a pig skin WebView — exact CSS from scroll-pig-reactions.html
 // Each skin has its own accessories, colors, and tap reaction animation.
 
@@ -85,7 +86,7 @@ html,body{
 
 /* base pig */
 .pigA{width:180px;height:168px;position:relative;overflow:visible}
-.pigA .head{position:absolute;inset:0;border-radius:46% 46% 44% 44%/50% 50% 46% 46%;
+.pigA .head{position:absolute;inset:0 -8px;border-radius:48% 48% 46% 46%/50% 50% 48% 48%;
   background:radial-gradient(circle at 34% 26%,#FFE4DE 0%,#FDC9C0 30%,#F6ABA0 62%,#E98D82 100%);
   box-shadow:inset 8px 12px 22px rgba(255,255,255,.75),inset -12px -18px 28px rgba(190,90,80,.38),inset 0 -4px 8px rgba(255,255,255,.2),0 14px 28px rgba(140,50,42,.28)}
 .pigA .head::before{content:"";position:absolute;top:10px;left:26px;width:74px;height:44px;border-radius:50%;
@@ -96,7 +97,7 @@ html,body{
   box-shadow:inset 6px 8px 12px rgba(255,255,255,.5),inset -6px -8px 14px rgba(190,90,80,.35),0 4px 10px rgba(140,50,42,.15);transform-origin:50% 90%}
 .pigA .ear::after{content:"";position:absolute;top:14px;left:16px;width:26px;height:30px;
   border-radius:70% 30% 60% 40%/78% 78% 22% 22%;background:radial-gradient(circle at 45% 40%,#F49A93,#E37B72);filter:blur(1px)}
-.pigA .ear.l{left:8px;transform:rotate(-14deg)}.pigA .ear.r{right:8px;transform:rotate(14deg) scaleX(-1)}
+.pigA .ear.l{left:3px;transform:rotate(-14deg)}.pigA .ear.r{right:3px;transform:rotate(14deg) scaleX(-1)}
 .eye{position:absolute;width:14px;height:15px;top:62px;background:#000;border-radius:50%}
 .eye.l{left:42px}.eye.r{right:42px}
 .blinking .eye{animation:blink .16s ease-in-out}
@@ -116,9 +117,10 @@ html,body{
 
 /* speech bubble */
 .bubble{position:absolute;top:15%;left:50%;z-index:9;white-space:normal;
-  background:#FFF5F8;color:#2D2D2D;font-weight:500;font-size:13px;letter-spacing:.02em;
-  padding:8px 14px;border-radius:14px;border:1.5px solid rgba(255,133,160,0.3);
-  box-shadow:0 4px 10px rgba(255,133,160,.15);
+  background:#FFF5F8;color:#2D2D2D;font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;
+  font-weight:700;font-size:13.5px;letter-spacing:.01em;line-height:1.25;
+  padding:8px 14px;border-radius:14px;border:1.5px solid rgba(247,160,178,0.45);
+  box-shadow:0 4px 10px rgba(247,160,178,.2);
   transform:translate(-50%,0);opacity:0;
   max-width:85%;text-align:center;word-wrap:break-word}
 .bubble::after{content:"";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);
@@ -241,7 +243,7 @@ export const SKIN_CSS = {
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 .horn.hl{left:38px;top:-26px;height:30px;transform:rotate(-15deg)}
 .horn.hr{right:38px;top:-26px;height:30px;transform:rotate(15deg)}
-.dtail{position:absolute;bottom:18px;left:-16px;width:28px;height:40px;z-index:0}
+.dtail{position:absolute;bottom:18px;left:-16px;width:28px;height:40px;z-index:0;transform-origin:100% 75%}
 .dtail::before{content:"";position:absolute;left:0;top:0;width:100%;height:100%;
   border:4px solid #C03030;border-radius:50%;border-top-color:transparent;border-right-color:transparent;transform:rotate(30deg)}
 .dtail::after{content:"";position:absolute;bottom:-2px;left:2px;width:12px;height:8px;
@@ -473,12 +475,13 @@ const SKIN_FX_JS = {
       ],{duration:800,easing:'cubic-bezier(.34,1.3,.5,1)'});
     });
     var tail=document.querySelector('.dtail');
+    // Wag from where the tail meets the body (a scaleX flip swung it off the pig)
     if(tail)tail.animate([
-      {transform:'scaleX(1)'},
-      {transform:'scaleX(-1)',offset:.25},
-      {transform:'scaleX(1)',offset:.5},
-      {transform:'scaleX(-1)',offset:.75},
-      {transform:'scaleX(1)'}
+      {transform:'rotate(0deg)'},
+      {transform:'rotate(-22deg)',offset:.2},
+      {transform:'rotate(16deg)',offset:.45},
+      {transform:'rotate(-12deg)',offset:.7},
+      {transform:'rotate(0deg)'}
     ],{duration:900,easing:'ease-in-out'});
     var stage=document.querySelector('.stage');
     var cx=stage.offsetWidth/2,cy=stage.offsetHeight*.4;
@@ -592,7 +595,7 @@ function scheduleIdle(){
 scheduleIdle();`;
 }
 
-export function buildPigSkinHTML(skinId, level, viewSize, centered, customIdleMessages) {
+export function buildPigSkinHTML(skinId, level, viewSize, centered, customIdleMessages, silent = false) {
   const skinCSS = SKIN_CSS[skinId] || "";
   const skinClass = SKIN_CLASS[skinId] || "";
   const extras = SKIN_EXTRAS_HTML[skinId] || "";
@@ -601,7 +604,7 @@ export function buildPigSkinHTML(skinId, level, viewSize, centered, customIdleMe
   const isFloaty = reactionInfo.floaty;
   const isDefault = skinId === "default";
 
-  const scales = "[{x:.92,y:1.0},{x:1.06,y:1.06},{x:1.22,y:1.12},{x:1.4,y:1.19},{x:1.6,y:1.27}]";
+  const pigScale = JSON.stringify(getPigScale(level));
 
   const idleMessages = customIdleMessages || IDLE_CHATTER[skinId] || IDLE_CHATTER.default;
 
@@ -641,6 +644,9 @@ function pokePig(){
 }`;
   }
 
+  // Silent pigs (e.g. locked skins) still react to taps but never speak
+  if (silent) pokeJS += "\nshowBubble=function(){};";
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -662,8 +668,7 @@ function pokePig(){
 </div>
 <script>
 var wrap=document.getElementById('wrap');var pigA=document.getElementById('pigA');
-var scales=${scales};var lvl=Math.min(${level || 1},5);
-var s=scales[lvl-1];wrap.style.scale=s.x+' '+s.y;
+var s=${pigScale};wrap.style.scale=s.x+' '+s.y;
 var shadow=document.querySelector('.shadow');if(shadow)shadow.style.width=140*s.x+'px';
 setInterval(function(){wrap.classList.add('blinking');setTimeout(function(){wrap.classList.remove('blinking')},200)},2400+Math.random()*2000);
 ${pokeJS}

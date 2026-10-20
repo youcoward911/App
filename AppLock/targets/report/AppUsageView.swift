@@ -19,32 +19,34 @@ struct AppUsageView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(formatted(totalDuration))
                     .font(.system(size: 28, weight: .black))
-                    .foregroundColor(Color(hex: "4A4545"))
+                    .foregroundColor(Color(hex: "2D2D2D"))
                 Text("today")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(hex: "8A8380"))
+                    .foregroundColor(Color(hex: "6E6468"))
             }
             .padding(.bottom, 16)
 
             // Divider
             Rectangle()
-                .fill(Color(hex: "E0DCD8"))
+                .fill(Color(hex: "F3E1E5"))
                 .frame(height: 1)
                 .padding(.bottom, 12)
 
             if apps.isEmpty {
                 Text("No usage data yet")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(hex: "8A8380"))
+                    .foregroundColor(Color(hex: "6E6468"))
                     .padding(.vertical, 20)
             } else {
-                // App list — show top 8
-                ForEach(Array(apps.prefix(8))) { app in
+                // App list: top 5 (the card in the app is sized for exactly this)
+                ForEach(Array(apps.prefix(5))) { app in
                     appRow(app)
                 }
             }
         }
         .padding(20)
+        // Pin to the top so a short list never floats or gets cut off in the fixed-height card
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     @ViewBuilder
@@ -65,7 +67,7 @@ struct AppUsageView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(app.name)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(Color(hex: "4A4545"))
+                    .foregroundColor(Color(hex: "2D2D2D"))
                     .lineLimit(1)
 
                 HStack(spacing: 8) {
@@ -90,18 +92,13 @@ struct AppUsageView: View {
         .padding(.vertical, 8)
     }
 
-    // Color coding: high usage = warm, low = cool
+    // App pink; heavier use (2h+) gets a deeper pink
     private func barColor(_ duration: TimeInterval) -> Color {
-        let hours = duration / 3600
-        if hours >= 2 { return Color(hex: "C4918A") }  // dusty rose for heavy
-        if hours >= 1 { return Color(hex: "A89490") }  // warm taupe for moderate
-        return Color(hex: "B5AFA8")                     // gray for light
+        duration >= 2 * 3600 ? Color(hex: "E97C95") : Color(hex: "F7A0B2")
     }
 
     private func barTextColor(_ duration: TimeInterval) -> Color {
-        let hours = duration / 3600
-        if hours >= 2 { return Color(hex: "C4918A") }
-        return Color(hex: "8A8380")
+        duration >= 2 * 3600 ? Color(hex: "E97C95") : Color(hex: "2D2D2D")
     }
 
     private func formatted(_ interval: TimeInterval) -> String {

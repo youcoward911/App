@@ -23,8 +23,11 @@ const NATIVE_FILES = [
   "DeviceActivityReportViewManager.m",
 ];
 
-// Extension target (DeviceActivityReport) is handled by @bacons/apple-targets
-// via targets/report/expo-target.config.js
+// Extension targets are handled by @bacons/apple-targets via targets/*/expo-target.config.js
+
+// Extensions that read the App Group state get a copy of SharedDefaults.swift
+// (single source in ios-native/ScreenTimeModule; the copies are gitignored)
+const SHARED_DEFAULTS_TARGETS = ["shield-action", "shield-config", "activity-monitor"];
 
 function withScreenTime(config) {
   // 1. Family Controls entitlement — always enabled
@@ -57,6 +60,13 @@ function withScreenTime(config) {
         const src = path.join(stmDir, file);
         if (fs.existsSync(src)) {
           fs.copyFileSync(src, path.join(appDir, file));
+        }
+      }
+
+      for (const target of SHARED_DEFAULTS_TARGETS) {
+        const targetDir = path.join(projectRoot, "targets", target);
+        if (fs.existsSync(targetDir)) {
+          fs.copyFileSync(path.join(stmDir, "SharedDefaults.swift"), path.join(targetDir, "SharedDefaults.swift"));
         }
       }
 

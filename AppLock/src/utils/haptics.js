@@ -30,3 +30,8 @@ export function warningTap() {
   if (Platform.OS !== "ios" || !Haptics) return;
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
 }
+
+export function selectionTick() {
+  if (Platform.OS !== "ios" || !Haptics) return;
+  Haptics.selectionAsync().catch(() => {});
+}

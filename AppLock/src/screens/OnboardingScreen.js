@@ -83,7 +83,7 @@ export default function OnboardingScreen({ onComplete }) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
           <View style={styles.spacer} />
-          <PigIdleWebView size={120} />
+          <PigIdleWebView size={224} />
           <Text style={styles.title}>Hi Piggy!</Text>
           <Text style={styles.message}>
             Grant me access to your{"\n"}screen time controls.
@@ -107,7 +107,7 @@ export default function OnboardingScreen({ onComplete }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.content}>
         <View style={styles.spacer} />
-        <PigIdleWebView size={120} />
+        <PigIdleWebView size={224} />
         <Text style={styles.title}>Very good.</Text>
         <Text style={styles.message}>
           Already following directions. Now let me know which apps you'd like to add to your Slop List.

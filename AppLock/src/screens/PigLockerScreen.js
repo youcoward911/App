@@ -66,7 +66,7 @@ export default function PigLockerScreen({ navigation }) {
       <View style={styles.card}>
         <View style={styles.pigArea}>
           <View style={[styles.pigCenter, !unlocked && styles.pigBlurred]}>
-            <PigIdleWebView level={Math.min(userLevel, 5)} size={180} skin={skin.id} />
+            <PigIdleWebView level={userLevel} size={224} skin={skin.id} silent={!unlocked} />
           </View>
           {!unlocked && (
             <View style={styles.lockOverlay}>
@@ -177,14 +177,14 @@ const styles = StyleSheet.create({
     width: CARD_W,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
   pigArea: {
     width: CARD_W,
-    height: 260,
+    height: 236,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    overflow: "visible", // the pig WebView extends 80pt past its box for the speech bubble/bounce
   },
   pigCenter: {
     alignItems: "center",
@@ -224,24 +224,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "900",
     color: "#2D2D2D",
-    marginTop: 4,
+    marginTop: 0,
   },
   rarityPill: {
-    paddingHorizontal: 14, paddingVertical: 4, borderRadius: 10, marginTop: 8,
+    paddingHorizontal: 14, paddingVertical: 4, borderRadius: 10, marginTop: 6,
   },
   rarityText: {
     fontSize: 10, fontWeight: "900", letterSpacing: 1.5, textTransform: "uppercase",
   },
   skinDesc: {
     fontSize: 14, fontWeight: "500", color: "#2D2D2D",
-    textAlign: "center", marginTop: 10, paddingHorizontal: 16, lineHeight: 20,
+    textAlign: "center", marginTop: 8, paddingHorizontal: 16, lineHeight: 19,
   },
 
-  btnRow: { flexDirection: "row", gap: 10, marginTop: 18 },
+  btnRow: { flexDirection: "row", gap: 10, marginTop: 14 },
   selectBtn: {
     borderWidth: 1.5,
     borderColor: "#F7A0B2",
-    borderRadius: 16, paddingVertical: 14, paddingHorizontal: 28,
+    borderRadius: 16, paddingVertical: 12, paddingHorizontal: 28,
   },
   selectBtnActive: { borderColor: "#2D2D2D" },
   selectBtnText: { fontSize: 15, fontWeight: "800", color: "#2D2D2D", letterSpacing: 0.5 },
@@ -249,11 +249,11 @@ const styles = StyleSheet.create({
   unboxBtn: {
     borderWidth: 1,
     borderColor: "#F7A0B2",
-    borderRadius: 16, paddingVertical: 14, paddingHorizontal: 20,
+    borderRadius: 16, paddingVertical: 12, paddingHorizontal: 20,
   },
   unboxBtnText: { fontSize: 13, fontWeight: "700", color: "#2D2D2D" },
 
-  lockedBtnRow: { alignItems: "center", marginTop: 18 },
+  lockedBtnRow: { alignItems: "center", marginTop: 14 },
   lockedText: { fontSize: 14, fontWeight: "700", color: "#F7A0B2" },
   lockedSub: { fontSize: 12, fontWeight: "500", color: "#F7A0B2", marginTop: 4 },
 

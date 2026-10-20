@@ -18,6 +18,10 @@ import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
 import { C, T, CARD_SHADOW } from "../utils/theme";
 import { signInWithApple, isAppleAuthAvailable, getAppleLinkedStatus } from "../utils/appleAuth";
+import PCoin from "../components/PCoin";
+import Constants from "expo-constants";
+
+const MIN_CUSTOM_FEE = 10;
 
 export default function SettingsScreen({ navigation }) {
   const { state, dispatch } = useAppLock();
@@ -73,33 +77,35 @@ export default function SettingsScreen({ navigation }) {
       showAlert("Nice Try", "Enter a real number.");
       return;
     }
+    if (val < MIN_CUSTOM_FEE) {
+      showAlert("Nice Try", `Minimum is ${MIN_CUSTOM_FEE} coins. Your master doesn't do discounts.`);
+      return;
+    }
     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultPeekFee: val, defaultFullFee: val } });
     const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
-    showAlert(`${val} coins to unlock`, taunt);
+    showAlert(`${val} coins to unlock`, taunt, undefined, { titleColor: "#F7A0B2", bodyColor: "#2D2D2D" });
     setCustomFee("");
   };
 
   return (
     <>
     <LinearGradient colors={["#EDE8E4", "#F5CCD5"]} style={styles.gradient}>
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Settings</Text>
 
         {/* Unlock Fee */}
         <View style={[styles.card, CARD_SHADOW]}>
           <Text style={styles.cardTitle}>
-            {state.isProPig ? "Peek / Unlock Cost" : "Unlock Cost"}
+            Unlock Cost
           </Text>
           <Text style={styles.cardDesc}>
-            {state.isProPig
-              ? `Current: ${state.settings.defaultPeekFee} peek / ${state.settings.defaultFullFee} unlock`
-              : `Current: ${state.settings.defaultFullFee} coins to unlock`}
+            {`Current: ${state.settings.defaultFullFee} coins to unlock`}
           </Text>
 
           <View style={styles.presets}>
             {FEE_TIERS.map((t) => {
-              const isActive = state.settings.defaultFullFee === t.full;
+              const isActive = (state.settings.defaultFullFee ?? FEE_TIERS[0].full) === t.full;
               return (
                 <TouchableOpacity
                   key={t.label}
@@ -108,13 +114,15 @@ export default function SettingsScreen({ navigation }) {
                     dispatch({ type: "UPDATE_SETTINGS", payload: { defaultPeekFee: t.peek, defaultFullFee: t.full } });
                     const taunt = FEE_TAUNTS[Math.floor(Math.random() * FEE_TAUNTS.length)];
                     showAlert(
-                      state.isProPig ? `${t.peek} peek / ${t.full} unlock` : `${t.full} coins to unlock`,
-                      taunt
+                      `${t.full} coins to unlock`,
+                      taunt,
+                      undefined,
+                      { titleColor: "#F7A0B2", bodyColor: "#2D2D2D" }
                     );
                   }}
                 >
                   <Text style={[styles.presetText, isActive && styles.presetTextActive]}>
-                    {state.isProPig ? t.label : t.full}
+                    {t.full}
                   </Text>
                 </TouchableOpacity>
               );
@@ -122,17 +130,15 @@ export default function SettingsScreen({ navigation }) {
           </View>
 
           <View style={styles.customRow}>
-            <Text style={styles.customLabel}>{state.isProPig ? "Custom peek:" : "Custom:"}</Text>
+            <Text style={styles.customLabel}>Custom:</Text>
             <View style={styles.feeInputWrap}>
-              <View style={styles.feeCoinIcon}>
-                <Text style={styles.feeCoinP}>P</Text>
-              </View>
+              <PCoin size={24} style={styles.feeCoinSpacing} />
               <TextInput
                 style={styles.feeInput}
                 value={customFee}
                 onChangeText={setCustomFee}
                 keyboardType="number-pad"
-                placeholder="0"
+                placeholder={`${MIN_CUSTOM_FEE}+`}
                 placeholderTextColor="rgba(45,45,45,0.3)"
                 inputAccessoryViewID="feeDone"
                 onSubmitEditing={saveCustom}
@@ -140,7 +146,7 @@ export default function SettingsScreen({ navigation }) {
             </View>
           </View>
           {state.isProPig && (
-            <Text style={styles.feeHint}>Unlock = 10x peek cost</Text>
+            <Text style={styles.feeHint}>Peeks: 1st free, then 20%, 30%, 40%… of the unlock cost</Text>
           )}
           <GlowButton
             title="Set Custom Fee"
@@ -173,7 +179,8 @@ export default function SettingsScreen({ navigation }) {
           </View>
         )}
 
-        {/* Dev Mode */}
+        {/* Dev Mode: development builds only (__DEV__ is false in App Store builds) */}
+        {__DEV__ && (
         <View style={[styles.card, CARD_SHADOW]}>
           <Text style={styles.cardTitle}>Dev Mode</Text>
           <Text style={styles.cardDesc}>Testing tools</Text>
@@ -206,12 +213,13 @@ export default function SettingsScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+        )}
 
         {/* About */}
         <View style={[styles.card, CARD_SHADOW, styles.aboutCard]}>
           <PigIdleWebView size={100} />
           <Text style={styles.aboutName}>Scroll Pig</Text>
-          <Text style={styles.aboutVer}>v1.0.5</Text>
+          <Text style={styles.aboutVer}>v{Constants.expoConfig?.version || ""}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -242,7 +250,7 @@ const styles = StyleSheet.create({
     padding: 22,
     marginBottom: 14,
   },
-  cardTitle: { fontSize: 15, fontWeight: "700", color: "#F7A0B2", textTransform: "uppercase", marginBottom: 4 },
+  cardTitle: { fontSize: 15, fontWeight: "700", color: "#F7A0B2", textTransform: "uppercase", marginBottom: 4, textShadowColor: "#FFFFFF", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 },
   cardDesc: { ...T.caption, marginBottom: 16 },
 
   // Fee
@@ -251,7 +259,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: C.bg,
+    backgroundColor: C.white,
     alignItems: "center",
   },
   presetActive: { borderWidth: 1.5, borderColor: "#F7A0B2" },
@@ -269,17 +277,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginRight: 10,
   },
-  feeCoinIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#F7A0B2",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
-  feeCoinP: { color: "#F7A0B2", fontSize: 12, fontWeight: "900" },
+  feeCoinSpacing: { marginRight: 8 },
   feeInput: { flex: 1, fontSize: 18, fontWeight: "800", color: "#F7A0B2", paddingVertical: 12 },
   feeTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   feeInfoBtn: {
@@ -318,5 +316,5 @@ const styles = StyleSheet.create({
 
   // Keyboard toolbar
   kbToolbar: { backgroundColor: "#F0F0F0", paddingHorizontal: 16, paddingVertical: 10, alignItems: "flex-end" },
-  kbDoneText: { fontSize: 16, fontWeight: "600", color: "#F7A0B2" },
+  kbDoneText: { fontSize: 16, fontWeight: "600", color: "#F7A0B2", textShadowColor: "#FFFFFF", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 },
 });

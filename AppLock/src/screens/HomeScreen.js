@@ -12,6 +12,7 @@ import {
   ScrollView,
   AppState,
   PanResponder,
+  Easing,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,18 +23,25 @@ import SlideToLock from "../components/SwipeToLock";
 import LockConfigModal from "../components/LockConfigModal";
 import NeuBox from "../components/NeuBox";
 import { getStarvingMessage } from "../data/roastMessages";
+import PCoin from "../components/PCoin";
+import XPBar from "../components/XPBar";
+import ScrollPigLogo from "../components/ScrollPigLogo";
+import HomeTutorial, { TUTORIAL_KEY } from "../components/HomeTutorial";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getPeekCost } from "../utils/peekPricing";
 import { getPigWeight, getLevel, getNextLevel, getLevelProgress } from "../utils/pigWeight";
 import { C, T, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import GlowButton from "../components/GlowButton";
 import { showAlert } from "../components/CustomAlert";
-import { isScreenTimeAvailable, showAppPicker, showAppPickerForList, blockSelectedApps, blockLists as blockListsNative, deleteBlockList as deleteBlockListNative } from "../native/ScreenTime";
+import { isScreenTimeAvailable, showAppPicker, showAppPickerForList, blockSelectedApps, blockLists as blockListsNative, deleteBlockList as deleteBlockListNative, getListCounts } from "../native/ScreenTime";
 import AppIconsRow from "../components/AppIconsRow";
+import { setPigAnchorY } from "../utils/pigAnchor";
 import { heavyTap, successTap, lightTap, warningTap } from "../utils/haptics";
 
 const PIG_COIN = require("../../assets/pig-coin.png");
 const ICON_SCHEDULE = require("../../assets/icon-schedule.png");
 
-const { width: SCREEN_W } = Dimensions.get("window");
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 function getTributeClock(lastTributeTime) {
   if (!lastTributeTime) return { text: "Never", minutes: Infinity };
@@ -128,7 +136,6 @@ export default function HomeScreen({ navigation }) {
       onPanResponderRelease: (_, g) => {
         if (g.dy > 80) {
           setShowBlockList(false);
-          setTimeout(() => blockListSwipeY.setValue(0), 300);
         } else {
           Animated.spring(blockListSwipeY, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
         }
@@ -136,6 +143,72 @@ export default function HomeScreen({ navigation }) {
     })
   ).current;
 
+  // Block list sheet: backdrop fades in place while the sheet slides up (and the reverse on close)
+  const blockListBackdrop = useRef(new Animated.Value(0)).current;
+  const blockListSheetY = useRef(new Animated.Value(SCREEN_H)).current;
+  const [blockListMounted, setBlockListMounted] = useState(false);
+  useEffect(() => {
+    if (showBlockList) {
+      setBlockListMounted(true);
+      blockListBackdrop.setValue(0);
+      blockListSheetY.setValue(SCREEN_H);
+      Animated.parallel([
+        Animated.timing(blockListBackdrop, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(blockListSheetY, { toValue: 0, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]).start();
+    } else if (blockListMounted) {
+      Animated.parallel([
+        Animated.timing(blockListBackdrop, { toValue: 0, duration: 240, useNativeDriver: true }),
+        Animated.timing(blockListSheetY, { toValue: SCREEN_H, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      ]).start(() => {
+        setBlockListMounted(false);
+        blockListSwipeY.setValue(0);
+      });
+    }
+  }, [showBlockList]);
+
+  const pigRef = useRef(null);
+  // Re-measured on container layout too: safe-area padding lands on an ancestor and
+  // shifts the pig on screen without firing the pig's own onLayout
+  const measurePig = () => pigRef.current?.measureInWindow((x, y) => setPigAnchorY(y));
+
+  // First-install walkthrough: spotlights each area once, right after onboarding
+  const coinRef = useRef(null);
+  const xpRef = useRef(null);
+  const slopRef = useRef(null);
+  const swipeRef = useRef(null);
+  const [tutorialSteps, setTutorialSteps] = useState(null);
+  useEffect(() => {
+    let timer;
+    AsyncStorage.getItem(TUTORIAL_KEY).then((val) => {
+      if (val !== "pending") return;
+      timer = setTimeout(buildTutorial, 900);
+    }).catch(() => {});
+    return () => clearTimeout(timer);
+  }, []);
+  const measure = (ref) => new Promise((resolve) => {
+    if (!ref.current) return resolve(null);
+    ref.current.measureInWindow((x, y, width, height) => resolve(width ? { x, y, width, height } : null));
+  });
+  const buildTutorial = async () => {
+    const [coin, pig, xp, slop, swipe] = await Promise.all([coinRef, pigRef, xpRef, slopRef, swipeRef].map(measure));
+    const { width: W, height: H } = Dimensions.get("window");
+    const pigArea = pig && xp
+      ? { x: 16, y: pig.y, width: W - 32, height: xp.y + xp.height - pig.y }
+      : pig;
+    const steps = [
+      pigArea && { rect: pigArea, title: "Meet your pig", body: "Every coin you spend feeds it. Level up to make it bigger and unlock new skins." },
+      coin && { rect: coin, pill: true, title: "Your coins", body: "Opening a blocked app costs coins, so caving actually costs you. Tap here to get more." },
+      slop && { rect: slop, title: "Your Slop List", body: "The apps that eat your time. Tap to add or change what gets blocked." },
+      swipe && { rect: swipe, pill: true, title: "Swipe to lock", body: "Your apps stay blocked until time's up or until you surrender." },
+      { rect: { x: 0, y: H - 85, width: W, height: 85 }, title: "Stats, leaderboard, settings", body: "Track your shame, climb local and global leaderboards, set a custom surrender price, and unlock new pig skins." },
+    ].filter(Boolean);
+    setTutorialSteps(steps);
+  };
+  const finishTutorial = () => {
+    setTutorialSteps(null);
+    AsyncStorage.setItem(TUTORIAL_KEY, "done").catch(() => {});
+  };
   const moodKey = useRef(null);
   const moodMessageRef = useRef(null);
 
@@ -175,14 +248,48 @@ export default function HomeScreen({ navigation }) {
   const peekCountdown = lock.peekExpiresAt ? formatCountdown(lock.peekExpiresAt) : null;
 
   const peekCost = lock.isLocked
-    ? (lock.peekFee || 1) * Math.pow(2, lock.peekCount || 0)
+    ? getPeekCost(lock.peekCount || 0, lock.fullFee || state.settings.defaultFullFee, state.isProPig)
     : 0;
 
   const totalActiveApps = (state.blockLists || []).filter((l) => l.isActive).reduce((s, l) => s + l.appCount, 0);
 
+  // Stored app counts can drift from the native selection (e.g. app state reset on reinstall
+  // while iOS keeps the picked apps), so resync them from native. Returns the active total.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const listIdsKey = (state.blockLists || []).map((l) => l.id).join(",");
+
+  const syncAppCounts = async () => {
+    const lists = stateRef.current.blockLists || [];
+    let counts = {};
+    try {
+      counts = await getListCounts(lists.map((l) => l.id));
+    } catch (e) {}
+    let total = 0;
+    for (const l of lists) {
+      const count = counts[l.id] ?? l.appCount;
+      if (count !== l.appCount) {
+        dispatch({ type: "SET_APP_COUNT", payload: { listId: l.id, count } });
+      }
+      if (l.isActive) total += count;
+    }
+    return total;
+  };
+
+  useEffect(() => {
+    syncAppCounts();
+  }, [listIdsKey]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "active") syncAppCounts();
+    });
+    return () => sub.remove();
+  }, []);
+
   const handleSwipeLock = async () => {
     heavyTap();
-    if (totalActiveApps === 0) {
+    if (totalActiveApps === 0 && (await syncAppCounts()) === 0) {
       if (!isScreenTimeAvailable()) {
         showAlert("No Apps Selected", "You need to select apps to lock first. This requires the full build (TestFlight or App Store).");
         return;
@@ -236,7 +343,7 @@ export default function HomeScreen({ navigation }) {
     }
     try {
       const result = await showAppPickerForList(listId);
-      if (result.selectedCount > 0) {
+      if (result.selectedCount >= 0) {
         dispatch({ type: "SET_APP_COUNT", payload: { listId, count: result.selectedCount } });
       }
     } catch (e) {
@@ -262,33 +369,37 @@ export default function HomeScreen({ navigation }) {
   return (
     <LinearGradient colors={["#EDE8E4", "#F5CCD5"]} style={styles.gradient}>
       <SafeAreaView style={styles.safe}>
-        <View style={styles.container}>
+        <View style={styles.container} onLayout={measurePig}>
           {/* Coin pill — top right */}
           <View style={styles.header}>
-            <Text style={styles.homeTitle}>Scroll Pig</Text>
-            <NeuBox style={styles.coinPill} borderRadius={9999} bg="rgba(255,255,255,0.55)" borderColor="rgba(255,255,255,0.5)">
-              <TouchableOpacity style={styles.coinPillInner} activeOpacity={0.6} onPress={() => { lightTap(); navigation.navigate("CoinShop"); }}>
-                <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: "rgba(255,144,172,0.4)", alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ color: "#F7A0B2", fontSize: 11, fontWeight: "300", letterSpacing: 0.5 }}>P</Text>
-                </View>
-                <Text style={styles.coinAmt}>{state.piggyCoins.toLocaleString()}</Text>
-              </TouchableOpacity>
-            </NeuBox>
+            <ScrollPigLogo height={44} />
+            <View ref={coinRef} collapsable={false}>
+              <NeuBox style={styles.coinPill} borderRadius={9999} bg="rgba(255,255,255,0.55)" borderColor="rgba(255,255,255,0.5)">
+                <TouchableOpacity style={styles.coinPillInner} activeOpacity={0.6} onPress={() => { lightTap(); navigation.navigate("CoinShop"); }}>
+                  <PCoin size={24} />
+                  <Text style={styles.coinAmt}>{state.piggyCoins.toLocaleString()}</Text>
+                </TouchableOpacity>
+              </NeuBox>
+            </View>
           </View>
 
           {/* Main content area — pig centered */}
           <View style={styles.mainContent}>
             {/* Glossy CSS pig */}
             <View style={styles.heroWrap}>
-              <PigIdleWebView level={Math.min(pigLevel, 5)} size={224} skin={state.activeSkin || "default"} />
+              <View
+                ref={pigRef}
+                collapsable={false}
+                onLayout={measurePig}
+              >
+                <PigIdleWebView level={pigLevel} size={224} skin={state.activeSkin || "default"} />
+              </View>
             </View>
 
             {/* XP Level Progress */}
-            <View style={styles.xpRow}>
+            <View ref={xpRef} collapsable={false} style={styles.xpRow}>
               <Text style={styles.xpLevelText}>Lv.{pigLevel}</Text>
-              <View style={styles.xpBarTrack}>
-                <View style={[styles.xpBarFill, { width: `${Math.max(2, xpProgress * 100)}%` }]} />
-              </View>
+              <XPBar progress={xpProgress} level={pigLevel} height={8} style={styles.xpBar} />
               <Text style={styles.xpLevelText}>{xpNextLabel}</Text>
             </View>
 
@@ -298,7 +409,11 @@ export default function HomeScreen({ navigation }) {
               {lock.isLocked && (
                 <>
                   <Text style={styles.statusText}>
-                    {`BLOCKING `}<Text style={styles.statusHighlight}>{lock.appCount || 0}</Text>{` APP${(lock.appCount || 0) !== 1 ? "S" : ""}`}
+                    {isPeeking ? "PEEKING FOR" : (
+                      <>
+                        {`BLOCKING `}<Text style={styles.statusHighlight}>{lock.appCount || 0}</Text>{` APP${(lock.appCount || 0) !== 1 ? "S" : ""}`}
+                      </>
+                    )}
                   </Text>
                   <Text style={[styles.lockTimer, isPeeking && { color: C.gold }]}>
                     {isPeeking && peekCountdown ? peekCountdown : lockCountdown || "0:00"}
@@ -313,6 +428,7 @@ export default function HomeScreen({ navigation }) {
             {/* Slop list pill */}
             {(totalActiveApps > 0 || !lock.isLocked) && (
               <TouchableOpacity
+                ref={slopRef}
                 style={styles.blockCard}
                 activeOpacity={0.6}
                 onPress={() => { lightTap(); setShowBlockList(true); }}
@@ -331,6 +447,7 @@ export default function HomeScreen({ navigation }) {
                 </View>
                 <AppIconsRow
                   listId={(state.blockLists || []).find(l => l.isActive)?.id || "default"}
+                  revision={(state.blockLists || []).find(l => l.isActive)?.rev || 0}
                   maxIcons={3}
                   appCount={totalActiveApps || 4}
                 />
@@ -345,7 +462,7 @@ export default function HomeScreen({ navigation }) {
               </>
             ) : (
               <>
-                <View style={styles.swipeRow}>
+                <View ref={swipeRef} collapsable={false} style={styles.swipeRow}>
                   <SlideToLock onLock={handleSwipeLock} locked={false} />
                 </View>
                 <NeuBox style={styles.scheduleBtn} borderRadius={24} bg="rgba(255,255,255,0.3)" borderColor="rgba(255,255,255,0.35)">
@@ -359,6 +476,8 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
+        {tutorialSteps && <HomeTutorial steps={tutorialSteps} onDone={finishTutorial} />}
+
         {/* Lock Config Modal */}
         <LockConfigModal
           visible={showConfig}
@@ -368,9 +487,11 @@ export default function HomeScreen({ navigation }) {
         />
 
         {/* Block List Modal */}
-        <Modal visible={showBlockList} transparent animationType="slide">
-          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowBlockList(false)}>
-            <Animated.View style={[styles.modalSheet, { transform: [{ translateY: blockListSwipeY }] }]} onStartShouldSetResponder={() => true}>
+        <Modal visible={blockListMounted} transparent animationType="none">
+          <View style={styles.modalOverlay}>
+            <Animated.View style={[StyleSheet.absoluteFill, styles.modalBackdrop, { opacity: blockListBackdrop }]} />
+            <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setShowBlockList(false)} />
+            <Animated.View style={[styles.modalSheet, { transform: [{ translateY: Animated.add(blockListSheetY, blockListSwipeY) }] }]} onStartShouldSetResponder={() => true}>
               <View {...blockListPan.panHandlers} style={styles.handleZone}>
                 <View style={styles.modalHandle} />
               </View>
@@ -462,7 +583,7 @@ export default function HomeScreen({ navigation }) {
                 style={{ marginTop: 16 }}
               />
             </Animated.View>
-          </TouchableOpacity>
+          </View>
         </Modal>
       </SafeAreaView>
     </LinearGradient>
@@ -482,7 +603,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 12, paddingBottom: 8,
     zIndex: 10,
   },
-  homeTitle: { ...T.hero, color: "#F7A0B2", marginBottom: 0, textShadowColor: "#FFFFFF", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 },
   coinPill: {},
   coinPillInner: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 8 },
   coinAmt: { fontSize: 14, fontWeight: "700", color: "#2D2D2D", letterSpacing: -0.35 },
@@ -519,13 +639,12 @@ const styles = StyleSheet.create({
   blockCardMoreText: { fontSize: 12, fontWeight: "800", color: "#2D2D2D" },
 
   // Hero pig — centered
-  heroWrap: { alignItems: "center", justifyContent: "center", overflow: "visible", marginTop: -20, marginBottom: 8 },
+  heroWrap: { alignItems: "center", justifyContent: "center", overflow: "visible", marginTop: 0, marginBottom: 8, transform: [{ translateY: 0 }] },
 
   // XP bar
-  xpRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, marginTop: 12, marginBottom: 12 },
+  xpRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, marginTop: 20, marginBottom: 0 },
   xpLevelText: { fontSize: 11, fontWeight: "700", color: "#F7A0B2" },
-  xpBarTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "rgba(255,122,173,0.18)", overflow: "hidden" },
-  xpBarFill: { height: "100%", borderRadius: 3, backgroundColor: "#F7A0B2" },
+  xpBar: { flex: 1 },
 
   // Mode pill
   modePill: { alignSelf: "center", marginBottom: 12 },
@@ -555,7 +674,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.35)",
   },
-  surrenderDot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1.5, borderColor: "#F7A0B2" },
+  surrenderDot: {
+    width: 10, height: 10, borderRadius: 5, backgroundColor: "#FF3B30",
+    shadowColor: "#FF3B30", shadowOpacity: 0.9, shadowRadius: 6, shadowOffset: { width: 0, height: 0 },
+  },
   surrenderText: { fontSize: 16, fontWeight: "700", color: "#2D2D2D", letterSpacing: 0.5 },
 
   // Schedule button
@@ -565,7 +687,8 @@ const styles = StyleSheet.create({
   scheduleText: { fontSize: 11, fontWeight: "600", color: "#2D2D2D", letterSpacing: 0.3, textTransform: "uppercase" },
 
   // Block List Modal
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  modalOverlay: { flex: 1, justifyContent: "flex-end" },
+  modalBackdrop: { backgroundColor: "rgba(0,0,0,0.4)" },
   modalSheet: { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
   handleZone: { paddingTop: 14, paddingBottom: 16, alignItems: "center", width: "100%" },
   modalHandle: { width: 40, height: 5, borderRadius: 3, backgroundColor: C.pinkPale },
@@ -576,7 +699,7 @@ const styles = StyleSheet.create({
   checkboxActive: { borderColor: "#2D2D2D" },
   checkmark: { color: "#2D2D2D", fontSize: 14, fontWeight: "900" },
   listInfo: { flex: 1 },
-  listItemName: { fontSize: 16, fontWeight: "800", color: C.text },
+  listItemName: { fontSize: 15, fontWeight: "700", color: "#F7A0B2", textTransform: "uppercase" },
   listPreviewRow: { flexDirection: "row", alignItems: "center", marginTop: 4, gap: 6 },
   appCountBadge: { borderWidth: 1.5, borderColor: "#2D2D2D", borderRadius: 10, minWidth: 22, height: 22, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
   appCountBadgeText: { color: "#2D2D2D", fontSize: 11, fontWeight: "900" },
@@ -586,6 +709,6 @@ const styles = StyleSheet.create({
   editBtnText: { fontSize: 13, fontWeight: "700", color: "#2D2D2D" },
   listItemNew: { borderStyle: "dashed", borderWidth: 1.5, borderColor: "#F7A0B2", justifyContent: "center", padding: 16 },
   listItemNewText: { fontSize: 14, fontWeight: "700", color: C.textSecondary },
-  proBadge: { borderWidth: 1, borderColor: "#2D2D2D", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginRight: 10 },
-  proBadgeText: { color: "#2D2D2D", fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
+  proBadge: { borderWidth: 1, borderColor: "#F7A0B2", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginRight: 10 },
+  proBadgeText: { color: "#F7A0B2", fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
 });

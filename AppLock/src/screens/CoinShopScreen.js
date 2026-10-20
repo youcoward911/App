@@ -13,6 +13,7 @@ import { showAlert } from "../components/CustomAlert";
 import { useAppLock, COIN_PACKAGES } from "../context/AppLockContext";
 import PigIdleWebView from "../components/PigIdleWebView";
 import CoinBadge from "../components/CoinBadge";
+import PCoin from "../components/PCoin";
 import { C, T, CARD_SHADOW, CARD_SHADOW_LG, NEU_RAISED, NEON_GLOW } from "../utils/theme";
 import { initIAP, buyCoins, buySubscription, restorePurchases, endIAP } from "../utils/iap";
 import { lightTap } from "../utils/haptics";
@@ -46,7 +47,6 @@ export default function CoinShopScreen({ navigation, route }) {
 
   // Auto-scroll handled in onLayout
 
-  const isEmpty = state.piggyCoins === 0;
 
   const handleBuy = async (pkg) => {
     setBuying(pkg.id);
@@ -95,6 +95,7 @@ export default function CoinShopScreen({ navigation, route }) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.doneBtn} activeOpacity={0.6} onPress={() => { lightTap(); navigation.goBack(); }}>
+            <View style={styles.doneBtnShine} pointerEvents="none" />
             <Text style={styles.doneBtnText}>Done</Text>
           </TouchableOpacity>
         </View>
@@ -108,16 +109,6 @@ export default function CoinShopScreen({ navigation, route }) {
           </View>
           <Text style={styles.balanceLabel}>current balance</Text>
         </View>
-
-        {/* Low balance warning */}
-        {isEmpty && (
-          <View style={[styles.warningCard, CARD_SHADOW]}>
-            <Text style={styles.warningTitle}>EMPTY WALLET</Text>
-            <Text style={styles.warningBody}>
-              Your master doesn't give free handouts. Buy coins to pay for your slop.
-            </Text>
-          </View>
-        )}
 
         {/* Packages */}
         <Text style={styles.sectionTitle}>Coin Packages</Text>
@@ -143,9 +134,7 @@ export default function CoinShopScreen({ navigation, route }) {
               )}
               <View style={styles.pkgLeft}>
                 <View style={styles.pkgCoinRow}>
-                  <View style={styles.pkgCoin}>
-                    <Text style={styles.pkgCoinP}>P</Text>
-                  </View>
+                  <PCoin size={28} style={{ marginRight: 8 }} />
                   <Text style={styles.pkgAmount}>{pkg.coins}</Text>
                 </View>
                 {pkg.bonus && (
@@ -188,7 +177,7 @@ export default function CoinShopScreen({ navigation, route }) {
               <Text style={styles.proFeature}>{"\u2022"} Peek Mode — peek at locked apps for 2 min</Text>
               <Text style={styles.proFeature}>{"\u2022"} Schedule locks in advance</Text>
               <Text style={styles.proFeature}>{"\u2022"} Build multiple block lists</Text>
-              <Text style={styles.proFeature}>{"\u2022"} Weekly Usage Report</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Weekly Shame Report</Text>
             </View>
           </View>
         ) : (
@@ -205,7 +194,7 @@ export default function CoinShopScreen({ navigation, route }) {
               <Text style={styles.proFeature}>{"\u2022"} Peek Mode — peek at locked apps for 2 min</Text>
               <Text style={styles.proFeature}>{"\u2022"} Schedule locks in advance</Text>
               <Text style={styles.proFeature}>{"\u2022"} Build multiple block lists</Text>
-              <Text style={styles.proFeature}>{"\u2022"} Weekly Usage Report</Text>
+              <Text style={styles.proFeature}>{"\u2022"} Weekly Shame Report</Text>
             </View>
             {buyingSub ? (
               <ActivityIndicator color={C.pink} style={{ marginTop: 14 }} />
@@ -316,13 +305,22 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     zIndex: 10,
   },
+  // Small version of the glossy pink pill used for Pig Locker / paywall buttons
   doneBtn: {
-    backgroundColor: "rgba(255,133,160,0.15)",
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 14,
+    backgroundColor: "#F7A0B2",
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.75)",
+    shadowColor: "#E97C95",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 7,
   },
-  doneBtnText: { fontSize: 15, fontWeight: "700", color: C.pink },
+  // Rounded itself rather than clipped: overflow hidden on the button would also clip its shadow
+  doneBtnShine: { position: "absolute", top: 0, left: 0, right: 0, height: "60%", borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: "rgba(255,255,255,0.18)" },
+  doneBtnText: { fontSize: 15, fontWeight: "800", color: "#FFFFFF", letterSpacing: 0.3 },
 
   // Hero
   hero: { alignItems: "center", paddingVertical: 20 },

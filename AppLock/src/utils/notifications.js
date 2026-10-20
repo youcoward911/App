@@ -160,7 +160,7 @@ export async function scheduleEggingNotifications(minutesSinceLastFeed) {
   if (!Notifications) return;
 
   try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    await cancelNagNotifications();
   } catch (e) {
     return;
   }
@@ -208,4 +208,53 @@ export async function refreshNotifications(lastTributeTime) {
   if (!lastTributeTime) return;
   const mins = Math.floor((Date.now() - lastTributeTime) / 60000);
   await scheduleEggingNotifications(mins);
+}
+
+// Calls onScreen(name) when the user taps a notification that names a screen
+// (e.g. the block screen's PRO upsell), including the one that launched the app
+export function subscribeNotificationScreens(onScreen) {
+  if (!Notifications) return () => {};
+  const handle = (response) => {
+    const screen = response?.notification?.request?.content?.data?.screen;
+    if (screen) onScreen(screen);
+  };
+  Notifications.getLastNotificationResponseAsync().then(handle).catch(() => {});
+  const sub = Notifications.addNotificationResponseReceivedListener(handle);
+  return () => sub.remove();
+}
+
+const WEEKLY_REPORT_ID = "scrollpig.weekly-report";
+
+// Cancels the nag reminders but keeps the weekly report (cancelling everything would wipe it)
+export async function cancelNagNotifications() {
+  if (!Notifications) return;
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter((n) => n.identifier !== WEEKLY_REPORT_ID)
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier))
+  );
+}
+
+// Pro perk: "Your Weekly Shame Report is ready" every Sunday at 7pm; tapping opens the report
+export async function scheduleWeeklyReport() {
+  if (!Notifications) return;
+  try {
+    await Notifications.cancelScheduledNotificationAsync(WEEKLY_REPORT_ID).catch(() => {});
+    await Notifications.scheduleNotificationAsync({
+      identifier: WEEKLY_REPORT_ID,
+      content: {
+        title: "Your Weekly Shame Report is ready 🐷",
+        body: "Every cave, every coin, every weak moment. Come see how bad it got.",
+        sound: true,
+        data: { screen: "WeeklyReport" },
+      },
+      trigger: { type: "weekly", weekday: 1, hour: 19, minute: 0 },
+    });
+  } catch (e) {}
+}
+
+export async function cancelWeeklyReport() {
+  if (!Notifications) return;
+  await Notifications.cancelScheduledNotificationAsync(WEEKLY_REPORT_ID).catch(() => {});
 }

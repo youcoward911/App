@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { C, T } from "../utils/theme";
+import PCoin from "./PCoin";
 
 // Displays piggy coin count with a small coin icon
 export default function CoinBadge({ amount, size = "normal" }) {
@@ -8,9 +9,7 @@ export default function CoinBadge({ amount, size = "normal" }) {
 
   return (
     <View style={[styles.badge, isSmall && styles.badgeSmall]}>
-      <View style={[styles.coin, isSmall && styles.coinSmall]}>
-        <Text style={[styles.coinP, isSmall && styles.coinPSmall]}>P</Text>
-      </View>
+      <PCoin size={isSmall ? 18 : 22} style={{ marginRight: isSmall ? 4 : 5 }} />
       <Text style={[styles.amount, isSmall && styles.amountSmall]}>
         {amount}
       </Text>
